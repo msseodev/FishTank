@@ -10,9 +10,9 @@ class TankApiImpl(): TankApi {
         return false
     }
 
-    override fun sendCommand(packet: FishPacket): TankData {
+    override fun sendCommand(packet: FishPacket): List<TankData> {
         // TODO - impl send packet and get response
-        return TankData(25.0, false, false, false, System.currentTimeMillis())
+        return emptyList()
     }
 
     override fun startListen() {

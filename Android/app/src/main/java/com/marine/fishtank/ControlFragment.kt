@@ -11,7 +11,7 @@ import com.github.mikephil.charting.components.YAxis.AxisDependency
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
-import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import com.github.mikephil.charting.utils.ColorTemplate
@@ -19,6 +19,9 @@ import com.marine.fishtank.databinding.FragmentControlBinding
 import com.marine.fishtank.model.Status
 import com.marine.fishtank.model.TankData
 import com.marine.fishtank.viewmodel.ControlViewModel
+import java.lang.StrictMath.round
+import java.text.SimpleDateFormat
+import java.util.*
 
 class ControlFragment : Fragment(), OnChartValueSelectedListener {
     private lateinit var binding: FragmentControlBinding
@@ -79,6 +82,8 @@ class ControlFragment : Fragment(), OnChartValueSelectedListener {
 
         setupObserver()
         viewModel.init()
+        viewModel.startFetchHistory()
+
         viewModel.startListenTank()
 
         return binding.root
@@ -103,10 +108,11 @@ class ControlFragment : Fragment(), OnChartValueSelectedListener {
     }
 
     private fun addData(tankData: TankData) {
+
         val data = binding.lineChart.data
         val set = data.getDataSetByIndex(0)
 
-        data.addEntry(Entry(set.entryCount.toFloat(), tankData.temperature.toFloat()), 0)
+        data.addEntry(Entry(set.entryCount.toFloat(), tankData.temperature.toFloat(), tankData), 0)
         data.notifyDataChanged()
 
         binding.lineChart.apply {
@@ -118,14 +124,6 @@ class ControlFragment : Fragment(), OnChartValueSelectedListener {
 
     private fun setData() {
         val entryList = mutableListOf<Entry>()
-        entryList.add(Entry(0f, 25f))
-        entryList.add(Entry(1f, 25.2f))
-        entryList.add(Entry(2f, 25.35f))
-        entryList.add(Entry(3f, 25.45f))
-        entryList.add(Entry(4f, 25f))
-        entryList.add(Entry(5f, 24.8f))
-        entryList.add(Entry(6f, 25.7f))
-
         val dataSet = LineDataSet(entryList, "Water temperature").apply {
             setAxisDependency(AxisDependency.LEFT)
             setColor(ColorTemplate.getHoloBlue())
@@ -145,10 +143,24 @@ class ControlFragment : Fragment(), OnChartValueSelectedListener {
         }
 
         //String setter in x-Axis
-        val xValues = arrayOf("14:00", "14:05", "14:10", "14:15", "14:20", "14:25", "14:30")
-        binding.lineChart.xAxis.valueFormatter = IndexAxisValueFormatter(xValues)
-
+        binding.lineChart.axisLeft.valueFormatter = yAxisFormatter
+        binding.lineChart.xAxis.valueFormatter = xAxisFormatter
         binding.lineChart.data = data
+    }
+
+    private val xAxisFormatter = object: ValueFormatter() {
+        override fun getFormattedValue(value: Float): String {
+            val entry = binding.lineChart.data.dataSets[0].getEntryForIndex(value.toInt())
+            val tankData = entry.data as TankData
+            val date = Date(tankData.dateTime)
+            return SimpleDateFormat("HH:mm:ss").format(date)
+        }
+    }
+
+    private val yAxisFormatter = object: ValueFormatter() {
+        override fun getFormattedValue(value: Float): String {
+            return (round(value * 10)/10).toString()
+        }
     }
 
     override fun onValueSelected(e: Entry?, h: Highlight?) {

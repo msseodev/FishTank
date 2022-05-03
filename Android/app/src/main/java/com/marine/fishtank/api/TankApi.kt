@@ -6,7 +6,7 @@ import com.marine.fishtank.model.TankData
 interface TankApi {
     fun connect(url: String, port: Int): Boolean
 
-    fun sendCommand(packet: FishPacket): TankData
+    fun sendCommand(packet: FishPacket): List<TankData>
 
     fun startListen()
 

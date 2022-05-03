@@ -43,7 +43,15 @@ class ControlViewModel : ViewModel() {
 
     fun startFetchHistory() {
         // TODO - Get FishTank history and emit data to liveData
-        tankApi.sendCommand(FishPacket(OP_GET_HISTORY, 1))
+        viewModelScope.launch(Dispatchers.IO){
+            val dataList = tankApi.sendCommand(FishPacket(OP_GET_HISTORY, 1))
+            withContext(Dispatchers.Main) {
+                dataList.forEach {
+                    liveData.value = DataSource(Status.SUCCESS, it)
+                }
+            }
+        }
+
     }
 
     fun startListenTank() {
