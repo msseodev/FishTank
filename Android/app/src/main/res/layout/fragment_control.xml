@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:padding="10dp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:id="@+id/container"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <com.github.mikephil.charting.charts.LineChart
+                android:id="@+id/lineChart"
+                app:layout_constraintTop_toTopOf="parent"
+                android:layout_width="match_parent"
+                android:layout_height="300dp" />
+
+            <GridLayout
+                app:layout_constraintTop_toBottomOf="@id/lineChart"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginTop="15dp"
+                android:columnCount="2"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/gridLayout">
+
+                <EditText
+                    android:id="@+id/editTextWaterRatio"
+                    android:layout_columnSpan="1"
+                    style="@style/GridButton"
+                    android:hint="%"
+                    android:text="20" />
+
+                <Button
+                    android:id="@+id/buttonChangeWater"
+                    style="@style/GridButton"
+                    android:layout_columnSpan="1"
+                    android:text="@string/change_water" />
+
+                <Button
+                    android:id="@+id/buttonLightOn"
+                    style="@style/GridButton"
+                    android:layout_columnSpan="1"
+                    android:text="@string/light_on" />
+
+                <Button
+                    android:id="@+id/buttonLightOff"
+                    style="@style/GridButton"
+                    android:layout_columnSpan="1"
+                    android:text="@string/light_off" />
+
+                <Button
+                    android:id="@+id/buttonPurifierOn"
+                    style="@style/GridButton"
+                    android:layout_columnSpan="1"
+                    android:text="@string/purifier_on" />
+
+                <Button
+                    android:id="@+id/buttonPurifierOff"
+                    style="@style/GridButton"
+                    android:layout_columnSpan="1"
+                    android:text="@string/purifier_off" />
+
+                <Button
+                    android:id="@+id/buttonHeaterOn"
+                    style="@style/GridButton"
+                    android:layout_columnSpan="1"
+                    android:text="@string/heater_on" />
+
+                <Button
+                    android:id="@+id/buttonHeaterOff"
+                    style="@style/GridButton"
+                    android:layout_columnSpan="1"
+                    android:text="@string/heater_off" />
+            </GridLayout>
+
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </LinearLayout>
+
+
+</ScrollView>
