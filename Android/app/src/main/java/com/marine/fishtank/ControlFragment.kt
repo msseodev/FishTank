@@ -23,7 +23,7 @@ import java.lang.StrictMath.round
 import java.text.SimpleDateFormat
 import java.util.*
 
-class ControlFragment : Fragment(), OnChartValueSelectedListener {
+class ControlFragment : Fragment(), OnChartValueSelectedListener, View.OnClickListener {
     private lateinit var binding: FragmentControlBinding
     private lateinit var viewModel: ControlViewModel
 
@@ -31,6 +31,14 @@ class ControlFragment : Fragment(), OnChartValueSelectedListener {
         binding = FragmentControlBinding.inflate(inflater, container, false)
 
         viewModel = ControlViewModel()
+
+        binding.buttonChangeWater.setOnClickListener(this)
+        binding.buttonHeaterOff.setOnClickListener(this)
+        binding.buttonHeaterOn.setOnClickListener(this)
+        binding.buttonLightOff.setOnClickListener(this)
+        binding.buttonLightOn.setOnClickListener(this)
+        binding.buttonPurifierOff.setOnClickListener(this)
+        binding.buttonPurifierOn.setOnClickListener(this)
 
         binding.lineChart.apply {
             setOnChartValueSelectedListener(this@ControlFragment)
@@ -103,6 +111,14 @@ class ControlFragment : Fragment(), OnChartValueSelectedListener {
                 Status.LOADING -> {
 
                 }
+            }
+        }
+    }
+
+    override fun onClick(view: View) {
+        when(view.id) {
+            R.id.buttonChangeWater -> {
+                viewModel.testFunction()
             }
         }
     }

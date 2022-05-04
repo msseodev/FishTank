@@ -5,21 +5,22 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.marine.fishtank.api.TankApi
+import com.marine.fishtank.api.TankApiImpl
 import com.marine.fishtank.api.TankApiMock
 import com.marine.fishtank.model.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-private const val SERVER_IP = ""
-private const val SERVER_PORT = 13422
+
+private const val SERVER_IP = "210.179.100.223"
+private const val SERVER_PORT = 53265
 
 class ControlViewModel : ViewModel() {
     val liveData = MutableLiveData<DataSource<TankData>>()
 
     // TODO - Replace api to actual one later.
-    private val tankApi: TankApi = TankApiMock()
+    private val tankApi: TankApi = TankApiImpl()
 
     private val packetListener = object: TankApi.OnServerPacketListener {
         override fun onServerPacket(rawData: String) {
@@ -51,12 +52,13 @@ class ControlViewModel : ViewModel() {
                 }
             }
         }
-
     }
 
     fun startListenTank() {
         // TODO - Listen tank status and emit data to liveData
-        tankApi.sendCommand(FishPacket(OP_LISTEN_STATUS, 1))
+        viewModelScope.launch(Dispatchers.IO) {
+            tankApi.sendCommand(FishPacket(OP_LISTEN_STATUS, 1))
+        }
     }
 
     fun changeWater(ratio: Double) {
@@ -73,6 +75,16 @@ class ControlViewModel : ViewModel() {
 
     fun setMaxWater(volume: Int) {
         // TODO - Send max fish-tank water volume.
+    }
+
+    private var preValue = 0
+    fun testFunction() {
+        preValue = if(preValue == 0) 1 else 0
+        viewModelScope.launch(Dispatchers.IO) {
+            tankApi.sendCommand(
+                FishPacket(OP_MEGA_LED, preValue)
+            )
+        }
     }
 
 }

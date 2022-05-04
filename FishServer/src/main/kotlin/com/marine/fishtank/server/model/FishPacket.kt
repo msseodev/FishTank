@@ -1,6 +1,4 @@
-package com.marine.fishtank.model
-
-import com.google.gson.Gson
+package com.marine.fishtank.server.model
 
 // For test, mega2560 led control.
 const val OP_MEGA_LED = 10
@@ -13,5 +11,3 @@ data class FishPacket(
     val opCode: Int,
     val data: Int
 )
-
-fun FishPacket.toJson() = Gson().toJson(this)
