@@ -1,0 +1,29 @@
+plugins {
+    id 'java'
+    id 'org.jetbrains.kotlin.jvm' version '1.4.32'
+}
+
+group 'com.marine.fishtank.server'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib"
+    implementation ('com.github.kurbatov:firmata4j:2.3.8') {
+        exclude group: 'org.scream3r', module: 'jssc'
+    }
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2"
+    implementation "io.github.java-native:jssc:2.9.2"
+    implementation "org.slf4j:slf4j-api:1.7.25"
+    implementation "org.slf4j:slf4j-simple:1.7.25"
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+}
+
+test {
+    useJUnitPlatform()
+}
