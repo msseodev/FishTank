@@ -38,6 +38,5 @@ set(${PROJECT_NAME}_PORT COM3)
 
 generate_arduino_firmware(${PROJECT_NAME})
 
-
 print_board_list()
 print_programmer_list()
