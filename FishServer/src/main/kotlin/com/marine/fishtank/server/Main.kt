@@ -11,6 +11,7 @@ import org.firmata4j.firmata.FirmataDevice
 fun main(args: Array<String>) {
     runBlocking {
         ArduinoDevice.initialize("COM3")
+        ArduinoDevice.setUp()
 
         val accepter = SocketAccepter()
         accepter.startListen()

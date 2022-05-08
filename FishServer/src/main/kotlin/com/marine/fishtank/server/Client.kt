@@ -40,7 +40,6 @@ class Client(private val socket: Socket) {
                     packet.data != 0
                 )
             }
-
             OP_GET_HISTORY -> {
 
             }
