@@ -7,6 +7,8 @@
 
 struct FishPacket {
     int opCode;
+    int pin;
+    int pinMode;
     double data;
 };
 

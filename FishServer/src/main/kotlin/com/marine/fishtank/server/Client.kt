@@ -37,7 +37,7 @@ class Client(private val socket: Socket) {
         when(packet.opCode) {
             OP_MEGA_LED -> {
                 ArduinoDevice.enableBoardLed(
-                    packet.data != 0
+                    packet.data != 0.0
                 )
             }
             OP_GET_HISTORY -> {
