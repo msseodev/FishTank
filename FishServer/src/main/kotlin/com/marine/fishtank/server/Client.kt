@@ -3,6 +3,7 @@ package com.marine.fishtank.server
 import com.google.gson.Gson
 import com.marine.fishtank.server.arduino.ArduinoDevice
 import com.marine.fishtank.server.model.*
+import com.marine.fishtank.server.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -12,6 +13,7 @@ import java.lang.Exception
 import java.net.Socket
 
 private const val MAGIC_VALUE = 235621
+private const val TAG = "Client"
 
 class Client(private val socket: Socket): ArduinoListener {
     private var dataOutputStream: DataOutputStream = DataOutputStream(socket.getOutputStream())
@@ -22,7 +24,6 @@ class Client(private val socket: Socket): ArduinoListener {
 
     override fun onMessage(packet: FishPacket) {
         // Message from Arduino device!
-        println("Message from arduino! message=$packet")
         when(packet.opCode) {
             OP_GET_TEMPERATURE -> {
                 // Send back to client.
@@ -49,7 +50,7 @@ class Client(private val socket: Socket): ArduinoListener {
     }
 
     private suspend fun handleMessage(json: String) {
-        println("Message from client=$json")
+        Log.d(TAG, "Message from client=$json")
         val packet = ServerPacket.createFromJson(json)
 
         when(packet.opCode) {

@@ -19,9 +19,15 @@ import com.marine.fishtank.databinding.FragmentControlBinding
 import com.marine.fishtank.model.Status
 import com.marine.fishtank.model.TankData
 import com.marine.fishtank.viewmodel.ControlViewModel
-import java.lang.StrictMath.round
 import java.text.SimpleDateFormat
 import java.util.*
+
+object LineChartConfig {
+    const val YAXIS_MAX = 35.0f
+    const val YAXIS_MIN = 20.0f
+
+    const val POINT_COUNT_MAXIMUM = 10f
+}
 
 class ControlFragment : Fragment(), OnChartValueSelectedListener, View.OnClickListener {
     private lateinit var binding: FragmentControlBinding
@@ -84,9 +90,11 @@ class ControlFragment : Fragment(), OnChartValueSelectedListener, View.OnClickLi
             legend.apply {
                 textSize = 12f
             }
+
+            setVisibleXRangeMaximum(LineChartConfig.POINT_COUNT_MAXIMUM)
         }
 
-        setData()
+        prepareDataChart()
 
         setupObserver()
         viewModel.init()
@@ -138,22 +146,21 @@ class ControlFragment : Fragment(), OnChartValueSelectedListener, View.OnClickLi
 
         binding.lineChart.apply {
             notifyDataSetChanged()
-            setVisibleXRangeMaximum(10f)
             moveViewToX(data.entryCount.toFloat())
         }
     }
 
-    private fun setData() {
+    private fun prepareDataChart() {
         val entryList = mutableListOf<Entry>()
         val dataSet = LineDataSet(entryList, "Water temperature").apply {
-            setAxisDependency(AxisDependency.LEFT)
-            setColor(ColorTemplate.getHoloBlue())
+            axisDependency = AxisDependency.LEFT
+            color = ColorTemplate.getHoloBlue()
             setCircleColor(Color.BLACK)
-            setLineWidth(3f)
-            setCircleRadius(4f)
-            setFillAlpha(65)
-            setFillColor(ColorTemplate.getHoloBlue())
-            setHighLightColor(Color.rgb(110, 117, 117))
+            lineWidth = 3f
+            circleRadius = 4f
+            fillAlpha = 65
+            fillColor = ColorTemplate.getHoloBlue()
+            highLightColor = Color.rgb(110, 117, 117)
             setDrawCircleHole(true)
         }
 
@@ -169,7 +176,12 @@ class ControlFragment : Fragment(), OnChartValueSelectedListener, View.OnClickLi
         }
 
         //String setter in x-Axis
-        binding.lineChart.axisLeft.valueFormatter = yAxisFormatter
+        binding.lineChart.axisLeft.apply {
+            valueFormatter = yAxisFormatter
+            axisMaximum = LineChartConfig.YAXIS_MAX
+            axisMinimum = LineChartConfig.YAXIS_MIN
+        }
+
         binding.lineChart.xAxis.valueFormatter = xAxisFormatter
         binding.lineChart.data = data
     }

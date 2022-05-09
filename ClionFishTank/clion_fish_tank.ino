@@ -39,7 +39,7 @@
 #define OP_GET_TEMPERATURE 1000
 #define OP_INPUT_PIN 1001
 
-#define LOOP_INTERVAL 50
+#define LOOP_INTERVAL 100
 #define PACKET_TERMINATE '\n'
 
 #define BUFFER_SIZE 512
@@ -112,7 +112,8 @@ void loop() {
             FishPacket packet;
             jsonToPacket(message, packet);
 
-            switch (packet.opCode) {
+            switch (packet.opCode
+            ) {
                 case OP_GET_TEMPERATURE: {
                     sensors.requestTemperatures();
                     float temperature = sensors.getTempCByIndex(0);

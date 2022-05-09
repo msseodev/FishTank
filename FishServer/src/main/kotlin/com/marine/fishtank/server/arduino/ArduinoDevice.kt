@@ -5,6 +5,7 @@ import com.marine.fishtank.server.model.FishPacket
 import com.marine.fishtank.server.model.OP_GET_TEMPERATURE
 import com.marine.fishtank.server.model.OP_PIN_IO
 import com.marine.fishtank.server.serial.ArduinoSerial
+import com.marine.fishtank.server.util.Log
 import jssc.SerialPort
 import jssc.SerialPortException
 import kotlinx.coroutines.CoroutineScope
@@ -19,6 +20,8 @@ private const val MODE_INPUT = 0x00
 private const val MODE_OUTPUT = 0x01
 private const val HIGH = 0x01
 private const val LOW = 0x00
+
+private const val TAG = "ArduinoDevice"
 
 object ArduinoDevice {
     private var port: ArduinoSerial? = null
@@ -48,13 +51,12 @@ object ArduinoDevice {
     }
 
     suspend fun enableBoardLed(clientId: Int, enable: Boolean) {
-        val result = port?.writePacket(
+        port?.writePacket(
             FishPacket(
                 clientId = clientId,
                 OP_PIN_IO, PIN_BOARD_LED, MODE_OUTPUT, (if (enable) HIGH else LOW).toDouble()
             )
         )
-        println("Write result=$result")
     }
 
     fun startListen() {
@@ -70,10 +72,9 @@ object ArduinoDevice {
     }
 
     private fun processMessage(json: String) {
-        println("(ArduinoDevice)Starting process message=$json")
         if (!json.startsWith("{")) {
             // This is not json format. Maybe debug message!
-            println("(ArduinoDevice)Unknown message=$json")
+            Log.d(TAG,"(ArduinoDevice)Unknown message=$json")
             return
         }
 
