@@ -36,11 +36,13 @@
 #define ONE_WIRE_BUS 52
 #define BAUDRATE 57600
 
-#define OP_GET_STATUS_ALL 100
-#define OP_GET_HISTORY 101
-#define OP_LISTEN_STATUS 102
-#define OP_GET_TEMPERATURE 103
-#define OP_INPUT_PIN 104
+#define OP_GET_TEMPERATURE 1000
+#define OP_INPUT_PIN 1001
+
+#define LOOP_INTERVAL 50
+#define PACKET_TERMINATE '\n'
+
+#define BUFFER_SIZE 512
 
 // Setup a oneWire instance to communicate with any OneWire device
 OneWire oneWire(ONE_WIRE_BUS);
@@ -48,19 +50,35 @@ OneWire oneWire(ONE_WIRE_BUS);
 // Pass oneWire reference to DallasTemperature library
 DallasTemperature sensors(&oneWire);
 
-void sendPacket(FishPacket *packet) {
+unsigned long prevMils = 0;
+char buffer[BUFFER_SIZE];
+char sendBuffer[BUFFER_SIZE];
+
+void clearBuffer(char* bf, size_t size) {
+    for(int i=0; i<size; i++) {
+        bf[i] = 0;
+    }
+}
+
+void sendPacket(FishPacket& packet) {
     StaticJsonDocument<200> doc;
-    doc["opCode"] = packet->opCode;
-    doc["data"] = packet->data;
-    doc["pin"] = packet->pin;
-    doc["pinMode"] = packet->pinMode;
-    serializeJson(doc, Serial);
+    doc["clientId"] = packet.clientId;
+    doc["opCode"] = packet.opCode;
+    doc["data"] = packet.data;
+    doc["pin"] = packet.pin;
+    doc["pinMode"] = packet.pinMode;
+
+    size_t size = serializeJson(doc, sendBuffer);
+    //Serial.println(sendBuffer);
+
+    sendBuffer[size] = '\n';
+    size++;
+    Serial.write(sendBuffer, size);
+
+    clearBuffer(sendBuffer, BUFFER_SIZE);
 }
 
 void jsonToPacket(String json, FishPacket& packet) {
-    Serial.println("Starting parsing json!");
-    Serial.println(json);
-
     StaticJsonDocument<200> doc;
     DeserializationError error = deserializeJson(doc, json);
     if (error) {
@@ -69,59 +87,56 @@ void jsonToPacket(String json, FishPacket& packet) {
         return;
     }
 
-    int opCode = doc["opCode"];
-    int data = doc["data"];
-    int pin = doc["pin"];
-    int pinMode = doc["pinMode"];
-
-    packet.opCode = opCode;
-    packet.data = data;
-    packet.pin = pin;
-    packet.pinMode = pinMode;
+    packet.clientId = doc["clientId"];
+    packet.opCode = doc["opCode"];
+    packet.data = doc["data"];
+    packet.pin = doc["pin"];
+    packet.pinMode = doc["pinMode"];
 }
 
 void setup() {
     Serial.begin(BAUDRATE);
+    Serial.flush();
     sensors.begin();
 }
 
 void loop() {
-    //Serial.println("Looping!!");
+    unsigned long currentMils = millis();
 
-    String message = Serial.readString();
-    if(message != nullptr) {
-        Serial.println("New message!");
-        FishPacket packet;
-        jsonToPacket(message, packet);
+    if(currentMils - prevMils > LOOP_INTERVAL) {
+        Serial.setTimeout(60000);
+        Serial.readBytesUntil(PACKET_TERMINATE, buffer, BUFFER_SIZE);
 
-        char buffer[50];
-        sprintf(buffer, "opCode=%d, pin=%d, mode=%d, data=%d",
-                packet.opCode, packet.pin, packet.pinMode, packet.data);
-        Serial.println(buffer);
+        String message = String(buffer);
+        if (message != nullptr) {
+            FishPacket packet;
+            jsonToPacket(message, packet);
 
-        switch (packet.opCode) {
-            case OP_GET_TEMPERATURE: {
-                sensors.requestTemperatures();
-                float temperature = sensors.getTempCByIndex(0);
+            switch (packet.opCode) {
+                case OP_GET_TEMPERATURE: {
+                    sensors.requestTemperatures();
+                    float temperature = sensors.getTempCByIndex(0);
 
-                packet.data = temperature;
-                sendPacket(&packet);
-                break;
-            }
-            case OP_INPUT_PIN: {
-                Serial.println("OP_INPUT_PIN");
+                    packet.data = temperature;
+                    sendPacket(packet);
+                    break;
+                }
+                case OP_INPUT_PIN: {
+                    pinMode(packet.pin, packet.pinMode);
+                    int value = (int) (packet.data);
 
-                pinMode(packet.pin, packet.pinMode);
-                int value = (int) (packet.data);
-
-                digitalWrite(packet.pin, value);
-
-                break;
+                    digitalWrite(packet.pin, value);
+                    break;
+                }
             }
         }
-    }
 
-    delay(100);
+        // clear buffer
+        clearBuffer(buffer, BUFFER_SIZE);
+
+        // Update prevMils.
+        prevMils = millis();
+    }
 }
 
 

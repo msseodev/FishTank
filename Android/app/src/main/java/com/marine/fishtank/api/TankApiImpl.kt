@@ -1,19 +1,22 @@
 package com.marine.fishtank.api
 
-import com.marine.fishtank.model.FishPacket
 import com.marine.fishtank.model.TankData
+import com.marine.fishtank.model.ServerPacket
 import com.marine.fishtank.model.toJson
 
-class TankApiImpl(): TankApi {
+class TankApiImpl(): TankApi, MessageListener {
     private val client = Client()
+    private var listener: TankApi.OnServerPacketListener? = null
 
     override fun connect(url: String, port: Int): Boolean {
         // TODO - impl TCP socket connection
         client.connect(url, port)
+
+        client.registerListener(this)
         return true
     }
 
-    override fun sendCommand(packet: FishPacket): List<TankData> {
+    override fun sendCommand(packet: ServerPacket): List<TankData> {
         // TODO - impl send packet and get response
         client.send(packet.toJson())
 
@@ -21,7 +24,7 @@ class TankApiImpl(): TankApi {
     }
 
     override fun startListen() {
-        // TODO -impl listen from socket.
+
     }
 
     override fun stopListen() {
@@ -34,8 +37,18 @@ class TankApiImpl(): TankApi {
 
 
     override fun registerServerPacketListener(listener: TankApi.OnServerPacketListener) {
+        this.listener = listener
+        client.startListen()
     }
 
-    override fun unRegisterServerPacketListener(listener: TankApi.OnServerPacketListener) {
+    override fun unRegisterServerPacketListener() {
+        this.listener = null
+    }
+
+    /**
+     * Called by Client
+     */
+    override fun onServerMessage(packet: ServerPacket) {
+        listener?.onServerPacket(packet)
     }
 }

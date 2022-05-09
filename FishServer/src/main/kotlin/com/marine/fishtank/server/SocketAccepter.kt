@@ -2,7 +2,6 @@ package com.marine.fishtank.server
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.net.ServerSocket
 
 private const val PORT = 53265
@@ -21,7 +20,7 @@ class SocketAccepter {
             println("Accept=${socket.inetAddress.hostAddress}")
 
             val client = Client(socket)
-            val isVerified = client.verifyMagicWord()
+            val isVerified = client.handShake()
             if (!isVerified) {
                 // Deny this client.
                 println("Client(${socket.inetAddress.hostAddress} is not verified. Disconnect!")

@@ -6,28 +6,33 @@ import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.marine.fishtank.api.TankApi
 import com.marine.fishtank.api.TankApiImpl
-import com.marine.fishtank.api.TankApiMock
 import com.marine.fishtank.model.*
+import com.marine.fishtank.model.ServerPacket
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 
 private const val SERVER_IP = "210.179.100.223"
 private const val SERVER_PORT = 53265
+private const val TEMPERATURE_INTERVAL = 1000L * 5
 
 class ControlViewModel : ViewModel() {
     val liveData = MutableLiveData<DataSource<TankData>>()
+    val temperatureData = MutableLiveData<Double>()
 
     // TODO - Replace api to actual one later.
     private val tankApi: TankApi = TankApiImpl()
 
     private val packetListener = object: TankApi.OnServerPacketListener {
-        override fun onServerPacket(rawData: String) {
-            val gson = Gson()
-            val tankData = gson.fromJson(rawData, TankData::class.java)
+        override fun onServerPacket(packet: ServerPacket) {
+            when(packet.opCode) {
+                SERVER_OP_GET_TEMPERATURE -> {
+                    temperatureData.postValue(packet.doubleData)
+                }
+            }
 
-            liveData.postValue(DataSource(Status.SUCCESS, tankData))
         }
     }
 
@@ -45,7 +50,7 @@ class ControlViewModel : ViewModel() {
     fun startFetchHistory() {
         // TODO - Get FishTank history and emit data to liveData
         viewModelScope.launch(Dispatchers.IO){
-            val dataList = tankApi.sendCommand(FishPacket(OP_GET_HISTORY, 1))
+            val dataList = tankApi.sendCommand(ServerPacket(AppId.MY_ID, SERVER_OP_GET_HISTORY))
             withContext(Dispatchers.Main) {
                 dataList.forEach {
                     liveData.value = DataSource(Status.SUCCESS, it)
@@ -54,10 +59,13 @@ class ControlViewModel : ViewModel() {
         }
     }
 
-    fun startListenTank() {
-        // TODO - Listen tank status and emit data to liveData
+    fun startListenTemperature() {
+        // TODO - Listen temperature and emit data to liveData
         viewModelScope.launch(Dispatchers.IO) {
-            tankApi.sendCommand(FishPacket(OP_LISTEN_STATUS, 1))
+            while(true) {
+                tankApi.sendCommand(ServerPacket(AppId.MY_ID, SERVER_OP_GET_TEMPERATURE))
+                delay(TEMPERATURE_INTERVAL)
+            }
         }
     }
 
@@ -82,7 +90,7 @@ class ControlViewModel : ViewModel() {
         preValue = if(preValue == 0) 1 else 0
         viewModelScope.launch(Dispatchers.IO) {
             tankApi.sendCommand(
-                FishPacket(OP_MEGA_LED, preValue)
+                ServerPacket(AppId.MY_ID, SERVER_OP_MEGA_LED, preValue)
             )
         }
     }

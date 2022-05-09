@@ -1,5 +1,10 @@
 package com.marine.fishtank.api
 
+import com.marine.fishtank.model.AppId
+import com.marine.fishtank.model.ServerPacket
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.IOException
@@ -12,6 +17,10 @@ class Client {
     private var dataInputStream: DataInputStream? = null
     private var dataOutputStream: DataOutputStream? = null
 
+    private var listener: MessageListener? = null
+    private val coroutineScope = CoroutineScope(Dispatchers.IO)
+    private var listen = false
+
     fun connect(url: String, port: Int) {
         socket = Socket(url, port)
 
@@ -19,6 +28,7 @@ class Client {
         dataOutputStream = DataOutputStream(socket?.getOutputStream())
 
         dataOutputStream?.writeInt(MAGIC_VALUE)
+        dataOutputStream?.writeInt(AppId.MY_ID)
     }
 
     @Throws(IOException::class)
@@ -26,6 +36,33 @@ class Client {
         if(socket?.isConnected == true) {
             dataOutputStream?.writeUTF(message)
         }
+    }
+
+    fun startListen() {
+        listen = true
+        coroutineScope.launch {
+            while(listen) {
+                val message = dataInputStream?.readUTF()
+                if(message != null) {
+                    listener?.onServerMessage(
+                        ServerPacket.createFromJson(message)
+                    )
+                }
+            }
+        }
+    }
+
+    fun stopListen() {
+        listen = false
+    }
+
+
+    fun registerListener(listener: MessageListener) {
+        this.listener = listener
+    }
+
+    fun unRegisterListener() {
+        this.listener = null
     }
 
     fun disConnect() {

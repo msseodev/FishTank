@@ -10,12 +10,16 @@ repositories {
     mavenCentral()
 }
 
+
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib"
+
     implementation ('com.github.kurbatov:firmata4j:2.3.8') {
         exclude group: 'org.scream3r', module: 'jssc'
     }
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2"
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3'
+
+
     implementation "io.github.java-native:jssc:2.9.2"
     implementation "org.slf4j:slf4j-api:1.7.25"
     implementation "org.slf4j:slf4j-simple:1.7.25"

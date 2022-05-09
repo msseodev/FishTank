@@ -6,6 +6,7 @@
 #define CLIONFISHTANK_FISHTANK_H
 
 struct FishPacket {
+    long clientId;
     int opCode;
     int pin;
     int pinMode;

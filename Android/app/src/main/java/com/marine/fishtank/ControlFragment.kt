@@ -92,7 +92,7 @@ class ControlFragment : Fragment(), OnChartValueSelectedListener, View.OnClickLi
         viewModel.init()
         viewModel.startFetchHistory()
 
-        viewModel.startListenTank()
+        viewModel.startListenTemperature()
 
         return binding.root
     }
@@ -113,6 +113,12 @@ class ControlFragment : Fragment(), OnChartValueSelectedListener, View.OnClickLi
                 }
             }
         }
+
+        viewModel.temperatureData.observe(viewLifecycleOwner) {
+            addData(
+                TankData(it, false, false, false, System.currentTimeMillis())
+            )
+        }
     }
 
     override fun onClick(view: View) {
@@ -124,7 +130,6 @@ class ControlFragment : Fragment(), OnChartValueSelectedListener, View.OnClickLi
     }
 
     private fun addData(tankData: TankData) {
-
         val data = binding.lineChart.data
         val set = data.getDataSetByIndex(0)
 
@@ -133,7 +138,7 @@ class ControlFragment : Fragment(), OnChartValueSelectedListener, View.OnClickLi
 
         binding.lineChart.apply {
             notifyDataSetChanged()
-            setVisibleXRangeMaximum(15f)
+            setVisibleXRangeMaximum(10f)
             moveViewToX(data.entryCount.toFloat())
         }
     }
@@ -156,6 +161,11 @@ class ControlFragment : Fragment(), OnChartValueSelectedListener, View.OnClickLi
         val data = LineData(dataSet).apply {
             setValueTextColor(Color.BLACK)
             setValueTextSize(10f)
+            setValueFormatter(object: ValueFormatter() {
+                override fun getFormattedValue(value: Float): String {
+                    return String.format("%.2f", value)
+                }
+            })
         }
 
         //String setter in x-Axis
@@ -175,7 +185,7 @@ class ControlFragment : Fragment(), OnChartValueSelectedListener, View.OnClickLi
 
     private val yAxisFormatter = object: ValueFormatter() {
         override fun getFormattedValue(value: Float): String {
-            return (round(value * 10)/10).toString()
+            return String.format("%.2f", value)
         }
     }
 

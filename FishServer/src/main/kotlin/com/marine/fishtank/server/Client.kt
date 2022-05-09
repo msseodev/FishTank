@@ -13,14 +13,32 @@ import java.net.Socket
 
 private const val MAGIC_VALUE = 235621
 
-class Client(private val socket: Socket) {
+class Client(private val socket: Socket): ArduinoListener {
     private var dataOutputStream: DataOutputStream = DataOutputStream(socket.getOutputStream())
     private var dataInputStream: DataInputStream = DataInputStream(socket.getInputStream())
     private val clientScope = CoroutineScope(Dispatchers.IO)
     private var isRun = false
+    private var id = 0
+
+    override fun onMessage(packet: FishPacket) {
+        // Message from Arduino device!
+        println("Message from arduino! message=$packet")
+        when(packet.opCode) {
+            OP_GET_TEMPERATURE -> {
+                // Send back to client.
+                dataOutputStream.writeUTF(
+                    ServerPacket(clientId = id, opCode = SERVER_OP_GET_TEMPERATURE, doubleData = packet.data).toJson()
+                )
+            }
+        }
+    }
 
     fun startListen() {
         isRun = true
+
+        // Listen Arduino message
+        ArduinoDevice.registerListener(id, this)
+
         clientScope.launch {
             while(isRun) {
                 val message = dataInputStream.readUTF()
@@ -30,29 +48,31 @@ class Client(private val socket: Socket) {
         }
     }
 
-    private fun handleMessage(json: String) {
+    private suspend fun handleMessage(json: String) {
         println("Message from client=$json")
-        val packet = Gson().fromJson(json, FishPacket::class.java)
+        val packet = ServerPacket.createFromJson(json)
 
         when(packet.opCode) {
-            OP_MEGA_LED -> {
+            SERVER_OP_MEGA_LED -> {
                 ArduinoDevice.enableBoardLed(
-                    packet.data != 0.0
+                    packet.clientId,
+                    packet.data != 0
                 )
             }
-            OP_GET_HISTORY -> {
+            SERVER_OP_GET_TEMPERATURE -> {
+                ArduinoDevice.getTemperature(packet.clientId)
+            }
+            SERVER_OP_GET_HISTORY -> {
 
             }
-            OP_GET_STATUS_ALL -> {
-
-            }
-            OP_LISTEN_STATUS -> {
+            SERVER_OP_LISTEN_STATUS -> {
 
             }
         }
     }
 
     fun disconnect() {
+        ArduinoDevice.unRegisterListener(id)
         try {
             isRun = false
             dataOutputStream.close()
@@ -63,8 +83,12 @@ class Client(private val socket: Socket) {
         }
     }
 
-    fun verifyMagicWord(): Boolean {
+    fun handShake(): Boolean {
         val first = dataInputStream.readInt()
-        return first == MAGIC_VALUE
+        val verified = first == MAGIC_VALUE
+        if(!verified) return false
+
+        this.id = dataInputStream.readInt()
+        return true
     }
 }
