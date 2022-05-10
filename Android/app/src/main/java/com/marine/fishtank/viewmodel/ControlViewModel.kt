@@ -28,7 +28,6 @@ class ControlViewModel : ViewModel() {
     val temperatureData = MutableLiveData<Double>()
     val initData = MutableLiveData<DataSource<String>>()
 
-    // TODO - Replace api to actual one later.
     private val tankApi: TankApi = TankApiImpl()
 
     private val packetListener = object: TankApi.OnServerPacketListener {
@@ -55,7 +54,6 @@ class ControlViewModel : ViewModel() {
     }
 
     fun startFetchHistory() {
-        // TODO - Get FishTank history and emit data to liveData
         viewModelScope.launch(Dispatchers.IO){
             val dataList = tankApi.sendCommand(ServerPacket(AppId.MY_ID, SERVER_OP_GET_HISTORY))
             withContext(Dispatchers.Main) {
@@ -67,7 +65,6 @@ class ControlViewModel : ViewModel() {
     }
 
     fun startListenTemperature() {
-        // TODO - Listen temperature and emit data to liveData
         viewModelScope.launch(Dispatchers.IO) {
             while(true) {
                 tankApi.sendCommand(ServerPacket(AppId.MY_ID, SERVER_OP_GET_TEMPERATURE))

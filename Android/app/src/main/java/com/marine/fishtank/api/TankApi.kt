@@ -8,10 +8,6 @@ interface TankApi {
 
     fun sendCommand(packet: ServerPacket): List<TankData>
 
-    fun startListen()
-
-    fun stopListen()
-
     fun disConnect()
 
     fun registerServerPacketListener(listener: OnServerPacketListener)
