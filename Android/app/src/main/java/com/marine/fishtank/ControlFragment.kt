@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.components.YAxis.AxisDependency
@@ -104,18 +105,19 @@ class ControlFragment : Fragment(), OnChartValueSelectedListener, View.OnClickLi
     }
 
     private fun setupObserver() {
-        viewModel.liveData.observe(viewLifecycleOwner) {
+        viewModel.initData.observe(viewLifecycleOwner) {
+            when(it.status) {
+                Status.SUCCESS -> Toast.makeText(context?.applicationContext, "Initialize success.", Toast.LENGTH_SHORT).show()
+                Status.ERROR -> Toast.makeText(context?.applicationContext, "Initialize fail! " + it.data, Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        viewModel.liveTankData.observe(viewLifecycleOwner) {
             when (it.status) {
                 Status.SUCCESS -> {
                     it.data?.let { tankData ->
                         addData(tankData)
                     }
-                }
-                Status.ERROR -> {
-
-                }
-                Status.LOADING -> {
-
                 }
             }
         }
@@ -129,11 +131,30 @@ class ControlFragment : Fragment(), OnChartValueSelectedListener, View.OnClickLi
 
     override fun onClick(view: View) {
         when(view.id) {
-            R.id.buttonLightOn -> {
-                viewModel.testFunction()
+            R.id.buttonBoardLedToggle -> {
+                viewModel.toggleBoardLed()
             }
             R.id.buttonChangeWater -> {
-                viewModel.changeWater(0.3)
+                val ratioText = binding.editTextWaterRatio.text.toString()
+                viewModel.changeWater(Integer.parseInt(ratioText) * 0.01)
+            }
+            R.id.buttonPurifierOn -> {
+                viewModel.enablePurifier(true)
+            }
+            R.id.buttonPurifierOff -> {
+                viewModel.enablePurifier(false)
+            }
+            R.id.buttonLightOn -> {
+                viewModel.enableLight(true)
+            }
+            R.id.buttonLightOff -> {
+                viewModel.enableLight(false)
+            }
+            R.id.buttonHeaterOn -> {
+                viewModel.enableHeater(true)
+            }
+            R.id.buttonHeaterOff -> {
+                viewModel.enableHeater(false)
             }
         }
     }

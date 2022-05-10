@@ -8,6 +8,7 @@ import kotlinx.coroutines.launch
 import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.IOException
+import java.lang.Exception
 import java.net.Socket
 
 private const val MAGIC_VALUE = 235621
@@ -21,14 +22,20 @@ class Client {
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
     private var listen = false
 
-    fun connect(url: String, port: Int) {
-        socket = Socket(url, port)
+    fun connect(url: String, port: Int): Boolean {
+        try {
+            socket = Socket(url, port)
 
-        dataInputStream = DataInputStream(socket?.getInputStream())
-        dataOutputStream = DataOutputStream(socket?.getOutputStream())
+            dataInputStream = DataInputStream(socket?.getInputStream())
+            dataOutputStream = DataOutputStream(socket?.getOutputStream())
 
-        dataOutputStream?.writeInt(MAGIC_VALUE)
-        dataOutputStream?.writeInt(AppId.MY_ID)
+            dataOutputStream?.writeInt(MAGIC_VALUE)
+            dataOutputStream?.writeInt(AppId.MY_ID)
+            return true
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return false
     }
 
     @Throws(IOException::class)

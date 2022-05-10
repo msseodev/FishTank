@@ -18,7 +18,7 @@ const val SERVER_OP_PURIFIER_2 = 205
 const val SERVER_OP_HEATER = 206
 
 data class ServerPacket(
-    val clientId: Int,
+    val clientId: Int = AppId.MY_ID,
     val opCode: Int,
     val data: Int = 0,
     val doubleData: Double = 0.0

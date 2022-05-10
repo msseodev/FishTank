@@ -9,11 +9,11 @@ class TankApiImpl(): TankApi, MessageListener {
     private var listener: TankApi.OnServerPacketListener? = null
 
     override fun connect(url: String, port: Int): Boolean {
-        // TODO - impl TCP socket connection
-        client.connect(url, port)
-
-        client.registerListener(this)
-        return true
+        val connectResult = client.connect(url, port)
+        if(connectResult) {
+            client.registerListener(this)
+        }
+        return connectResult
     }
 
     override fun sendCommand(packet: ServerPacket): List<TankData> {
@@ -24,7 +24,6 @@ class TankApiImpl(): TankApi, MessageListener {
     }
 
     override fun startListen() {
-
     }
 
     override fun stopListen() {
@@ -32,9 +31,9 @@ class TankApiImpl(): TankApi, MessageListener {
     }
 
     override fun disConnect() {
-        // TODO - impl disconnect.
+        client.unRegisterListener()
+        client.disConnect()
     }
-
 
     override fun registerServerPacketListener(listener: TankApi.OnServerPacketListener) {
         this.listener = listener
