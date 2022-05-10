@@ -8,6 +8,8 @@ const val SERVER_OP_GET_HISTORY = 100
 const val SERVER_OP_LISTEN_STATUS = 101
 const val SERVER_OP_GET_TEMPERATURE = 102
 
+const val SERVER_OP_OUT_WATER = 200
+
 data class ServerPacket(
     val clientId: Int,
     val opCode: Int,

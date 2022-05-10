@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 import java.io.IOException
 
 private const val PIN_BOARD_LED = 13
+private const val PIN_RELAY_OUT_WATER = 49
 
 private const val MODE_INPUT = 0x00
 private const val MODE_OUTPUT = 0x01
@@ -55,6 +56,15 @@ object ArduinoDevice {
             FishPacket(
                 clientId = clientId,
                 OP_PIN_IO, PIN_BOARD_LED, MODE_OUTPUT, (if (enable) HIGH else LOW).toDouble()
+            )
+        )
+    }
+
+    suspend fun enableOutWater(clientId: Int, enable: Boolean) {
+        port?.writePacket(
+            FishPacket(
+                clientId = clientId,
+                OP_PIN_IO, PIN_RELAY_OUT_WATER, MODE_OUTPUT, (if (enable) HIGH else LOW).toDouble()
             )
         )
     }

@@ -60,6 +60,9 @@ class Client(private val socket: Socket): ArduinoListener {
                     packet.data != 0
                 )
             }
+            SERVER_OP_OUT_WATER -> {
+                ArduinoDevice.enableOutWater(packet.clientId, packet.data != 0)
+            }
             SERVER_OP_GET_TEMPERATURE -> {
                 ArduinoDevice.getTemperature(packet.clientId)
             }

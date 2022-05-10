@@ -90,8 +90,6 @@ class ControlFragment : Fragment(), OnChartValueSelectedListener, View.OnClickLi
             legend.apply {
                 textSize = 12f
             }
-
-            setVisibleXRangeMaximum(LineChartConfig.POINT_COUNT_MAXIMUM)
         }
 
         prepareDataChart()
@@ -131,8 +129,11 @@ class ControlFragment : Fragment(), OnChartValueSelectedListener, View.OnClickLi
 
     override fun onClick(view: View) {
         when(view.id) {
-            R.id.buttonChangeWater -> {
+            R.id.buttonLightOn -> {
                 viewModel.testFunction()
+            }
+            R.id.buttonChangeWater -> {
+                viewModel.changeWater(0.3)
             }
         }
     }
@@ -146,6 +147,7 @@ class ControlFragment : Fragment(), OnChartValueSelectedListener, View.OnClickLi
 
         binding.lineChart.apply {
             notifyDataSetChanged()
+            setVisibleXRangeMaximum(LineChartConfig.POINT_COUNT_MAXIMUM)
             moveViewToX(data.entryCount.toFloat())
         }
     }

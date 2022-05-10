@@ -39,10 +39,11 @@
 #define OP_GET_TEMPERATURE 1000
 #define OP_INPUT_PIN 1001
 
-#define LOOP_INTERVAL 100
+#define LOOP_INTERVAL 10
 #define PACKET_TERMINATE '\n'
 
 #define BUFFER_SIZE 512
+#define SMALL_BUF_SIZE 256
 
 // Setup a oneWire instance to communicate with any OneWire device
 OneWire oneWire(ONE_WIRE_BUS);
@@ -53,6 +54,8 @@ DallasTemperature sensors(&oneWire);
 unsigned long prevMils = 0;
 char buffer[BUFFER_SIZE];
 char sendBuffer[BUFFER_SIZE];
+
+char smallBuffer[SMALL_BUF_SIZE];
 
 void clearBuffer(char* bf, size_t size) {
     for(int i=0; i<size; i++) {
@@ -83,7 +86,8 @@ void jsonToPacket(String json, FishPacket& packet) {
     DeserializationError error = deserializeJson(doc, json);
     if (error) {
         Serial.print(F("deserializeJson() failed: "));
-        Serial.println(error.f_str());
+        Serial.print(error.f_str());
+        Serial.println(json);
         return;
     }
 

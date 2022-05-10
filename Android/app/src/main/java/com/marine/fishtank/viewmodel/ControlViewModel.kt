@@ -3,7 +3,6 @@ package com.marine.fishtank.viewmodel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
 import com.marine.fishtank.api.TankApi
 import com.marine.fishtank.api.TankApiImpl
 import com.marine.fishtank.model.*
@@ -14,7 +13,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 
-private const val SERVER_IP = "210.179.100.223"
+private const val SERVER_URL = "marineseo.iptime.org"
 private const val SERVER_PORT = 53265
 private const val TEMPERATURE_INTERVAL = 1000L * 5
 
@@ -38,7 +37,7 @@ class ControlViewModel : ViewModel() {
 
     fun init() {
         viewModelScope.launch(Dispatchers.IO) {
-            val connectResult = tankApi.connect(SERVER_IP, SERVER_PORT)
+            val connectResult = tankApi.connect(SERVER_URL, SERVER_PORT)
             withContext(Dispatchers.Main) {
                 liveData.value = DataSource(if (connectResult) Status.SUCCESS else Status.ERROR, null)
             }
@@ -70,7 +69,14 @@ class ControlViewModel : ViewModel() {
     }
 
     fun changeWater(ratio: Double) {
-        // TODO - impl change water and result to liveData (status)
+        viewModelScope.launch(Dispatchers.IO) {
+            // Open out-water valve.
+            tankApi.sendCommand(ServerPacket(AppId.MY_ID, SERVER_OP_OUT_WATER, data = 1))
+            // Wait water out time..
+            delay(1000L * 5)
+
+            tankApi.sendCommand(ServerPacket(AppId.MY_ID, SERVER_OP_OUT_WATER, data = 0))
+        }
     }
 
     fun setLight(enable: Boolean) {
