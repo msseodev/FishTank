@@ -48,13 +48,18 @@ class Client {
     fun startListen() {
         listen = true
         coroutineScope.launch {
-            while(listen) {
-                val message = dataInputStream?.readUTF()
-                if(message != null) {
-                    listener?.onServerMessage(
-                        ServerPacket.createFromJson(message)
-                    )
+            try {
+                while (listen) {
+                    val message = dataInputStream?.readUTF()
+                    if (message != null) {
+                        listener?.onServerMessage(
+                            ServerPacket.createFromJson(message)
+                        )
+                    }
                 }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                listen = false
             }
         }
     }
