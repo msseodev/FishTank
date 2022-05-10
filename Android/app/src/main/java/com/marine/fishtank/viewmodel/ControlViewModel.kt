@@ -80,7 +80,7 @@ class ControlViewModel : ViewModel() {
             tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_IN_WATER, data = 1))
 
             // Open out-water valve.
-            tankApi.sendCommand(ServerPacket(AppId.MY_ID, SERVER_OP_OUT_WATER, data = 1))
+            tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_OUT_WATER, data = 1))
             // Wait some delay.
             delay(1000L * 2)
 
@@ -96,7 +96,7 @@ class ControlViewModel : ViewModel() {
             delay(1000L * 2)
 
             // Close out-water valve. Water draining is done!
-            tankApi.sendCommand(ServerPacket(AppId.MY_ID, SERVER_OP_OUT_WATER, data = 0))
+            tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_OUT_WATER, data = 0))
 
             // Now we have to supply water. We assume that in-water has ball-top valve.
             tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_IN_WATER, data = 0))
