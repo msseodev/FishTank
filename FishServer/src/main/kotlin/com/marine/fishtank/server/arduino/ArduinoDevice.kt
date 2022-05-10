@@ -6,6 +6,7 @@ import com.marine.fishtank.server.model.OP_GET_TEMPERATURE
 import com.marine.fishtank.server.model.OP_PIN_IO
 import com.marine.fishtank.server.serial.ArduinoSerial
 import com.marine.fishtank.server.util.Log
+import jdk.jfr.Enabled
 import jssc.SerialPort
 import jssc.SerialPortException
 import kotlinx.coroutines.CoroutineScope
@@ -16,6 +17,12 @@ import java.io.IOException
 
 private const val PIN_BOARD_LED = 13
 private const val PIN_RELAY_OUT_WATER = 49
+private const val PIN_RELAY_IN_WATER = 48
+private const val PIN_RELAY_PUMP = 47
+private const val PIN_RELAY_LIGHT = 46
+private const val PIN_RELAY_PURIFIER1 = 45
+private const val PIN_RELAY_PURIFIER2 = 44
+private const val PIN_RELAY_HEATER = 43
 
 private const val MODE_INPUT = 0x00
 private const val MODE_OUTPUT = 0x01
@@ -55,17 +62,88 @@ object ArduinoDevice {
         port?.writePacket(
             FishPacket(
                 clientId = clientId,
-                OP_PIN_IO, PIN_BOARD_LED, MODE_OUTPUT, (if (enable) HIGH else LOW).toDouble()
+                opCode = OP_PIN_IO,
+                pin = PIN_BOARD_LED,
+                pinMode = MODE_OUTPUT,
+                data = (if (enable) HIGH else LOW).toDouble())
+        )
+    }
+
+    suspend fun enableOutWaterValve(clientId: Int, enable: Boolean) {
+        port?.writePacket(
+            FishPacket(
+                clientId = clientId,
+                opCode = OP_PIN_IO,
+                pin = PIN_RELAY_OUT_WATER,
+                pinMode = MODE_OUTPUT,
+                data = (if (enable) HIGH else LOW).toDouble())
+        )
+    }
+
+    suspend fun enableInWaterValve(clientId: Int, open: Boolean) {
+        // NOTE! in-water solenoid valve is NO(Normally open)
+        port?.writePacket(
+            FishPacket(clientId = clientId,
+                opCode = OP_PIN_IO,
+                pin = PIN_RELAY_IN_WATER,
+                pinMode = MODE_OUTPUT,
+                data = (if (open) LOW else HIGH).toDouble()
             )
         )
     }
 
-    suspend fun enableOutWater(clientId: Int, enable: Boolean) {
+    suspend fun enableWaterPump(clientId: Int, enable: Boolean) {
         port?.writePacket(
             FishPacket(
                 clientId = clientId,
-                OP_PIN_IO, PIN_RELAY_OUT_WATER, MODE_OUTPUT, (if (enable) HIGH else LOW).toDouble()
-            )
+                opCode = OP_PIN_IO,
+                pin = PIN_RELAY_PUMP,
+                pinMode = MODE_OUTPUT,
+                data = (if (enable) HIGH else LOW).toDouble())
+        )
+    }
+
+    suspend fun enableLight(clientId: Int, enable: Boolean) {
+        port?.writePacket(
+            FishPacket(
+                clientId = clientId,
+                opCode = OP_PIN_IO,
+                pin = PIN_RELAY_LIGHT,
+                pinMode = MODE_OUTPUT,
+                data = (if (enable) HIGH else LOW).toDouble())
+        )
+    }
+
+    suspend fun enablePurifier1(clientId: Int, enable: Boolean) {
+        port?.writePacket(
+            FishPacket(
+                clientId = clientId,
+                opCode = OP_PIN_IO,
+                pin = PIN_RELAY_PURIFIER1,
+                pinMode = MODE_OUTPUT,
+                data = (if (enable) HIGH else LOW).toDouble())
+        )
+    }
+
+    suspend fun enablePurifier2(clientId: Int, enable: Boolean) {
+        port?.writePacket(
+            FishPacket(
+                clientId = clientId,
+                opCode = OP_PIN_IO,
+                pin = PIN_RELAY_PURIFIER2,
+                pinMode = MODE_OUTPUT,
+                data = (if (enable) HIGH else LOW).toDouble())
+        )
+    }
+
+    suspend fun enableHeater(clientId: Int, enable: Boolean) {
+        port?.writePacket(
+            FishPacket(
+                clientId = clientId,
+                opCode = OP_PIN_IO,
+                pin = PIN_RELAY_HEATER,
+                pinMode = MODE_OUTPUT,
+                data = (if (enable) HIGH else LOW).toDouble())
         )
     }
 
