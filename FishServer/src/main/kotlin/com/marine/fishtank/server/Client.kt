@@ -1,6 +1,5 @@
 package com.marine.fishtank.server
 
-import com.google.gson.Gson
 import com.marine.fishtank.server.arduino.ArduinoDevice
 import com.marine.fishtank.server.model.*
 import com.marine.fishtank.server.util.Log
@@ -60,16 +59,31 @@ class Client(private val socket: Socket): ArduinoListener {
                     packet.data != 0
                 )
             }
-            SERVER_OP_OUT_WATER -> {
-                ArduinoDevice.enableOutWater(packet.clientId, packet.data != 0)
-            }
             SERVER_OP_GET_TEMPERATURE -> {
                 ArduinoDevice.getTemperature(packet.clientId)
             }
-            SERVER_OP_GET_HISTORY -> {
-
+            SERVER_OP_IN_WATER -> {
+                ArduinoDevice.enableInWaterValve(packet.clientId, packet.data != 0)
             }
-            SERVER_OP_LISTEN_STATUS -> {
+            SERVER_OP_OUT_WATER -> {
+                ArduinoDevice.enableOutWaterValve(packet.clientId, packet.data != 0)
+            }
+            SERVER_OP_WATER_PUMP -> {
+                ArduinoDevice.enableWaterPump(packet.clientId, packet.data != 0)
+            }
+            SERVER_OP_HEATER -> {
+                ArduinoDevice.enableHeater(packet.clientId, packet.data != 0)
+            }
+            SERVER_OP_LIGHT -> {
+                ArduinoDevice.enableLight(packet.clientId, packet.data != 0)
+            }
+            SERVER_OP_PURIFIER_1 -> {
+                ArduinoDevice.enablePurifier1(packet.clientId, packet.data != 0)
+            }
+            SERVER_OP_PURIFIER_2 -> {
+                ArduinoDevice.enablePurifier2(packet.clientId, packet.data != 0)
+            }
+            SERVER_OP_GET_HISTORY -> {
 
             }
         }

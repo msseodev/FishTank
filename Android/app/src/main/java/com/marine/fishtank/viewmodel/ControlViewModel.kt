@@ -76,8 +76,7 @@ class ControlViewModel : ViewModel() {
     fun changeWater(ratio: Double) {
         viewModelScope.launch(Dispatchers.IO) {
             // Before draining we have to close in-water solenoid valve.
-            // in-water solenoid valve is NO(normally open). data=1 make close.
-            tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_IN_WATER, data = 1))
+            tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_IN_WATER, data = 0))
 
             // Open out-water valve.
             tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_OUT_WATER, data = 1))
@@ -99,7 +98,7 @@ class ControlViewModel : ViewModel() {
             tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_OUT_WATER, data = 0))
 
             // Now we have to supply water. We assume that in-water has ball-top valve.
-            tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_IN_WATER, data = 0))
+            tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_IN_WATER, data = 1))
         }
     }
 
