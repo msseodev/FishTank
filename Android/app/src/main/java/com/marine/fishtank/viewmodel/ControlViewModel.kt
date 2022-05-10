@@ -118,7 +118,7 @@ class ControlViewModel : ViewModel() {
 
     private fun calculateWaterPumpTime(ratio: Double): Int {
         // TODO - WaterPump 의 분당 출수량을 측정하여 ratio 에 따라 동작시간을 계산하여 리턴
-        // https://www.coupang.com/vp/products/1749478023?vendorItemId=70967688005&sourceType=MyCoupang_my_orders_list_product_title&isAddedCart=
+        // https://www.coupang.com/vp/products/1749478023?vendorItemId=70967688005
         // 스펙상 토출량: 분당 2L
         val targetOutVolume = TANK_WATER_VOLUME * ratio
         return round((targetOutVolume / 2.0) * 60).toInt()
