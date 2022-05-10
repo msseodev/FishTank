@@ -16,7 +16,6 @@ class SocketAcceptor {
 
     fun startListen() {
         while (true) {
-
             Log.d(TAG, "Waiting Client....")
             val socket = serverSocket.accept()
 
