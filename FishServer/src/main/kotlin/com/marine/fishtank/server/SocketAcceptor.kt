@@ -6,9 +6,9 @@ import kotlinx.coroutines.Dispatchers
 import java.net.ServerSocket
 
 private const val PORT = 53265
-private const val TAG = "SocketAccepter"
+private const val TAG = "SocketAcceptor"
 
-class SocketAccepter {
+class SocketAcceptor {
     private val serverSocket = ServerSocket(PORT)
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
 

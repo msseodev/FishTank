@@ -9,7 +9,7 @@ fun main(args: Array<String>) {
         ArduinoDevice.initialize("COM3")
         ArduinoDevice.startListen()
 
-        val acceptor = SocketAccepter()
+        val acceptor = SocketAcceptor()
         acceptor.startListen()
     }
 }
