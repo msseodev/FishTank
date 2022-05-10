@@ -17,4 +17,6 @@
 
     <string name="heater_on">히터 켜기</string>
     <string name="heater_off">히터 끄기</string>
+
+    <string name="board_pin_toggle">Board LED toggle</string>
 </resources>
