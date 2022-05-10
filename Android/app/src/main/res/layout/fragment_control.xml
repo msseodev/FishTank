@@ -34,6 +34,7 @@
                 <EditText
                     android:id="@+id/editTextWaterRatio"
                     android:layout_columnSpan="1"
+                    android:inputType="number"
                     style="@style/GridButton"
                     android:hint="%"
                     android:text="20" />
@@ -79,6 +80,12 @@
                     style="@style/GridButton"
                     android:layout_columnSpan="1"
                     android:text="@string/heater_off" />
+
+                <Button
+                    android:id="@+id/buttonBoardLedToggle"
+                    style="@style/GridButton"
+                    android:layout_columnSpan="1"
+                    android:text="@string/board_pin_toggle" />
             </GridLayout>
 
 
