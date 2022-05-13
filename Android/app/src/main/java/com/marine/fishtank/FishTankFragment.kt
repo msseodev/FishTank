@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.*
@@ -33,6 +34,7 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.pagerTabIndicatorOffset
 import com.google.accompanist.pager.rememberPagerState
+import com.marine.fishtank.model.Status
 import com.marine.fishtank.model.TankData
 import com.marine.fishtank.viewmodel.FishTankViewModel
 import com.marine.fishtank.viewmodel.FishTankViewModelFactory
@@ -53,6 +55,15 @@ class FishTankFragment : Fragment() {
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        // Need call to pull the trigger of Composition.
+        viewModel.init()
+
+        //setupObserver()
+        viewModel.init()
+        viewModel.startFetchHistory()
+
+        viewModel.startListenTemperature()
+
         return ComposeView(requireContext()).apply {
             setContent {
                 MaterialTheme {
@@ -63,11 +74,47 @@ class FishTankFragment : Fragment() {
                     }
                 }
             }
-
-            // Need call to pull the trigger of Composition.
-            viewModel.init()
         }
     }
+
+    /*private fun setupObserver() {
+        viewModel.initData.observe(viewLifecycleOwner) {
+            when(it.status) {
+                Status.SUCCESS -> Toast.makeText(context?.applicationContext, "Initialize success.", Toast.LENGTH_SHORT).show()
+                Status.ERROR -> Toast.makeText(context?.applicationContext, "Initialize fail! " + it.data, Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        viewModel.liveTankData.observe(viewLifecycleOwner) {
+            when (it.status) {
+                Status.SUCCESS -> {
+                    it.data?.let { tankData ->
+                        addData(tankData)
+                    }
+                }
+            }
+        }
+
+        viewModel.temperatureData.observe(viewLifecycleOwner) {
+            addData(
+                TankData(it, false, false, false, System.currentTimeMillis())
+            )
+        }
+    }
+
+    private fun addData(tankData: TankData) {
+        val data = binding.lineChart.data
+        val set = data.getDataSetByIndex(0)
+
+        data.addEntry(Entry(set.entryCount.toFloat(), tankData.temperature.toFloat(), tankData), 0)
+        data.notifyDataChanged()
+
+        binding.lineChart.apply {
+            notifyDataSetChanged()
+            setVisibleXRangeMaximum(LineChartConfig.POINT_COUNT_MAXIMUM)
+            moveViewToX(data.entryCount.toFloat())
+        }
+    }*/
 }
 
 @OptIn(ExperimentalPagerApi::class)
