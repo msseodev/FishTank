@@ -9,6 +9,9 @@
     <string name="open_water_out">Open out-water</string>
     <string name="close_water_out">Close out-water</string>
 
+    <string name="pump_run">Run pump</string>
+    <string name="pump_stop">Stop pump</string>
+
     <string name="light_on">Light on</string>
     <string name="light_off">Light off</string>
 

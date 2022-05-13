@@ -12,16 +12,28 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.components.YAxis
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.formatter.ValueFormatter
+import com.github.mikephil.charting.utils.ColorTemplate
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.pagerTabIndicatorOffset
 import com.google.accompanist.pager.rememberPagerState
+import com.marine.fishtank.model.TankData
 import com.marine.fishtank.viewmodel.FishTankViewModel
 import com.marine.fishtank.viewmodel.FishTankViewModelFactory
 import com.marine.fishtank.viewmodel.UiEvent
@@ -29,16 +41,18 @@ import com.marine.fishtank.viewmodel.UiState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
 
 private const val TAG = "FishTankFragment"
 
 @OptIn(ExperimentalPagerApi::class)
-class FishTankFragment: Fragment() {
+class FishTankFragment : Fragment() {
     private val viewModel: FishTankViewModel by viewModels {
         FishTankViewModelFactory()
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return ComposeView(requireContext()).apply {
             setContent {
                 MaterialTheme {
@@ -49,6 +63,9 @@ class FishTankFragment: Fragment() {
                     }
                 }
             }
+
+            // Need call to pull the trigger of Composition.
+            viewModel.fetchState()
         }
     }
 }
@@ -56,59 +73,159 @@ class FishTankFragment: Fragment() {
 @OptIn(ExperimentalPagerApi::class)
 @Composable
 fun FishTankScreen(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
-    Log.d(TAG, "Composing SecondScreen")
+    Log.d(TAG, "Composing FishTankScreen")
 
     val tabTitles = listOf("Control", "Monitor", "ETC")
     val pagerState = rememberPagerState()
 
+    // Surface = TAB 전체화면
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colors.background
     ) {
-        Scaffold(topBar = {
-            TopAppBar(
-                title = { Text(text = "AppBar") },
-            )
-        }) {
-            Column {
-                TabRow(selectedTabIndex = pagerState.currentPage,
-                    indicator = { tabPositions -> // 3.
-                        TabRowDefaults.Indicator(
-                            Modifier.pagerTabIndicatorOffset(
-                                pagerState,
-                                tabPositions
-                            )
+        Column {
+            TabRow(
+                backgroundColor = Color.Cyan,
+                selectedTabIndex = pagerState.currentPage,
+                indicator = { tabPositions -> // 3.
+                    TabRowDefaults.Indicator(
+                        Modifier.pagerTabIndicatorOffset(
+                            pagerState,
+                            tabPositions
                         )
-                    }) {
-                    tabTitles.forEachIndexed { index, title ->
-                        Tab(selected = pagerState.currentPage == index,
-                            onClick = { CoroutineScope(Dispatchers.Main).launch { pagerState.scrollToPage(index) } },
-                            text = { Text(text = title) })
-                    }
+                    )
+                }) {
+                tabTitles.forEachIndexed { index, title ->
+                    Tab(selected = pagerState.currentPage == index,
+                        onClick = { CoroutineScope(Dispatchers.Main).launch { pagerState.scrollToPage(index) } },
+                        text = { Text(text = title) })
                 }
-                HorizontalPager(
-                    modifier = Modifier.fillMaxSize(),
-                    count = tabTitles.size,
-                    state = pagerState,
-                ) { tabIndex ->
-                    when (tabIndex) {
-                        0 -> ControlTab(uiState, eventHandler)
-                        1 -> Text("MONITOR!!!")
-                        2 -> Text("ETC!!!")
-                    }
+            }
+            HorizontalPager(
+                modifier = Modifier.fillMaxSize(),
+                count = tabTitles.size,
+                state = pagerState,
+                verticalAlignment = Alignment.Top
+            ) { tabIndex ->
+                when (tabIndex) {
+                    0 -> ControlTab(uiState, eventHandler)
+                    1 -> MonitorPage(eventHandler)
+                    2 -> Text("ETC!!!")
                 }
             }
         }
     }
 }
 
+@Composable
+fun MonitorPage(eventHandler: (UiEvent) -> Unit) {
+    Chart(eventHandler)
+}
+
+@Composable
+fun Chart(eventHandler: (UiEvent) -> Unit) {
+    AndroidView(
+        modifier = Modifier
+            .height(200.dp)
+            .fillMaxWidth(),
+        factory = { context ->
+            LineChart(context).apply {
+                // no description text
+                description.isEnabled = false
+
+                // enable touch gestures
+                setTouchEnabled(true)
+
+                dragDecelerationFrictionCoef = 0.9f
+
+                // enable scaling and dragging
+                isDragEnabled = true
+                setScaleEnabled(true)
+                setDrawGridBackground(false)
+                isHighlightPerDragEnabled = true
+
+                // if disabled, scaling can be done on x- and y-axis separately
+                setPinchZoom(true)
+
+                // set an alternative background color
+                setBackgroundColor(android.graphics.Color.WHITE)
+
+                xAxis.apply {
+                    textSize = 11f
+                    textColor = android.graphics.Color.BLACK
+                    setDrawGridLines(true)
+                    setDrawAxisLine(true)
+                    position = XAxis.XAxisPosition.BOTTOM
+
+                    valueFormatter = object : ValueFormatter() {
+                        override fun getFormattedValue(value: Float): String {
+                            val entry = data.dataSets[0].getEntryForIndex(value.toInt())
+                            val tankData = entry.data as TankData
+                            val date = Date(tankData.dateTime)
+                            return SimpleDateFormat("HH:mm:ss").format(date)
+                        }
+                    }
+                }
+
+                axisLeft.apply {
+                    textColor = android.graphics.Color.BLACK
+                    setDrawGridLines(true)
+                    setDrawAxisLine(true)
+
+                    //String setter in x-Axis
+                    valueFormatter = object : ValueFormatter() {
+                        override fun getFormattedValue(value: Float): String {
+                            return String.format("%.2f", value)
+                        }
+                    }
+                    axisMaximum = LineChartConfig.YAXIS_MAX
+                    axisMinimum = LineChartConfig.YAXIS_MIN
+                }
+
+                axisRight.apply {
+                    isEnabled = false
+                }
+
+                legend.apply {
+                    textSize = 12f
+                }
+
+                val entryList = mutableListOf<Entry>()
+                val dataSet = LineDataSet(entryList, "Water temperature").apply {
+                    axisDependency = YAxis.AxisDependency.LEFT
+                    color = ColorTemplate.getHoloBlue()
+                    setCircleColor(android.graphics.Color.BLACK)
+                    lineWidth = 3f
+                    circleRadius = 4f
+                    fillAlpha = 65
+                    fillColor = ColorTemplate.getHoloBlue()
+                    highLightColor = android.graphics.Color.rgb(110, 117, 117)
+                    setDrawCircleHole(true)
+                }
+
+                // create a data object with the data sets
+                data = LineData(dataSet).apply {
+                    setValueTextColor(android.graphics.Color.BLACK)
+                    setValueTextSize(10f)
+                    setValueFormatter(object : ValueFormatter() {
+                        override fun getFormattedValue(value: Float): String {
+                            return String.format("%.2f", value)
+                        }
+                    })
+                }
+            }
+        },
+        update = {
+
+        })
+}
 
 @Composable
 fun ControlTab(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
     Column(modifier = Modifier.padding(10.dp)) {
         Text(
             modifier = Modifier
-                .height(200.dp)
+                .height(40.dp)
                 .fillMaxWidth(),
             text = uiState.resultText,
             textAlign = TextAlign.Center
@@ -121,36 +238,42 @@ fun ControlTab(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
         // Create Radio
         RadioGroup(
             listOf(
-                RadioState(false, "Open Out-water valve") { eventHandler(UiEvent.OutWaterEvent(true)) },
-                RadioState(false, "Close Out-water valve") { eventHandler(UiEvent.OutWaterEvent(false)) }
+                RadioState(
+                    false,
+                    stringResource(R.string.open_water_out)
+                ) { eventHandler(UiEvent.OutWaterEvent(true)) },
+                RadioState(
+                    false,
+                    stringResource(R.string.close_water_out)
+                ) { eventHandler(UiEvent.OutWaterEvent(false)) }
             )
         )
         RadioGroup(
             listOf(
-                RadioState(false, "Open In-water valve") { eventHandler(UiEvent.InWaterEvent(true)) },
-                RadioState(false, "Close In-water valve") { eventHandler(UiEvent.InWaterEvent(false)) }
+                RadioState(false, stringResource(R.string.open_water_in)) { eventHandler(UiEvent.InWaterEvent(true)) },
+                RadioState(false, stringResource(R.string.close_water_in)) { eventHandler(UiEvent.InWaterEvent(false)) }
             )
         )
-    }
-
-}
-
-@Composable
-fun tab() {
-    var tabIndex by remember { mutableStateOf(0) } // 1.
-    val tabTitles = listOf("Hello", "There", "World")
-    Column { // 2.
-        TabRow(selectedTabIndex = tabIndex) { // 3.
-            tabTitles.forEachIndexed { index, title ->
-                Tab(selected = tabIndex == index, // 4.
-                    onClick = { tabIndex = index },
-                    text = { Text(text = title) }) // 5.
-            }
-        }
-        when (tabIndex) { // 6.
-            0 -> Text("Hello content")
-            1 -> Text("There content")
-            2 -> Text("World content")
+        RadioGroup(
+            listOf(
+                RadioState(false, stringResource(R.string.pump_run)) { eventHandler(UiEvent.PumpEvent(true)) },
+                RadioState(false, stringResource(R.string.pump_stop)) { eventHandler(UiEvent.PumpEvent(false)) }
+            )
+        )
+        RadioGroup(
+            listOf(
+                RadioState(false, stringResource(R.string.purifier_on)) { eventHandler(UiEvent.PurifierEvent(true)) },
+                RadioState(false, stringResource(R.string.purifier_off)) { eventHandler(UiEvent.PurifierEvent(false)) }
+            )
+        )
+        RadioGroup(
+            listOf(
+                RadioState(false, stringResource(R.string.heater_on)) { eventHandler(UiEvent.HeaterEvent(true)) },
+                RadioState(false, stringResource(R.string.heater_off)) { eventHandler(UiEvent.HeaterEvent(false)) }
+            )
+        )
+        OutlinedButton(onClick = { eventHandler(UiEvent.ChangeWater()) }) {
+            Text(text = stringResource(id = R.string.change_water))
         }
     }
 }
@@ -204,10 +327,9 @@ fun CreateButton(text: String, modifier: Modifier, onclick: () -> Unit) {
     }
 }
 
-@OptIn(ExperimentalPagerApi::class)
 @Preview
 @Composable
-fun PhotographerCardPreview() {
+fun Preview() {
     MaterialTheme {
         FishTankScreen(
             UiState(
@@ -215,7 +337,7 @@ fun PhotographerCardPreview() {
                 inWaterValveState = false,
                 lightState = true,
                 pumpState = true,
-                "Fetch complete!"
+                resultText = "Fetch complete!"
             )
         )
         { uiEvent ->

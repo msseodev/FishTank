@@ -10,15 +10,21 @@ data class UiState(
     val inWaterValveState: Boolean,
     val lightState: Boolean,
     val pumpState: Boolean,
+    val heaterState: Boolean = false,
+    val purifierState: Boolean = false,
 
-    val resultText: String,
+    val resultText: String = "",
 )
 
-sealed class UiEvent(val value: Boolean) {
+sealed class UiEvent(val value: Boolean = false) {
     class OutWaterEvent(enable: Boolean) : UiEvent(enable)
     class InWaterEvent(enable: Boolean) : UiEvent(enable)
     class LightEvent(enable: Boolean) : UiEvent(enable)
     class PumpEvent(enable: Boolean) : UiEvent(enable)
+    class HeaterEvent(enable: Boolean): UiEvent(enable)
+    class PurifierEvent(enable: Boolean): UiEvent(enable)
+
+    class ChangeWater: UiEvent()
 }
 
 class FishTankViewModel: ViewModel() {
@@ -34,7 +40,7 @@ class FishTankViewModel: ViewModel() {
                 inWaterValveState = false,
                 lightState = true,
                 pumpState = true,
-                "Fetch complete!"
+                resultText = "Fetch complete!"
             )
         }
     }
@@ -63,6 +69,10 @@ class FishTankViewModel: ViewModel() {
                     )
                 )
             }
+            is UiEvent.LightEvent -> {}
+            is UiEvent.PumpEvent -> {}
+            is UiEvent.HeaterEvent -> {}
+            is UiEvent.PurifierEvent -> {}
         }
     }
 
