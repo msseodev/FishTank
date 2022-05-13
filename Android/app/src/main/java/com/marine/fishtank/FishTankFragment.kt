@@ -65,7 +65,7 @@ class FishTankFragment : Fragment() {
             }
 
             // Need call to pull the trigger of Composition.
-            viewModel.fetchState()
+            viewModel.init()
         }
     }
 }
