@@ -15,7 +15,7 @@ import kotlinx.coroutines.withContext
 import kotlin.math.round
 
 
-private const val TAG = "ControlViewModel"
+private const val TAG = "FishTankViewModel"
 private const val SERVER_URL = "marineseo.iptime.org"
 private const val SERVER_PORT = 53265
 private const val TEMPERATURE_INTERVAL = 1000L * 5
@@ -23,7 +23,7 @@ private const val TEMPERATURE_INTERVAL = 1000L * 5
 // 어항 물 용량
 private const val TANK_WATER_VOLUME = 100
 
-class ControlViewModel : ViewModel() {
+class ControlViewModelLegacy : ViewModel() {
     val liveTankData = MutableLiveData<DataSource<TankData>>()
     val temperatureData = MutableLiveData<Double>()
     val initData = MutableLiveData<DataSource<String>>()

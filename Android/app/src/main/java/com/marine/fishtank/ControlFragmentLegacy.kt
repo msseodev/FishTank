@@ -19,7 +19,7 @@ import com.github.mikephil.charting.utils.ColorTemplate
 import com.marine.fishtank.databinding.FragmentControlBinding
 import com.marine.fishtank.model.Status
 import com.marine.fishtank.model.TankData
-import com.marine.fishtank.viewmodel.ControlViewModel
+import com.marine.fishtank.viewmodel.ControlViewModelLegacy
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -30,14 +30,14 @@ object LineChartConfig {
     const val POINT_COUNT_MAXIMUM = 10f
 }
 
-class ControlFragment : Fragment(), OnChartValueSelectedListener, View.OnClickListener {
+class ControlFragmentLegacy : Fragment(), OnChartValueSelectedListener, View.OnClickListener {
     private lateinit var binding: FragmentControlBinding
-    private lateinit var viewModel: ControlViewModel
+    private lateinit var viewModel: ControlViewModelLegacy
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = FragmentControlBinding.inflate(inflater, container, false)
 
-        viewModel = ControlViewModel()
+        viewModel = ControlViewModelLegacy()
 
         binding.buttonChangeWater.setOnClickListener(this)
         binding.buttonHeaterOff.setOnClickListener(this)
@@ -48,7 +48,7 @@ class ControlFragment : Fragment(), OnChartValueSelectedListener, View.OnClickLi
         binding.buttonPurifierOn.setOnClickListener(this)
 
         binding.lineChart.apply {
-            setOnChartValueSelectedListener(this@ControlFragment)
+            setOnChartValueSelectedListener(this@ControlFragmentLegacy)
 
             // no description text
             description.isEnabled = false
