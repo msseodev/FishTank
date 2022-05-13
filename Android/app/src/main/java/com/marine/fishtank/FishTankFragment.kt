@@ -343,7 +343,7 @@ fun RadioGroup(radioList: List<RadioState>) {
                     .weight(1f)
                     .selectable(selected = selected, onClick = onClickHandle),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
+                horizontalArrangement = Arrangement.Start,
             ) {
                 RadioButton(
                     selected = selected,
