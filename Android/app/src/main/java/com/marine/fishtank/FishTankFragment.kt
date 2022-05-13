@@ -272,7 +272,7 @@ fun ControlTab(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
                 RadioState(false, stringResource(R.string.heater_off)) { eventHandler(UiEvent.HeaterEvent(false)) }
             )
         )
-        OutlinedButton(onClick = { eventHandler(UiEvent.ChangeWater()) }) {
+        OutlinedButton(modifier = Modifier.fillMaxWidth().padding(15.dp), onClick = { eventHandler(UiEvent.ChangeWater()) }) {
             Text(text = stringResource(id = R.string.change_water))
         }
     }
