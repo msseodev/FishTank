@@ -21,6 +21,7 @@
     <string name="heater_on">Heater On</string>
     <string name="heater_off">Heater Off</string>
 
-    <string name="board_pin_toggle">Board LED toggle</string>
+    <string name="board_led_on">LED On</string>
+    <string name="board_led_off">LED Off</string>
 
 </resources>

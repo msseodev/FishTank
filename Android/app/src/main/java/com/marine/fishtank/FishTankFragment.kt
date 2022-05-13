@@ -5,19 +5,21 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
@@ -34,8 +36,7 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.pagerTabIndicatorOffset
 import com.google.accompanist.pager.rememberPagerState
-import com.marine.fishtank.model.Status
-import com.marine.fishtank.model.TankData
+import com.marine.fishtank.model.TemperatureData
 import com.marine.fishtank.viewmodel.FishTankViewModel
 import com.marine.fishtank.viewmodel.FishTankViewModelFactory
 import com.marine.fishtank.viewmodel.UiEvent
@@ -57,9 +58,6 @@ class FishTankFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         // Need call to pull the trigger of Composition.
         viewModel.init()
-
-        //setupObserver()
-        viewModel.init()
         viewModel.startFetchHistory()
 
         viewModel.startListenTemperature()
@@ -67,60 +65,23 @@ class FishTankFragment : Fragment() {
         return ComposeView(requireContext()).apply {
             setContent {
                 MaterialTheme {
-                    viewModel.uiState.observeAsState().value?.let { uiState ->
-                        FishTankScreen(uiState) { uiEvent ->
-                            viewModel.uiEvent(uiEvent)
-                        }
+                    FishTankScreen(viewModel = viewModel) { uiEvent ->
+                        viewModel.uiEvent(uiEvent)
                     }
                 }
             }
         }
     }
-
-    /*private fun setupObserver() {
-        viewModel.initData.observe(viewLifecycleOwner) {
-            when(it.status) {
-                Status.SUCCESS -> Toast.makeText(context?.applicationContext, "Initialize success.", Toast.LENGTH_SHORT).show()
-                Status.ERROR -> Toast.makeText(context?.applicationContext, "Initialize fail! " + it.data, Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        viewModel.liveTankData.observe(viewLifecycleOwner) {
-            when (it.status) {
-                Status.SUCCESS -> {
-                    it.data?.let { tankData ->
-                        addData(tankData)
-                    }
-                }
-            }
-        }
-
-        viewModel.temperatureData.observe(viewLifecycleOwner) {
-            addData(
-                TankData(it, false, false, false, System.currentTimeMillis())
-            )
-        }
-    }
-
-    private fun addData(tankData: TankData) {
-        val data = binding.lineChart.data
-        val set = data.getDataSetByIndex(0)
-
-        data.addEntry(Entry(set.entryCount.toFloat(), tankData.temperature.toFloat(), tankData), 0)
-        data.notifyDataChanged()
-
-        binding.lineChart.apply {
-            notifyDataSetChanged()
-            setVisibleXRangeMaximum(LineChartConfig.POINT_COUNT_MAXIMUM)
-            moveViewToX(data.entryCount.toFloat())
-        }
-    }*/
 }
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
-fun FishTankScreen(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
+fun FishTankScreen(viewModel: FishTankViewModel,
+                   eventHandler: (UiEvent) -> Unit) {
     Log.d(TAG, "Composing FishTankScreen")
+
+    val uiState: UiState by viewModel.uiState.observeAsState(UiState())
+    val temperatureState: TemperatureData by viewModel.temperatureLiveData.observeAsState(TemperatureData())
 
     val tabTitles = listOf("Control", "Monitor", "ETC")
     val pagerState = rememberPagerState()
@@ -156,7 +117,7 @@ fun FishTankScreen(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
             ) { tabIndex ->
                 when (tabIndex) {
                     0 -> ControlTab(uiState, eventHandler)
-                    1 -> MonitorPage(eventHandler)
+                    1 -> MonitorPage(temperatureState, eventHandler)
                     2 -> Text("ETC!!!")
                 }
             }
@@ -165,15 +126,17 @@ fun FishTankScreen(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
 }
 
 @Composable
-fun MonitorPage(eventHandler: (UiEvent) -> Unit) {
-    Chart(eventHandler)
+fun MonitorPage(temperatureData: TemperatureData, eventHandler: (UiEvent) -> Unit) {
+    Chart(temperatureData, eventHandler)
 }
 
 @Composable
-fun Chart(eventHandler: (UiEvent) -> Unit) {
+fun Chart(temperatureData: TemperatureData, eventHandler: (UiEvent) -> Unit) {
+    Log.d(TAG, "Composing Chart!")
+
     AndroidView(
         modifier = Modifier
-            .height(200.dp)
+            .height(500.dp)
             .fillMaxWidth(),
         factory = { context ->
             LineChart(context).apply {
@@ -207,7 +170,7 @@ fun Chart(eventHandler: (UiEvent) -> Unit) {
                     valueFormatter = object : ValueFormatter() {
                         override fun getFormattedValue(value: Float): String {
                             val entry = data.dataSets[0].getEntryForIndex(value.toInt())
-                            val tankData = entry.data as TankData
+                            val tankData = entry.data as TemperatureData
                             val date = Date(tankData.dateTime)
                             return SimpleDateFormat("HH:mm:ss").format(date)
                         }
@@ -225,8 +188,11 @@ fun Chart(eventHandler: (UiEvent) -> Unit) {
                             return String.format("%.2f", value)
                         }
                     }
-                    axisMaximum = LineChartConfig.YAXIS_MAX
-                    axisMinimum = LineChartConfig.YAXIS_MIN
+                    //axisMaximum = LineChartConfig.YAXIS_MAX
+                    //axisMinimum = LineChartConfig.YAXIS_MIN
+
+                    spaceBottom = 20f
+                    spaceTop = 20f
                 }
 
                 axisRight.apply {
@@ -263,7 +229,22 @@ fun Chart(eventHandler: (UiEvent) -> Unit) {
             }
         },
         update = {
+            Log.d(TAG, "Update LineChart")
+            if(temperatureData.temperature > 0 ) {
+                val dataSet = it.data.getDataSetByIndex(0)
 
+                it.data.addEntry(
+                    Entry(
+                        dataSet.entryCount.toFloat(), temperatureData.temperature.toFloat(),
+                        temperatureData
+                    ), 0
+                )
+                it.data.notifyDataChanged()
+
+                it.notifyDataSetChanged()
+                it.setVisibleXRangeMaximum(10f)
+                it.moveViewToX(it.data.entryCount.toFloat())
+            }
         })
 }
 
@@ -319,7 +300,17 @@ fun ControlTab(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
                 RadioState(false, stringResource(R.string.heater_off)) { eventHandler(UiEvent.HeaterEvent(false)) }
             )
         )
-        OutlinedButton(modifier = Modifier.fillMaxWidth().padding(15.dp), onClick = { eventHandler(UiEvent.ChangeWater()) }) {
+        RadioGroup(
+            listOf(
+                RadioState(false, stringResource(R.string.board_led_on)) { eventHandler(UiEvent.LedEvent(true)) },
+                RadioState(false, stringResource(R.string.board_led_off)) { eventHandler(UiEvent.LedEvent(false)) }
+            )
+        )
+        OutlinedButton(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(15.dp),
+            onClick = { eventHandler(UiEvent.ChangeWater()) }) {
             Text(text = stringResource(id = R.string.change_water))
         }
     }
@@ -360,35 +351,6 @@ fun RadioGroup(radioList: List<RadioState>) {
                 )
                 Text(text = radioState.text)
             }
-        }
-    }
-}
-
-@Composable
-fun CreateButton(text: String, modifier: Modifier, onclick: () -> Unit) {
-    Button(
-        onClick = onclick,
-        modifier = modifier
-    ) {
-        Text(text = text)
-    }
-}
-
-@Preview
-@Composable
-fun Preview() {
-    MaterialTheme {
-        FishTankScreen(
-            UiState(
-                outWaterValveState = true,
-                inWaterValveState = false,
-                lightState = true,
-                pumpState = true,
-                resultText = "Fetch complete!"
-            )
-        )
-        { uiEvent ->
-
         }
     }
 }

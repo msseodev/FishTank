@@ -1,7 +1,6 @@
 package com.marine.fishtank.viewmodel
 
 import android.util.Log
-import androidx.compose.runtime.Stable
 import androidx.lifecycle.*
 import com.marine.fishtank.api.TankApi
 import com.marine.fishtank.api.TankApiImpl
@@ -21,12 +20,14 @@ private const val TEMPERATURE_INTERVAL = 1000L * 5
 private const val TANK_WATER_VOLUME = 100
 
 data class UiState(
-    var outWaterValveState: Boolean,
-    var inWaterValveState: Boolean,
-    var lightState: Boolean,
-    var pumpState: Boolean,
+    var outWaterValveState: Boolean = false,
+    var inWaterValveState: Boolean = false,
+    var lightState: Boolean = false,
+    var pumpState: Boolean = false,
     var heaterState: Boolean = false,
     var purifierState: Boolean = false,
+
+    var temperature: Double = 0.0,
 
     var resultText: String = "",
 )
@@ -38,13 +39,17 @@ sealed class UiEvent(val value: Boolean = false) {
     class PumpEvent(enable: Boolean) : UiEvent(enable)
     class HeaterEvent(enable: Boolean) : UiEvent(enable)
     class PurifierEvent(enable: Boolean) : UiEvent(enable)
+    class LedEvent(enable: Boolean) : UiEvent(enable)
 
     class ChangeWater : UiEvent()
 }
 
 class FishTankViewModel : ViewModel() {
-    val liveTankData = MutableLiveData<DataSource<TankData>>()
-    val temperatureData = MutableLiveData<Double>()
+    val liveTankData = MutableLiveData<DataSource<TemperatureData>>()
+
+    val temperatureLiveData = MutableLiveData<TemperatureData>()
+    var lastTemperature = TemperatureData(0.0, 0)
+
     val initData = MutableLiveData<DataSource<String>>()
 
     private val tankApi: TankApi = TankApiImpl()
@@ -53,12 +58,19 @@ class FishTankViewModel : ViewModel() {
     val uiState: LiveData<UiState>
         get() = _uiState
 
-    private val packetListener = object: TankApi.OnServerPacketListener {
+    private val packetListener = object : TankApi.OnServerPacketListener {
         override fun onServerPacket(packet: ServerPacket) {
             // packet sent by server.
-            when(packet.opCode) {
+            Log.d(TAG, "onServerPacket=$packet")
+            when (packet.opCode) {
                 SERVER_OP_GET_TEMPERATURE -> {
-                    temperatureData.postValue(packet.doubleData)
+//                    lastTemperature.temperature = packet.doubleData
+//                    lastTemperature.dateTime = System.currentTimeMillis()
+                    temperatureLiveData.postValue(
+                        TemperatureData(
+                            packet.doubleData, System.currentTimeMillis()
+                        )
+                    )
                 }
             }
         }
@@ -88,7 +100,7 @@ class FishTankViewModel : ViewModel() {
     }
 
     fun startFetchHistory() {
-        viewModelScope.launch(Dispatchers.IO){
+        viewModelScope.launch(Dispatchers.IO) {
             val dataList = tankApi.sendCommand(ServerPacket(AppId.MY_ID, SERVER_OP_GET_HISTORY))
             withContext(Dispatchers.Main) {
                 dataList.forEach {
@@ -100,7 +112,7 @@ class FishTankViewModel : ViewModel() {
 
     fun startListenTemperature() {
         viewModelScope.launch(Dispatchers.IO) {
-            while(true) {
+            while (true) {
                 tankApi.sendCommand(ServerPacket(AppId.MY_ID, SERVER_OP_GET_TEMPERATURE))
                 delay(TEMPERATURE_INTERVAL)
             }
@@ -137,28 +149,32 @@ class FishTankViewModel : ViewModel() {
     }
 
     private fun enableOutWaterValve(open: Boolean) {
-        tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_OUT_WATER, data = if(open) 1 else 0))
+        tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_OUT_WATER, data = if (open) 1 else 0))
     }
 
     private fun enableInWaterValve(open: Boolean) {
-        tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_IN_WATER, data = if(open) 1 else 0))
+        tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_IN_WATER, data = if (open) 1 else 0))
     }
 
     private fun enablePump(run: Boolean) {
-        tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_WATER_PUMP, data = if(run) 1 else 0))
+        tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_WATER_PUMP, data = if (run) 1 else 0))
     }
 
     private fun enableLight(enable: Boolean) {
-        tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_LIGHT, data = if(enable) 1 else 0))
+        tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_LIGHT, data = if (enable) 1 else 0))
     }
 
     private fun enableHeater(enable: Boolean) {
-        tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_HEATER, data = if(enable) 1 else 0))
+        tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_HEATER, data = if (enable) 1 else 0))
     }
 
     private fun enablePurifier(enable: Boolean) {
-        tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_PURIFIER_1, data = if(enable) 1 else 0))
-        tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_PURIFIER_2, data = if(enable) 1 else 0))
+        tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_PURIFIER_1, data = if (enable) 1 else 0))
+        tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_PURIFIER_2, data = if (enable) 1 else 0))
+    }
+
+    private fun enableBoardLed(enable: Boolean) {
+        tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_MEGA_LED, data = if (enable) 1 else 0))
     }
 
     private fun calculateWaterPumpTime(ratio: Double): Int {
@@ -169,66 +185,80 @@ class FishTankViewModel : ViewModel() {
         return round((targetOutVolume / 2.0) * 60).toInt()
     }
 
-    private var preValue = 0
-    fun toggleBoardLed() {
-        preValue = if(preValue == 0) 1 else 0
-        viewModelScope.launch(Dispatchers.IO) {
-            tankApi.sendCommand(
-                ServerPacket(AppId.MY_ID, SERVER_OP_MEGA_LED, preValue)
-            )
-        }
-    }
-
     fun uiEvent(uiEvent: UiEvent) {
-        when (uiEvent) {
-            is UiEvent.OutWaterEvent -> {
-                _uiState.value = _uiState.value?.copy(
-                    resultText = "${if (uiEvent.value) "Open" else "Close"} Out-Water valve!",
-                    outWaterValveState = uiEvent.value,
-                )
-                enableOutWaterValve(uiEvent.value)
-            }
-            is UiEvent.InWaterEvent -> {
-                _uiState.value = _uiState.value?.copy(
-                    inWaterValveState = uiEvent.value,
-                    resultText = "${if (uiEvent.value) "Open" else "Close"} In-Water valve!"
-                )
-                enableInWaterValve(uiEvent.value)
-            }
-            is UiEvent.LightEvent -> {
-                _uiState.value = _uiState.value?.copy(
-                    lightState = uiEvent.value,
-                    resultText = "Light ${if (uiEvent.value) "On" else "Off"} "
-                )
-                enableLight(uiEvent.value)
-            }
-            is UiEvent.PumpEvent -> {
-                _uiState.value = _uiState.value?.copy(
-                    pumpState = uiEvent.value,
-                    resultText = "Pump ${if (uiEvent.value) "On" else "Off"} "
-                )
-                enablePump(uiEvent.value)
-            }
-            is UiEvent.HeaterEvent -> {
-                _uiState.value = _uiState.value?.copy(
-                    heaterState = uiEvent.value,
-                    resultText = "Heater ${if (uiEvent.value) "On" else "Off"} "
-                )
-                enableHeater(uiEvent.value)
-            }
-            is UiEvent.PurifierEvent -> {
-                _uiState.value = _uiState.value?.copy(
-                    purifierState = uiEvent.value,
-                    resultText = "Purifier ${if (uiEvent.value) "On" else "Off"} "
-                )
-                enablePurifier(uiEvent.value)
-            }
-            is UiEvent.ChangeWater -> {
-                _uiState.value = _uiState.value?.copy(
-                    resultText = "Start change-water"
-                )
-                // TODO - Change this ratio later!
-                changeWater(0.3)
+        viewModelScope.launch(Dispatchers.IO) {
+            when (uiEvent) {
+                is UiEvent.OutWaterEvent -> {
+                    _uiState.postValue(
+                        _uiState.value?.copy(
+                            resultText = "${if (uiEvent.value) "Open" else "Close"} Out-Water valve!",
+                            outWaterValveState = uiEvent.value,
+                        )
+                    )
+                    enableOutWaterValve(uiEvent.value)
+                }
+                is UiEvent.InWaterEvent -> {
+                    _uiState.postValue(
+                        _uiState.value?.copy(
+                            inWaterValveState = uiEvent.value,
+                            resultText = "${if (uiEvent.value) "Open" else "Close"} In-Water valve!"
+                        )
+                    )
+                    enableInWaterValve(uiEvent.value)
+                }
+                is UiEvent.LightEvent -> {
+                    _uiState.postValue(
+                        _uiState.value?.copy(
+                            lightState = uiEvent.value,
+                            resultText = "Light ${if (uiEvent.value) "On" else "Off"} "
+                        )
+                    )
+                    enableLight(uiEvent.value)
+                }
+                is UiEvent.PumpEvent -> {
+                    _uiState.postValue(
+                        _uiState.value?.copy(
+                            pumpState = uiEvent.value,
+                            resultText = "Pump ${if (uiEvent.value) "On" else "Off"} "
+                        )
+                    )
+                    enablePump(uiEvent.value)
+                }
+                is UiEvent.HeaterEvent -> {
+                    _uiState.postValue(
+                        _uiState.value?.copy(
+                            heaterState = uiEvent.value,
+                            resultText = "Heater ${if (uiEvent.value) "On" else "Off"} "
+                        )
+                    )
+                    enableHeater(uiEvent.value)
+                }
+                is UiEvent.PurifierEvent -> {
+                    _uiState.postValue(
+                        _uiState.value?.copy(
+                            purifierState = uiEvent.value,
+                            resultText = "Purifier ${if (uiEvent.value) "On" else "Off"} "
+                        )
+                    )
+                    enablePurifier(uiEvent.value)
+                }
+                is UiEvent.ChangeWater -> {
+                    _uiState.postValue(
+                        _uiState.value?.copy(
+                            resultText = "Start change-water"
+                        )
+                    )
+                    // TODO - Change this ratio later!
+                    changeWater(0.3)
+                }
+                is UiEvent.LedEvent -> {
+                    _uiState.postValue(
+                        _uiState.value?.copy(
+                            resultText = "${if (uiEvent.value) "On" else "Off"} Board LED"
+                        )
+                    )
+                    enableBoardLed(uiEvent.value)
+                }
             }
         }
     }

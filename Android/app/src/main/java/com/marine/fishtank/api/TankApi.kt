@@ -1,12 +1,14 @@
 package com.marine.fishtank.api
 
-import com.marine.fishtank.model.TankData
+import androidx.annotation.WorkerThread
+import com.marine.fishtank.model.TemperatureData
 import com.marine.fishtank.model.ServerPacket
 
 interface TankApi {
     fun connect(url: String, port: Int): Boolean
 
-    fun sendCommand(packet: ServerPacket): List<TankData>
+    @WorkerThread
+    fun sendCommand(packet: ServerPacket): List<TemperatureData>
 
     fun disConnect()
 
