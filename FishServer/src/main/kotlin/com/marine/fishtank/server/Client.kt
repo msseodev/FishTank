@@ -49,43 +49,47 @@ class Client(private val socket: Socket): ArduinoListener {
     }
 
     private suspend fun handleMessage(json: String) {
-        Log.d(TAG, "Message from client=$json")
-        val packet = ServerPacket.createFromJson(json)
+        try {
+            Log.d(TAG, "Message from client=$json")
+            val packet = ServerPacket.createFromJson(json)
 
-        when(packet.opCode) {
-            SERVER_OP_MEGA_LED -> {
-                ArduinoDevice.enableBoardLed(
-                    packet.clientId,
-                    packet.data != 0
-                )
-            }
-            SERVER_OP_GET_TEMPERATURE -> {
-                ArduinoDevice.getTemperature(packet.clientId)
-            }
-            SERVER_OP_IN_WATER -> {
-                ArduinoDevice.enableInWaterValve(packet.clientId, packet.data != 0)
-            }
-            SERVER_OP_OUT_WATER -> {
-                ArduinoDevice.enableOutWaterValve(packet.clientId, packet.data != 0)
-            }
-            SERVER_OP_WATER_PUMP -> {
-                ArduinoDevice.enableWaterPump(packet.clientId, packet.data != 0)
-            }
-            SERVER_OP_HEATER -> {
-                ArduinoDevice.enableHeater(packet.clientId, packet.data != 0)
-            }
-            SERVER_OP_LIGHT -> {
-                ArduinoDevice.enableLight(packet.clientId, packet.data != 0)
-            }
-            SERVER_OP_PURIFIER_1 -> {
-                ArduinoDevice.enablePurifier1(packet.clientId, packet.data != 0)
-            }
-            SERVER_OP_PURIFIER_2 -> {
-                ArduinoDevice.enablePurifier2(packet.clientId, packet.data != 0)
-            }
-            SERVER_OP_GET_HISTORY -> {
+            when (packet.opCode) {
+                SERVER_OP_MEGA_LED -> {
+                    ArduinoDevice.enableBoardLed(
+                        packet.clientId,
+                        packet.data != 0
+                    )
+                }
+                SERVER_OP_GET_TEMPERATURE -> {
+                    ArduinoDevice.getTemperature(packet.clientId)
+                }
+                SERVER_OP_IN_WATER -> {
+                    ArduinoDevice.enableInWaterValve(packet.clientId, packet.data != 0)
+                }
+                SERVER_OP_OUT_WATER -> {
+                    ArduinoDevice.enableOutWaterValve(packet.clientId, packet.data != 0)
+                }
+                SERVER_OP_WATER_PUMP -> {
+                    ArduinoDevice.enableWaterPump(packet.clientId, packet.data != 0)
+                }
+                SERVER_OP_HEATER -> {
+                    ArduinoDevice.enableHeater(packet.clientId, packet.data != 0)
+                }
+                SERVER_OP_LIGHT -> {
+                    ArduinoDevice.enableLight(packet.clientId, packet.data != 0)
+                }
+                SERVER_OP_PURIFIER_1 -> {
+                    ArduinoDevice.enablePurifier1(packet.clientId, packet.data != 0)
+                }
+                SERVER_OP_PURIFIER_2 -> {
+                    ArduinoDevice.enablePurifier2(packet.clientId, packet.data != 0)
+                }
+                SERVER_OP_GET_HISTORY -> {
 
+                }
             }
+        } catch (e: Exception) {
+            Log.e(TAG, e.toString())
         }
     }
 
