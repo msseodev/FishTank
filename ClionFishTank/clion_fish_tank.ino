@@ -65,6 +65,7 @@ void clearBuffer(char* bf, size_t size) {
 
 void sendPacket(FishPacket& packet) {
     StaticJsonDocument<200> doc;
+    doc["id"] = packet.id;
     doc["clientId"] = packet.clientId;
     doc["opCode"] = packet.opCode;
     doc["data"] = packet.data;
@@ -78,6 +79,9 @@ void sendPacket(FishPacket& packet) {
     size++;
     Serial.write(sendBuffer, size);
 
+    Serial1.print("SendPacket=");
+    Serial1.println(sendBuffer);
+
     clearBuffer(sendBuffer, BUFFER_SIZE);
 }
 
@@ -85,12 +89,13 @@ void jsonToPacket(String json, FishPacket& packet) {
     StaticJsonDocument<200> doc;
     DeserializationError error = deserializeJson(doc, json);
     if (error) {
-        Serial.print(F("deserializeJson() failed: "));
-        Serial.print(error.f_str());
-        Serial.println(json);
+        Serial1.print(F("deserializeJson() failed: "));
+        Serial1.print(error.f_str());
+        Serial1.println(json);
         return;
     }
 
+    packet.id = doc["id"];
     packet.clientId = doc["clientId"];
     packet.opCode = doc["opCode"];
     packet.data = doc["data"];
@@ -100,6 +105,7 @@ void jsonToPacket(String json, FishPacket& packet) {
 
 void setup() {
     Serial.begin(BAUDRATE);
+    Serial1.begin(BAUDRATE);
     Serial.flush();
     sensors.begin();
 }
@@ -112,18 +118,19 @@ void loop() {
         Serial.readBytesUntil(PACKET_TERMINATE, buffer, BUFFER_SIZE);
 
         String message = String(buffer);
+        Serial1.print("ClientMessage=");
+        Serial1.println(message);
+
         if (message != nullptr) {
             FishPacket packet;
             jsonToPacket(message, packet);
 
-            switch (packet.opCode
-            ) {
+            switch (packet.opCode) {
                 case OP_GET_TEMPERATURE: {
                     sensors.requestTemperatures();
                     float temperature = sensors.getTempCByIndex(0);
 
                     packet.data = temperature;
-                    sendPacket(packet);
                     break;
                 }
                 case OP_INPUT_PIN: {
@@ -134,6 +141,9 @@ void loop() {
                     break;
                 }
             }
+
+            // Send response
+            sendPacket(packet);
         }
 
         // clear buffer

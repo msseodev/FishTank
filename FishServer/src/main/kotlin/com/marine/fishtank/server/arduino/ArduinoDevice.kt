@@ -6,13 +6,14 @@ import com.marine.fishtank.server.model.OP_GET_TEMPERATURE
 import com.marine.fishtank.server.model.OP_PIN_IO
 import com.marine.fishtank.server.serial.ArduinoSerial
 import com.marine.fishtank.server.util.Log
-import jdk.jfr.Enabled
 import jssc.SerialPort
 import jssc.SerialPortException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.io.IOException
 
 private const val PIN_BOARD_LED = 13
@@ -34,6 +35,7 @@ private const val TAG = "ArduinoDevice"
 object ArduinoDevice {
     private var port: ArduinoSerial? = null
     private val listenerMap = mutableMapOf<Int, ArduinoListener>()
+    private val mutex: Mutex = Mutex()
 
     fun initialize(portName: String) {
         port = ArduinoSerial(portName)
@@ -55,35 +57,38 @@ object ArduinoDevice {
     }
 
     suspend fun getTemperature(clientId: Int) {
-        port?.writePacket(FishPacket(clientId = clientId, opCode = OP_GET_TEMPERATURE))
+        sendAndGetResponse(FishPacket(clientId = clientId, opCode = OP_GET_TEMPERATURE))
     }
 
     suspend fun enableBoardLed(clientId: Int, enable: Boolean) {
-        port?.writePacket(
+        sendAndGetResponse(
             FishPacket(
                 clientId = clientId,
                 opCode = OP_PIN_IO,
                 pin = PIN_BOARD_LED,
                 pinMode = MODE_OUTPUT,
-                data = (if (enable) HIGH else LOW).toDouble())
+                data = (if (enable) HIGH else LOW).toDouble()
+            )
         )
     }
 
     suspend fun enableOutWaterValve(clientId: Int, enable: Boolean) {
-        port?.writePacket(
+        sendAndGetResponse(
             FishPacket(
                 clientId = clientId,
                 opCode = OP_PIN_IO,
                 pin = PIN_RELAY_OUT_WATER,
                 pinMode = MODE_OUTPUT,
-                data = (if (enable) HIGH else LOW).toDouble())
+                data = (if (enable) HIGH else LOW).toDouble()
+            )
         )
     }
 
     suspend fun enableInWaterValve(clientId: Int, open: Boolean) {
         // NOTE! in-water solenoid valve is NO(Normally open)
-        port?.writePacket(
-            FishPacket(clientId = clientId,
+        sendAndGetResponse(
+            FishPacket(
+                clientId = clientId,
                 opCode = OP_PIN_IO,
                 pin = PIN_RELAY_IN_WATER,
                 pinMode = MODE_OUTPUT,
@@ -93,68 +98,76 @@ object ArduinoDevice {
     }
 
     suspend fun enableWaterPump(clientId: Int, enable: Boolean) {
-        port?.writePacket(
+        sendAndGetResponse(
             FishPacket(
                 clientId = clientId,
                 opCode = OP_PIN_IO,
                 pin = PIN_RELAY_PUMP,
                 pinMode = MODE_OUTPUT,
-                data = (if (enable) HIGH else LOW).toDouble())
+                data = (if (enable) HIGH else LOW).toDouble()
+            )
         )
     }
 
     suspend fun enableLight(clientId: Int, enable: Boolean) {
-        port?.writePacket(
+        sendAndGetResponse(
             FishPacket(
                 clientId = clientId,
                 opCode = OP_PIN_IO,
                 pin = PIN_RELAY_LIGHT,
                 pinMode = MODE_OUTPUT,
-                data = (if (enable) HIGH else LOW).toDouble())
+                data = (if (enable) HIGH else LOW).toDouble()
+            )
         )
     }
 
     suspend fun enablePurifier1(clientId: Int, enable: Boolean) {
-        port?.writePacket(
+        sendAndGetResponse(
             FishPacket(
                 clientId = clientId,
                 opCode = OP_PIN_IO,
                 pin = PIN_RELAY_PURIFIER1,
                 pinMode = MODE_OUTPUT,
-                data = (if (enable) HIGH else LOW).toDouble())
+                data = (if (enable) HIGH else LOW).toDouble()
+            )
         )
     }
 
     suspend fun enablePurifier2(clientId: Int, enable: Boolean) {
-        port?.writePacket(
+        sendAndGetResponse(
             FishPacket(
                 clientId = clientId,
                 opCode = OP_PIN_IO,
                 pin = PIN_RELAY_PURIFIER2,
                 pinMode = MODE_OUTPUT,
-                data = (if (enable) HIGH else LOW).toDouble())
+                data = (if (enable) HIGH else LOW).toDouble()
+            )
         )
     }
 
     suspend fun enableHeater(clientId: Int, enable: Boolean) {
-        port?.writePacket(
+        sendAndGetResponse(
             FishPacket(
                 clientId = clientId,
                 opCode = OP_PIN_IO,
                 pin = PIN_RELAY_HEATER,
                 pinMode = MODE_OUTPUT,
-                data = (if (enable) HIGH else LOW).toDouble())
+                data = (if (enable) HIGH else LOW).toDouble()
+            )
         )
     }
 
-    fun startListen() {
-        CoroutineScope(Dispatchers.IO).launch {
-            while (true) {
-                val message = port?.readPacket()
-                if (message?.isNotEmpty() == true) {
+    private suspend fun sendAndGetResponse(packet: FishPacket) {
+        mutex.withLock {
+            port?.writePacket(packet)
+            val message = port?.readPacket()
+            if (message?.isNotEmpty() == true) {
+                val responsePacket = FishPacket.createFromJson(message)
+                if(packet.id == responsePacket.id) {
                     processMessage(message)
+                } else {
+                    Log.e(TAG, "Unexpected packet! $responsePacket")
                 }
-                delay(10)
             }
         }
     }
@@ -162,7 +175,7 @@ object ArduinoDevice {
     private fun processMessage(json: String) {
         if (!json.startsWith("{")) {
             // This is not json format. Maybe debug message!
-            Log.d(TAG,"(ArduinoDevice)Unknown message=$json")
+            Log.e(TAG, "(ArduinoDevice)Unknown message=$json")
             return
         }
 

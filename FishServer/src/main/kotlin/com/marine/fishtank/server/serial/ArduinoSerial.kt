@@ -12,15 +12,33 @@ import java.lang.StringBuilder
 private const val TERMINATION = "\n"
 private const val BUFFER_SIZE = 1024
 
+private const val MAX_READ_ATTEMPT = 500
+private const val READ_INTERVAL = 10L
+private const val READ_TIMEOUT = MAX_READ_ATTEMPT * READ_INTERVAL // ms
+
 private const val TAG = "ArduinoSerial"
+
 
 class ArduinoSerial(portName: String): SerialPort(portName) {
     private val mutex = Mutex()
 
     suspend fun readPacket(): String {
         mutex.withLock {
+
+
             val builder = StringBuilder()
-            val firstMessage = readString() ?: return ""
+            var firstMessage = readString()
+            repeat(MAX_READ_ATTEMPT) {
+                if(firstMessage != null) return@repeat
+                firstMessage = readString()
+                delay(READ_INTERVAL)
+            }
+
+            if(firstMessage == null) {
+                // TIMEOUT!
+                Log.e(TAG, "TimeOut!")
+                return ""
+            }
 
             // Message arrived!
             builder.append(firstMessage)
@@ -41,7 +59,7 @@ class ArduinoSerial(portName: String): SerialPort(portName) {
                 }
             }
 
-            Log.d(TAG, "packet=${builder}")
+            Log.d(TAG, "ReadPacket=${builder}")
             return builder.toString()
         }
     }

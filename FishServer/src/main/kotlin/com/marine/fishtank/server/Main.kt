@@ -7,7 +7,6 @@ import kotlinx.coroutines.runBlocking
 fun main(args: Array<String>) {
     runBlocking {
         ArduinoDevice.initialize("COM3")
-        ArduinoDevice.startListen()
 
         val acceptor = SocketAcceptor()
         acceptor.startListen()
