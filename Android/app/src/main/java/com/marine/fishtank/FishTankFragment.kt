@@ -90,7 +90,7 @@ fun FishTankScreen(viewModel: FishTankViewModel,
     val temperatureState: TemperatureData by viewModel.temperatureLiveData.observeAsState(TemperatureData())
     val initializeData: Boolean by viewModel.initializeLiveData.observeAsState(false)
 
-    val tabTitles = listOf("Control", "Monitor", "ETC")
+    val tabTitles = listOf("Control", "Monitor", "Setting")
     val pagerState = rememberPagerState()
 
     // Surface = TAB 전체화면
@@ -137,7 +137,7 @@ fun FishTankScreen(viewModel: FishTankViewModel,
 @Composable
 fun EtcPage(initResult: Boolean) {
     Column {
-        Text("ETC!!!")
+        Text("Setting!!!")
 
         Text(
             if(initResult) {
@@ -275,13 +275,13 @@ fun Chart(temperatureData: TemperatureData, eventHandler: (UiEvent) -> Unit) {
 @Composable
 fun ControlTab(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
     Column(modifier = Modifier.padding(10.dp)) {
-        Text(
+        /*Text(
             modifier = Modifier
                 .height(40.dp)
                 .fillMaxWidth(),
             text = uiState.resultText,
             textAlign = TextAlign.Center
-        )
+        )*/
 
         Text(text = "Functions")
 
