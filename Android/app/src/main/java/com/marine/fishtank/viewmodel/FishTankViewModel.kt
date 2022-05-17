@@ -48,9 +48,8 @@ class FishTankViewModel : ViewModel() {
     val liveTankData = MutableLiveData<DataSource<TemperatureData>>()
 
     val temperatureLiveData = MutableLiveData<TemperatureData>()
-    var lastTemperature = TemperatureData(0.0, 0)
 
-    val initData = MutableLiveData<DataSource<String>>()
+    val initializeLiveData = MutableLiveData<Boolean>()
 
     private val tankApi: TankApi = TankApiImpl()
 
@@ -64,8 +63,6 @@ class FishTankViewModel : ViewModel() {
             Log.d(TAG, "onServerPacket=$packet")
             when (packet.opCode) {
                 SERVER_OP_GET_TEMPERATURE -> {
-//                    lastTemperature.temperature = packet.doubleData
-//                    lastTemperature.dateTime = System.currentTimeMillis()
                     temperatureLiveData.postValue(
                         TemperatureData(
                             packet.doubleData, System.currentTimeMillis()
@@ -77,22 +74,15 @@ class FishTankViewModel : ViewModel() {
     }
 
     fun init() {
-        // Set initial UiState
-        viewModelScope.launch {
-            // Some Fetches occur...
-            _uiState.value = UiState(
-                outWaterValveState = true,
-                inWaterValveState = false,
-                lightState = true,
-                pumpState = true,
-                resultText = "Fetch complete!"
-            )
-        }
+        // Post first empty value to copy later.
+        _uiState.postValue(
+            UiState()
+        )
 
         viewModelScope.launch(Dispatchers.IO) {
             val connectResult = tankApi.connect(SERVER_URL, SERVER_PORT)
             withContext(Dispatchers.Main) {
-                initData.value = DataSource(if (connectResult) Status.SUCCESS else Status.ERROR, "Init Error!")
+                initializeLiveData.value = connectResult
             }
 
             tankApi.registerServerPacketListener(packetListener)

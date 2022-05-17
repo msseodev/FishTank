@@ -36,6 +36,8 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.pagerTabIndicatorOffset
 import com.google.accompanist.pager.rememberPagerState
+import com.marine.fishtank.model.DataSource
+import com.marine.fishtank.model.Status
 import com.marine.fishtank.model.TemperatureData
 import com.marine.fishtank.viewmodel.FishTankViewModel
 import com.marine.fishtank.viewmodel.FishTankViewModelFactory
@@ -57,10 +59,14 @@ class FishTankFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         // Need call to pull the trigger of Composition.
+        val sTime = System.currentTimeMillis()
+
         viewModel.init()
         viewModel.startFetchHistory()
 
         viewModel.startListenTemperature()
+
+        Log.d(TAG, "onCreateView viewModel elapse=${System.currentTimeMillis() - sTime}")
 
         return ComposeView(requireContext()).apply {
             setContent {
@@ -82,6 +88,7 @@ fun FishTankScreen(viewModel: FishTankViewModel,
 
     val uiState: UiState by viewModel.uiState.observeAsState(UiState())
     val temperatureState: TemperatureData by viewModel.temperatureLiveData.observeAsState(TemperatureData())
+    val initializeData: Boolean by viewModel.initializeLiveData.observeAsState(false)
 
     val tabTitles = listOf("Control", "Monitor", "ETC")
     val pagerState = rememberPagerState()
@@ -118,10 +125,27 @@ fun FishTankScreen(viewModel: FishTankViewModel,
                 when (tabIndex) {
                     0 -> ControlTab(uiState, eventHandler)
                     1 -> MonitorPage(temperatureState, eventHandler)
-                    2 -> Text("ETC!!!")
+                    2 -> EtcPage(initializeData)
                 }
             }
         }
+    }
+
+    Log.d(TAG, "End composing FishTankScreen")
+}
+
+@Composable
+fun EtcPage(initResult: Boolean) {
+    Column {
+        Text("ETC!!!")
+
+        Text(
+            if(initResult) {
+                "Init Success"
+            } else {
+                "Init fail"
+            }
+        )
     }
 }
 
