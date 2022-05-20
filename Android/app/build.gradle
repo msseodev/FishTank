@@ -5,6 +5,15 @@ plugins {
 }
 
 android {
+    signingConfigs {
+        fishman {
+            storeFile file('../key/fishman-key.jks')
+            storePassword 'fishman'
+            keyAlias 'fishman'
+            keyPassword 'fishman'
+        }
+    }
+
     compileSdk 31
 
     defaultConfig {
@@ -20,9 +29,15 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+            signingConfig signingConfigs.fishman
+        }
+        debug {
+            signingConfig signingConfigs.fishman
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
