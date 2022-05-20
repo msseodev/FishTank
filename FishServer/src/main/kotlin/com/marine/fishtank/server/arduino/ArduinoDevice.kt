@@ -51,7 +51,8 @@ object ArduinoDevice {
                 )
                 port?.eventsMask = SerialPort.MASK_RXCHAR
             } catch (ex: SerialPortException) {
-                throw IOException("Cannot start firmata device", ex)
+                Log.e(TAG, ex.toString())
+                //throw IOException("Can not connect device($portName)", ex)
             }
         }
     }
