@@ -4,41 +4,41 @@ import com.marine.fishtank.server.ArduinoListener
 import com.marine.fishtank.server.model.FishPacket
 import com.marine.fishtank.server.model.OP_GET_TEMPERATURE
 import com.marine.fishtank.server.model.OP_PIN_IO
-import com.marine.fishtank.server.serial.ArduinoSerial
+import com.marine.fishtank.server.serial.ArduinoSerialPort
 import com.marine.fishtank.server.util.Log
 import jssc.SerialPort
 import jssc.SerialPortException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.channels.actor
+import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import java.io.IOException
 
-private const val PIN_BOARD_LED = 13
-private const val PIN_RELAY_OUT_WATER = 49
-private const val PIN_RELAY_IN_WATER = 48
-private const val PIN_RELAY_PUMP = 47
-private const val PIN_RELAY_LIGHT = 46
-private const val PIN_RELAY_PURIFIER1 = 45
-private const val PIN_RELAY_PURIFIER2 = 44
-private const val PIN_RELAY_HEATER = 43
+private const val PIN_BOARD_LED: Short = 13
+private const val PIN_RELAY_OUT_WATER: Short = 49
+private const val PIN_RELAY_IN_WATER: Short = 48
+private const val PIN_RELAY_PUMP: Short = 47
+private const val PIN_RELAY_LIGHT: Short = 46
+private const val PIN_RELAY_PURIFIER1: Short = 45
+private const val PIN_RELAY_PURIFIER2: Short = 44
+private const val PIN_RELAY_HEATER: Short = 43
 
-private const val MODE_INPUT = 0x00
-private const val MODE_OUTPUT = 0x01
-private const val HIGH = 0x01
-private const val LOW = 0x00
+private const val MODE_INPUT: Short = 0x00
+private const val MODE_OUTPUT: Short = 0x01
+private const val HIGH: Short = 0x01
+private const val LOW: Short = 0x00
 
 private const val TAG = "ArduinoDevice"
 
 object ArduinoDevice {
-    private var port: ArduinoSerial? = null
+    private var port: ArduinoSerialPort? = null
     private val listenerMap = mutableMapOf<Int, ArduinoListener>()
-    private val mutex: Mutex = Mutex()
+    private val scope = CoroutineScope(Dispatchers.IO)
 
     fun initialize(portName: String) {
-        port = ArduinoSerial(portName)
+        port = ArduinoSerialPort(portName)
 
         if (port?.isOpened == false) {
             try {
@@ -68,7 +68,7 @@ object ArduinoDevice {
                 opCode = OP_PIN_IO,
                 pin = PIN_BOARD_LED,
                 pinMode = MODE_OUTPUT,
-                data = (if (enable) HIGH else LOW).toDouble()
+                data = (if (enable) HIGH else LOW).toFloat()
             )
         )
     }
@@ -80,7 +80,7 @@ object ArduinoDevice {
                 opCode = OP_PIN_IO,
                 pin = PIN_RELAY_OUT_WATER,
                 pinMode = MODE_OUTPUT,
-                data = (if (enable) HIGH else LOW).toDouble()
+                data = (if (enable) HIGH else LOW).toFloat()
             )
         )
     }
@@ -93,7 +93,7 @@ object ArduinoDevice {
                 opCode = OP_PIN_IO,
                 pin = PIN_RELAY_IN_WATER,
                 pinMode = MODE_OUTPUT,
-                data = (if (open) LOW else HIGH).toDouble()
+                data = (if (open) LOW else HIGH).toFloat()
             )
         )
     }
@@ -105,7 +105,7 @@ object ArduinoDevice {
                 opCode = OP_PIN_IO,
                 pin = PIN_RELAY_PUMP,
                 pinMode = MODE_OUTPUT,
-                data = (if (enable) HIGH else LOW).toDouble()
+                data = (if (enable) HIGH else LOW).toFloat()
             )
         )
     }
@@ -117,7 +117,7 @@ object ArduinoDevice {
                 opCode = OP_PIN_IO,
                 pin = PIN_RELAY_LIGHT,
                 pinMode = MODE_OUTPUT,
-                data = (if (enable) HIGH else LOW).toDouble()
+                data = (if (enable) HIGH else LOW).toFloat()
             )
         )
     }
@@ -129,7 +129,7 @@ object ArduinoDevice {
                 opCode = OP_PIN_IO,
                 pin = PIN_RELAY_PURIFIER1,
                 pinMode = MODE_OUTPUT,
-                data = (if (enable) HIGH else LOW).toDouble()
+                data = (if (enable) HIGH else LOW).toFloat()
             )
         )
     }
@@ -141,7 +141,7 @@ object ArduinoDevice {
                 opCode = OP_PIN_IO,
                 pin = PIN_RELAY_PURIFIER2,
                 pinMode = MODE_OUTPUT,
-                data = (if (enable) HIGH else LOW).toDouble()
+                data = (if (enable) HIGH else LOW).toFloat()
             )
         )
     }
@@ -153,34 +153,29 @@ object ArduinoDevice {
                 opCode = OP_PIN_IO,
                 pin = PIN_RELAY_HEATER,
                 pinMode = MODE_OUTPUT,
-                data = (if (enable) HIGH else LOW).toDouble()
+                data = (if (enable) HIGH else LOW).toFloat()
             )
         )
     }
 
-    private suspend fun sendAndGetResponse(packet: FishPacket) {
-        mutex.withLock {
+    private val requests = scope.actor<FishPacket> {
+        consumeEach { packet ->
             port?.writePacket(packet)
-            val message = port?.readPacket()
-            if (message?.isNotEmpty() == true) {
-                val responsePacket = FishPacket.createFromJson(message)
-                if(packet.id == responsePacket.id) {
-                    processMessage(message)
-                } else {
-                    Log.e(TAG, "Unexpected packet! $responsePacket")
-                }
+            val responsePacket = port?.readPacket()
+            if(packet.id == responsePacket?.id) {
+                processMessage(responsePacket)
+            } else {
+                Log.e(TAG, "Unexpected packet! $responsePacket")
             }
         }
     }
-
-    private fun processMessage(json: String) {
-        if (!json.startsWith("{")) {
-            // This is not json format. Maybe debug message!
-            Log.e(TAG, "(ArduinoDevice)Unknown message=$json")
-            return
+    private fun sendAndGetResponse(packet: FishPacket) {
+        scope.launch {
+            requests.send(packet)
         }
+    }
 
-        val packet = FishPacket.createFromJson(json)
+    private fun processMessage(packet: FishPacket) {
         listenerMap[packet.clientId]?.onMessage(packet)
     }
 

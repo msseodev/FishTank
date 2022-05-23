@@ -27,7 +27,7 @@ class Client(private val socket: Socket): ArduinoListener {
             OP_GET_TEMPERATURE -> {
                 // Send back to client.
                 dataOutputStream.writeUTF(
-                    ServerPacket(clientId = id, opCode = SERVER_OP_GET_TEMPERATURE, doubleData = packet.data).toJson()
+                    ServerPacket(clientId = id, opCode = SERVER_OP_GET_TEMPERATURE, doubleData = packet.data.toDouble()).toJson()
                 )
             }
         }

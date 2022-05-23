@@ -33,6 +33,8 @@
 #include "lib/ArduinoJson-v6.19.4.h"
 #include "FishPacket.h"
 
+#define READ_TIMEOUT 5000
+
 #define ONE_WIRE_BUS 52
 #define BAUDRATE 57600
 
@@ -53,9 +55,6 @@ DallasTemperature sensors(&oneWire);
 
 unsigned long prevMils = 0;
 char buffer[BUFFER_SIZE];
-char sendBuffer[BUFFER_SIZE];
-
-char smallBuffer[SMALL_BUF_SIZE];
 
 void clearBuffer(char* bf, size_t size) {
     for(int i=0; i<size; i++) {
@@ -64,43 +63,48 @@ void clearBuffer(char* bf, size_t size) {
 }
 
 void sendPacket(FishPacket& packet) {
-    StaticJsonDocument<200> doc;
-    doc["id"] = packet.id;
-    doc["clientId"] = packet.clientId;
-    doc["opCode"] = packet.opCode;
-    doc["data"] = packet.data;
-    doc["pin"] = packet.pin;
-    doc["pinMode"] = packet.pinMode;
+    unsigned char buffer[PACKET_SIZE];
+    serializePacket(packet, buffer);
 
-    size_t size = serializeJson(doc, sendBuffer);
-    //Serial.println(sendBuffer);
-
-    sendBuffer[size] = '\n';
-    size++;
-    Serial.write(sendBuffer, size);
-
-    Serial1.print("SendPacket=");
-    Serial1.println(sendBuffer);
-
-    clearBuffer(sendBuffer, BUFFER_SIZE);
+    Serial.write(buffer, PACKET_SIZE);
 }
 
-void jsonToPacket(String json, FishPacket& packet) {
-    StaticJsonDocument<200> doc;
-    DeserializationError error = deserializeJson(doc, json);
-    if (error) {
-        Serial1.print(F("deserializeJson() failed: "));
-        Serial1.print(error.f_str());
-        Serial1.println(json);
-        return;
-    }
+void readPacket(FishPacket& packet) {
+    Serial1.println("ReadPacket");
 
-    packet.id = doc["id"];
-    packet.clientId = doc["clientId"];
-    packet.opCode = doc["opCode"];
-    packet.data = doc["data"];
-    packet.pin = doc["pin"];
-    packet.pinMode = doc["pinMode"];
+    byte buffer[PACKET_SIZE];
+    Serial.readBytes(buffer, PACKET_SIZE);
+
+    // Print buffer for debugging
+    for(unsigned char i:buffer) {
+        char hexBuf[3];
+        sprintf(hexBuf, "%X", i);
+        hexBuf[2] = 0;
+
+        Serial1.print(hexBuf);
+        Serial1.print(" ");
+    }
+    Serial1.println();
+
+    deSerializePacket(packet, buffer);
+
+    Serial1.print("magic=");
+    Serial1.print(packet.magic);
+    Serial1.print(", id=");
+    Serial1.print(packet.id);
+    Serial1.print(", clientId=");
+    Serial1.print(packet.clientId);
+    Serial1.print(", opCode=");
+    Serial1.print(packet.opCode);
+    Serial1.print(", pin=");
+    Serial1.print(packet.pin);
+    Serial1.print(", pinMode=");
+    Serial1.print(packet.pinMode);
+    Serial1.print(", data=");
+    Serial1.print(packet.data);
+    Serial1.println();
+
+    Serial1.println("ReadPacket complete");
 }
 
 void setup() {
@@ -114,17 +118,12 @@ void loop() {
     unsigned long currentMils = millis();
 
     if(currentMils - prevMils > LOOP_INTERVAL) {
-        Serial.setTimeout(60000);
-        Serial.readBytesUntil(PACKET_TERMINATE, buffer, BUFFER_SIZE);
+        Serial.setTimeout(READ_TIMEOUT);
 
-        String message = String(buffer);
-        Serial1.print("ClientMessage=");
-        Serial1.println(message);
+        FishPacket packet;
+        readPacket(packet);
 
-        if (message != nullptr) {
-            FishPacket packet;
-            jsonToPacket(message, packet);
-
+        if (packet.id != 0) {
             switch (packet.opCode) {
                 case OP_GET_TEMPERATURE: {
                     sensors.requestTemperatures();
