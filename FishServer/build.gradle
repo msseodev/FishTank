@@ -11,18 +11,18 @@ repositories {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib"
+    compile "org.jetbrains.kotlin:kotlin-stdlib"
 
-    implementation ('com.github.kurbatov:firmata4j:2.3.8') {
+    compile ('com.github.kurbatov:firmata4j:2.3.8') {
         exclude group: 'org.scream3r', module: 'jssc'
     }
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3'
+    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3'
 
-    implementation "io.github.java-native:jssc:2.9.2"
-    implementation "org.slf4j:slf4j-api:1.7.25"
-    implementation "org.slf4j:slf4j-simple:1.7.25"
-    implementation 'com.google.code.gson:gson:2.9.0'
-    implementation 'org.mariadb.jdbc:mariadb-java-client:3.0.4'
+    compile "io.github.java-native:jssc:2.9.2"
+    compile "org.slf4j:slf4j-api:1.7.25"
+    compile "org.slf4j:slf4j-simple:1.7.25"
+    compile 'com.google.code.gson:gson:2.9.0'
+    compile 'org.mariadb.jdbc:mariadb-java-client:3.0.4'
 
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
@@ -31,4 +31,16 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'com.marine.fishtank.server.MainKt'
+    }
+    from {
+        configurations.runtimeClasspath.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
