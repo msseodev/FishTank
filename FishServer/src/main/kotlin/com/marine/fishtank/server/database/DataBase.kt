@@ -1,4 +1,4 @@
-package com.marine.fishtank.server
+package com.marine.fishtank.server.database
 
 import com.marine.fishtank.server.model.Temperature
 import com.marine.fishtank.server.util.Log

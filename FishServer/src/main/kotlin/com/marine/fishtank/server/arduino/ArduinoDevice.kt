@@ -4,7 +4,6 @@ import com.marine.fishtank.server.ArduinoListener
 import com.marine.fishtank.server.model.FishPacket
 import com.marine.fishtank.server.model.OP_GET_TEMPERATURE
 import com.marine.fishtank.server.model.OP_PIN_IO
-import com.marine.fishtank.server.serial.ArduinoSerialPort
 import com.marine.fishtank.server.util.Log
 import jssc.SerialPort
 import jssc.SerialPortException
@@ -13,8 +12,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.actor
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 
 private const val PIN_BOARD_LED: Short = 13
 private const val PIN_RELAY_OUT_WATER: Short = 49

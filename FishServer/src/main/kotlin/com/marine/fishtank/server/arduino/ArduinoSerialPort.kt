@@ -1,13 +1,11 @@
-package com.marine.fishtank.server.serial
+package com.marine.fishtank.server.arduino
 
 import com.marine.fishtank.server.model.FishPacket
 import com.marine.fishtank.server.model.MAGIC
 import com.marine.fishtank.server.model.PACKET_SIZE
-import com.marine.fishtank.server.model.toJson
 import com.marine.fishtank.server.util.Log
 import jssc.SerialPort
 import jssc.SerialPortTimeoutException
-import kotlinx.coroutines.yield
 import java.lang.Exception
 import java.lang.StringBuilder
 import java.nio.ByteBuffer
