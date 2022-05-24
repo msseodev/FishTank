@@ -1,6 +1,5 @@
 package com.marine.fishtank.server.arduino
 
-import com.marine.fishtank.server.ArduinoListener
 import com.marine.fishtank.server.model.FishPacket
 import com.marine.fishtank.server.model.OP_GET_TEMPERATURE
 import com.marine.fishtank.server.model.OP_PIN_IO

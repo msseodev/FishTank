@@ -4,7 +4,7 @@ import java.sql.Date
 
 
 data class Temperature (
-    val id: Int,
+    val id: Int = 0,
     val temperature: Float,
     val time: Date
 )

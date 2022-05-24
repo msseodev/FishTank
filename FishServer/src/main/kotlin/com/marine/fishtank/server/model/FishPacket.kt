@@ -17,13 +17,6 @@ data class FishPacket(
     val pin: Short = 0,
     val pinMode: Short = 0,
     val data: Float = 0f
-) {
-    companion object {
-        fun createFromJson(json: String) = Gson().fromJson(json, FishPacket::class.java)
-    }
-}
-
-fun FishPacket.toJson(): String = Gson().toJson(this) + "\n"
-
+)
 
 

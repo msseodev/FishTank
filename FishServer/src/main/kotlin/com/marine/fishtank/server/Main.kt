@@ -1,6 +1,7 @@
 package com.marine.fishtank.server
 
 import com.marine.fishtank.server.arduino.ArduinoDevice
+import com.marine.fishtank.server.database.DataBase
 import com.marine.fishtank.server.util.Log
 import kotlinx.coroutines.runBlocking
 
@@ -12,6 +13,8 @@ fun main(args: Array<String>) {
     runBlocking {
         ArduinoDevice.initialize(PORT_NAME)
         DataBase.initialize()
+
+        TemperatureService().start()
 
         val acceptor = SocketAcceptor()
         acceptor.startListen()

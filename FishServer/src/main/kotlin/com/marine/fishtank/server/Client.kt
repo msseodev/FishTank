@@ -1,6 +1,7 @@
 package com.marine.fishtank.server
 
 import com.marine.fishtank.server.arduino.ArduinoDevice
+import com.marine.fishtank.server.arduino.ArduinoListener
 import com.marine.fishtank.server.model.*
 import com.marine.fishtank.server.util.Log
 import kotlinx.coroutines.CoroutineScope

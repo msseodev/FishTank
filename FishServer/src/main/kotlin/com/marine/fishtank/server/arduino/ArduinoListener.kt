@@ -1,4 +1,4 @@
-package com.marine.fishtank.server
+package com.marine.fishtank.server.arduino
 
 import com.marine.fishtank.server.model.FishPacket
 
