@@ -9,21 +9,18 @@ private const val PORT_NAME_WINDOW = "COM3"
 private const val PORT_NAME_LINUX = "/dev/ttyUSB0"
 private const val TAG = "MAIN"
 fun main(args: Array<String>) {
+    val portName = args[0]
+
     Log.d(TAG, "Starting FishTank server.")
 
     val os = System.getProperty("os.name")
     Log.d(TAG, "OS=$os")
 
-    val port = if(os.contains("window", true)) {
-        PORT_NAME_WINDOW
-    } else {
-        PORT_NAME_LINUX
-    }
-
     runBlocking {
-        ArduinoDevice.initialize(port)
+        ArduinoDevice.initialize(portName)
 
-        if(port == PORT_NAME_LINUX) {
+        if(!os.contains("window", true)) {
+            // Not window -> Raspberry pi.
             DataBase.initialize()
             TemperatureService().start()
         }
