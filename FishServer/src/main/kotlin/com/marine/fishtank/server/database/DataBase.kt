@@ -5,6 +5,7 @@ import com.marine.fishtank.server.util.Log
 import java.sql.Connection
 import java.sql.Date
 import java.sql.DriverManager
+import java.sql.Timestamp
 
 private const val CONNECTION_URL = "jdbc:mariadb://127.0.0.1:16650/fishtank"
 private const val USER_ID = "root"
@@ -55,7 +56,7 @@ object DataBase {
             "INSERT INTO $TB_TEMPERATURE($COL_TEMP_TEMPERATURE, $COL_TEMP_TIME) VALUES(?,?)"
         ).apply {
             setFloat(1, temperature.temperature)
-            setDate(2, temperature.time)
+            setTimestamp(2, Timestamp(temperature.time.time))
         }
         statement.executeUpdate()
     }
