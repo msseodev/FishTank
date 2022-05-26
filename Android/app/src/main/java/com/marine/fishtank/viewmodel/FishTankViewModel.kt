@@ -12,8 +12,8 @@ import kotlinx.coroutines.withContext
 import kotlin.math.round
 
 private const val TAG = "FishTankViewModel"
-//private const val SERVER_URL = "marineseo.iptime.org"
-private const val SERVER_URL = "192.168.0.12"
+private const val SERVER_URL = "marineseo.iptime.org"
+//private const val SERVER_URL = "192.168.0.12"
 private const val SERVER_PORT = 53265
 private const val TEMPERATURE_INTERVAL = 1000L * 5
 
@@ -63,7 +63,7 @@ class FishTankViewModel : ViewModel() {
             // packet sent by server.
             Log.d(TAG, "onServerPacket=$packet")
             when (packet.opCode) {
-                SERVER_OP_GET_TEMPERATURE -> {
+                SERVER_OP_READ_TEMPERATURE -> {
                     temperatureLiveData.postValue(
                         TemperatureData(
                             packet.doubleData, System.currentTimeMillis()
@@ -104,7 +104,7 @@ class FishTankViewModel : ViewModel() {
     fun startListenTemperature() {
         viewModelScope.launch(Dispatchers.IO) {
             while (true) {
-                tankApi.sendCommand(ServerPacket(AppId.MY_ID, SERVER_OP_GET_TEMPERATURE))
+                tankApi.sendCommand(ServerPacket(AppId.MY_ID, SERVER_OP_READ_TEMPERATURE))
                 delay(TEMPERATURE_INTERVAL)
             }
         }
@@ -170,8 +170,7 @@ class FishTankViewModel : ViewModel() {
 
     private fun calculateWaterPumpTime(ratio: Double): Int {
         // TODO - WaterPump 의 분당 출수량을 측정하여 ratio 에 따라 동작시간을 계산하여 리턴
-        // https://www.coupang.com/vp/products/1749478023?vendorItemId=70967688005
-        // 스펙상 토출량: 분당 2L
+
         val targetOutVolume = TANK_WATER_VOLUME * ratio
         return round((targetOutVolume / 2.0) * 60).toInt()
     }
