@@ -1,7 +1,8 @@
 package com.marine.fishtank.model
 
-import java.util.*
+import kotlin.random.Random
+
 
 object AppId {
-    val MY_ID = UUID.randomUUID().hashCode()
+    val MY_ID = Random(System.currentTimeMillis()).nextInt(Integer.MAX_VALUE)
 }
