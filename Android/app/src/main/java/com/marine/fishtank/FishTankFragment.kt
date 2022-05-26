@@ -13,13 +13,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
@@ -36,9 +34,7 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.pagerTabIndicatorOffset
 import com.google.accompanist.pager.rememberPagerState
-import com.marine.fishtank.model.DataSource
-import com.marine.fishtank.model.Status
-import com.marine.fishtank.model.TemperatureData
+import com.marine.fishtank.model.Temperature
 import com.marine.fishtank.viewmodel.FishTankViewModel
 import com.marine.fishtank.viewmodel.FishTankViewModelFactory
 import com.marine.fishtank.viewmodel.UiEvent
@@ -51,7 +47,6 @@ import java.util.*
 
 private const val TAG = "FishTankFragment"
 
-@OptIn(ExperimentalPagerApi::class)
 class FishTankFragment : Fragment() {
     private val viewModel: FishTankViewModel by viewModels {
         FishTankViewModelFactory()
@@ -61,10 +56,15 @@ class FishTankFragment : Fragment() {
         // Need call to pull the trigger of Composition.
         val sTime = System.currentTimeMillis()
 
+        viewModel.initializeLiveData.observe(viewLifecycleOwner) { connect ->
+            if(connect) {
+                Log.i(TAG, "Connect to fish server successful.")
+                viewModel.startFetchTemperature()
+            } else {
+                Log.e(TAG, "Fail to connect!")
+            }
+        }
         viewModel.init()
-        viewModel.startFetchHistory()
-
-        viewModel.startListenTemperature()
 
         Log.d(TAG, "onCreateView viewModel elapse=${System.currentTimeMillis() - sTime}")
 
@@ -87,7 +87,7 @@ fun FishTankScreen(viewModel: FishTankViewModel,
     Log.d(TAG, "Composing FishTankScreen")
 
     val uiState: UiState by viewModel.uiState.observeAsState(UiState())
-    val temperatureState: TemperatureData by viewModel.temperatureLiveData.observeAsState(TemperatureData())
+    val temperatureState: List<Temperature> by viewModel.temperatureLiveData.observeAsState(emptyList())
     val initializeData: Boolean by viewModel.initializeLiveData.observeAsState(false)
 
     val tabTitles = listOf("Control", "Monitor", "Setting")
@@ -150,19 +150,20 @@ fun EtcPage(initResult: Boolean) {
 }
 
 @Composable
-fun MonitorPage(temperatureData: TemperatureData, eventHandler: (UiEvent) -> Unit) {
-    Chart(temperatureData, eventHandler)
+fun MonitorPage(temperatureList: List<Temperature>, eventHandler: (UiEvent) -> Unit) {
+    Chart(temperatureList, eventHandler)
 }
 
 @Composable
-fun Chart(temperatureData: TemperatureData, eventHandler: (UiEvent) -> Unit) {
+fun Chart(temperatureList: List<Temperature>, eventHandler: (UiEvent) -> Unit) {
     Log.d(TAG, "Composing Chart!")
 
     AndroidView(
         modifier = Modifier
-            .height(500.dp)
+            .fillMaxHeight()
             .fillMaxWidth(),
         factory = { context ->
+            Log.d(TAG, "Factory LineChart")
             LineChart(context).apply {
                 // no description text
                 description.isEnabled = false
@@ -194,9 +195,8 @@ fun Chart(temperatureData: TemperatureData, eventHandler: (UiEvent) -> Unit) {
                     valueFormatter = object : ValueFormatter() {
                         override fun getFormattedValue(value: Float): String {
                             val entry = data.dataSets[0].getEntryForIndex(value.toInt())
-                            val tankData = entry.data as TemperatureData
-                            val date = Date(tankData.dateTime)
-                            return SimpleDateFormat("HH:mm:ss").format(date)
+                            val tmp = entry.data as Temperature
+                            return SimpleDateFormat("HH:mm:ss").format(Date(tmp.time))
                         }
                     }
                 }
@@ -254,21 +254,22 @@ fun Chart(temperatureData: TemperatureData, eventHandler: (UiEvent) -> Unit) {
         },
         update = {
             Log.d(TAG, "Update LineChart")
-            if(temperatureData.temperature > 0 ) {
-                val dataSet = it.data.getDataSetByIndex(0)
 
-                it.data.addEntry(
-                    Entry(
-                        dataSet.entryCount.toFloat(), temperatureData.temperature.toFloat(),
-                        temperatureData
-                    ), 0
+            val entryList = mutableListOf<Entry>()
+            for(tmp in temperatureList.withIndex()) {
+                entryList.add(
+                    Entry(tmp.index.toFloat(), tmp.value.temperature, tmp.value)
                 )
-                it.data.notifyDataChanged()
-
-                it.notifyDataSetChanged()
-                it.setVisibleXRangeMaximum(10f)
-                it.moveViewToX(it.data.entryCount.toFloat())
             }
+
+            val dataSet = it.data.getDataSetByIndex(0) as LineDataSet
+            dataSet.values = entryList
+
+            it.data.notifyDataChanged()
+            it.notifyDataSetChanged()
+
+            it.setVisibleXRangeMaximum(10f)
+            it.moveViewToX(it.data.entryCount.toFloat())
         })
 }
 

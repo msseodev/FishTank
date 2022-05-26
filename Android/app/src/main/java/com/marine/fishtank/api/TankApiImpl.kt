@@ -1,6 +1,5 @@
 package com.marine.fishtank.api
 
-import com.marine.fishtank.model.TemperatureData
 import com.marine.fishtank.model.ServerPacket
 import com.marine.fishtank.model.toJson
 
@@ -16,9 +15,8 @@ class TankApiImpl: TankApi, MessageListener {
         return connectResult
     }
 
-    override fun sendCommand(packet: ServerPacket): List<TemperatureData> {
+    override fun sendCommand(packet: ServerPacket) {
         client.send(packet.toJson())
-        return emptyList()
     }
 
     override fun disConnect() {

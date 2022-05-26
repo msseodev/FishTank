@@ -56,7 +56,7 @@ object DataBase {
             "INSERT INTO $TB_TEMPERATURE($COL_TEMP_TEMPERATURE, $COL_TEMP_TIME) VALUES(?,?)"
         ).apply {
             setFloat(1, temperature.temperature)
-            setTimestamp(2, Timestamp(temperature.time.time))
+            setTimestamp(2, Timestamp(temperature.time))
         }
         statement.executeUpdate()
     }
@@ -64,11 +64,13 @@ object DataBase {
     fun fetchTemperature(from: Date, until: Date): List<Temperature> {
         assertInit()
 
-        val statement = connection.prepareStatement(
-            "SELECT * FROM $TB_TEMPERATURE WHERE ? AND ?"
-        ).apply {
-            setDate(1, from)
-            setDate(2, until)
+        val sql = "SELECT * FROM $TB_TEMPERATURE WHERE $COL_TEMP_TIME BETWEEN ? AND ?"
+        val fromStr = from.format()
+        val untilStr = until.format()
+        Log.i(TAG, "$sql, param=$fromStr, $untilStr")
+        val statement = connection.prepareStatement(sql).apply {
+            setString(1, fromStr)
+            setString(2, untilStr)
         }
 
         return statement.executeQuery().toTemperature()

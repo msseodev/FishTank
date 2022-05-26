@@ -22,7 +22,7 @@ data class ServerPacket(
     val clientId: Int = 0,
     val opCode: Int,
     val data: Int = 0,
-    val doubleData: Double = 0.0
+    val temperatureList: List<Temperature> = emptyList()
 ) {
     companion object {
         fun createFromJson(json: String) = Gson().fromJson(json, ServerPacket::class.java)

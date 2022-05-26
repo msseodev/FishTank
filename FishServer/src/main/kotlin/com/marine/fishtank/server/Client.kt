@@ -2,20 +2,25 @@ package com.marine.fishtank.server
 
 import com.marine.fishtank.server.arduino.ArduinoDevice
 import com.marine.fishtank.server.arduino.ArduinoListener
+import com.marine.fishtank.server.database.DataBase
 import com.marine.fishtank.server.model.*
 import com.marine.fishtank.server.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.DataInputStream
 import java.io.DataOutputStream
-import java.lang.Exception
 import java.net.Socket
+import java.sql.Date
+import java.text.SimpleDateFormat
 
 private const val MAGIC_VALUE = 235621
 private const val TAG = "Client"
 
-class Client(private val socket: Socket): ArduinoListener {
+private const val MILS_DAYS_14 = 1000L * 60 * 60 * 24 * 14
+
+class Client(private val socket: Socket) : ArduinoListener {
     private var dataOutputStream: DataOutputStream = DataOutputStream(socket.getOutputStream())
     private var dataInputStream: DataInputStream = DataInputStream(socket.getInputStream())
     private val clientScope = CoroutineScope(Dispatchers.IO)
@@ -24,11 +29,20 @@ class Client(private val socket: Socket): ArduinoListener {
 
     override fun onMessage(packet: FishPacket) {
         // Message from Arduino device!
-        when(packet.opCode) {
+        when (packet.opCode) {
             OP_GET_TEMPERATURE -> {
                 // Send back to client.
                 dataOutputStream.writeUTF(
-                    ServerPacket(clientId = id, opCode = SERVER_OP_READ_TEMPERATURE, doubleData = packet.data.toDouble()).toJson()
+                    ServerPacket(
+                        clientId = id,
+                        opCode = SERVER_OP_READ_TEMPERATURE,
+                        temperatureList = arrayListOf(
+                            Temperature(
+                                temperature = packet.data,
+                                time = System.currentTimeMillis()
+                            )
+                        )
+                    ).toJson()
                 )
             }
         }
@@ -41,7 +55,7 @@ class Client(private val socket: Socket): ArduinoListener {
         ArduinoDevice.registerListener(id, this)
 
         clientScope.launch {
-            while(isRun) {
+            while (isRun) {
                 val message = dataInputStream.readUTF()
                 // message should be json.
                 handleMessage(message)
@@ -63,6 +77,29 @@ class Client(private val socket: Socket): ArduinoListener {
                 }
                 SERVER_OP_READ_TEMPERATURE -> {
                     ArduinoDevice.getTemperature(packet.clientId)
+                }
+                SERVER_OP_DB_TEMPERATURE -> {
+                    // Last 14 days for now...
+                    val from = Date(System.currentTimeMillis() - MILS_DAYS_14)
+                    val until = Date(System.currentTimeMillis())
+                    val temperatures = DataBase.fetchTemperature(from, until)
+
+                    // for logging
+                    val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+                    Log.d(
+                        TAG,
+                        "Fetching from ${formatter.format(from)} until ${formatter.format(until)} tempSize=${temperatures.size} $temperatures"
+                    )
+
+                    withContext(Dispatchers.IO) {
+                        dataOutputStream.writeUTF(
+                            ServerPacket(
+                                clientId = id,
+                                opCode = SERVER_OP_DB_TEMPERATURE,
+                                temperatureList = temperatures
+                            ).toJson()
+                        )
+                    }
                 }
                 SERVER_OP_IN_WATER -> {
                     ArduinoDevice.enableInWaterValve(packet.clientId, packet.data != 0)
@@ -109,7 +146,7 @@ class Client(private val socket: Socket): ArduinoListener {
     fun handShake(): Boolean {
         val first = dataInputStream.readInt()
         val verified = first == MAGIC_VALUE
-        if(!verified) return false
+        if (!verified) return false
 
         this.id = dataInputStream.readInt()
         return true

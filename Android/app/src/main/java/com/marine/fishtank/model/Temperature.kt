@@ -3,9 +3,9 @@ package com.marine.fishtank.model
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 
-
 @Parcelize
-data class TemperatureData(
-    var temperature: Double = 0.0,
-    var dateTime: Long = 0
+data class Temperature (
+    val id: Int = 0,
+    val temperature: Float,
+    val time: Long
 ): Parcelable

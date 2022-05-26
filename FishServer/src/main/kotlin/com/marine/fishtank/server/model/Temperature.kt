@@ -1,10 +1,9 @@
 package com.marine.fishtank.server.model
 
-import java.sql.Date
-
+import java.util.*
 
 data class Temperature (
     val id: Int = 0,
     val temperature: Float,
-    val time: Date
+    val time: Long
 )

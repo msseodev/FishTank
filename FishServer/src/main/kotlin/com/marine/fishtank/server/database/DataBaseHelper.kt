@@ -6,15 +6,18 @@ import java.sql.Date
 import java.sql.ResultSet
 import java.text.SimpleDateFormat
 
+private const val TAG = "DataBaseHelper"
+
 fun ResultSet.toTemperature(): List<Temperature> {
     val list = mutableListOf<Temperature>()
 
+    first()
     while (next()) {
         list.add(
             Temperature(
                 id = getInt(COL_TEMP_ID),
                 temperature = getFloat(COL_TEMP_TEMPERATURE),
-                time = getDate(COL_TEMP_TIME)
+                time = getTimestamp(COL_TEMP_TIME).time
             )
         )
     }
@@ -22,8 +25,8 @@ fun ResultSet.toTemperature(): List<Temperature> {
     return list
 }
 
-fun Date.format() {
-    SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(this)
+fun Date.format(): String {
+    return SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(this)
 }
 
 fun ResultSet.toSingleUser(): User? {

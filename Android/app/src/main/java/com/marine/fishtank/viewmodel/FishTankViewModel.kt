@@ -15,7 +15,6 @@ private const val TAG = "FishTankViewModel"
 private const val SERVER_URL = "marineseo.iptime.org"
 //private const val SERVER_URL = "192.168.0.12"
 private const val SERVER_PORT = 53265
-private const val TEMPERATURE_INTERVAL = 1000L * 5
 
 // 어항 물 용량
 private const val TANK_WATER_VOLUME = 100
@@ -46,9 +45,7 @@ sealed class UiEvent(val value: Boolean = false) {
 }
 
 class FishTankViewModel : ViewModel() {
-    val liveTankData = MutableLiveData<DataSource<TemperatureData>>()
-
-    val temperatureLiveData = MutableLiveData<TemperatureData>()
+    val temperatureLiveData = MutableLiveData<List<Temperature>>()
 
     val initializeLiveData = MutableLiveData<Boolean>()
 
@@ -64,11 +61,18 @@ class FishTankViewModel : ViewModel() {
             Log.d(TAG, "onServerPacket=$packet")
             when (packet.opCode) {
                 SERVER_OP_READ_TEMPERATURE -> {
-                    temperatureLiveData.postValue(
-                        TemperatureData(
-                            packet.doubleData, System.currentTimeMillis()
+                    // only one temperature!
+                    if(packet.temperatureList.isNotEmpty()) {
+                        val list = mutableListOf<Temperature>()
+                        list.add(packet.temperatureList[0])
+                        temperatureLiveData.postValue(
+                            list
                         )
-                    )
+                    }
+                }
+                SERVER_OP_DB_TEMPERATURE -> {
+                    // List of temperature!
+                    temperatureLiveData.postValue(packet.temperatureList)
                 }
             }
         }
@@ -90,27 +94,15 @@ class FishTankViewModel : ViewModel() {
         }
     }
 
-    fun startFetchHistory() {
+    fun startFetchTemperature() {
         viewModelScope.launch(Dispatchers.IO) {
-            val dataList = tankApi.sendCommand(ServerPacket(AppId.MY_ID, SERVER_OP_GET_HISTORY))
-            withContext(Dispatchers.Main) {
-                dataList.forEach {
-                    liveTankData.value = DataSource(Status.SUCCESS, it)
-                }
-            }
-        }
-    }
-
-    fun startListenTemperature() {
-        viewModelScope.launch(Dispatchers.IO) {
-            while (true) {
-                tankApi.sendCommand(ServerPacket(AppId.MY_ID, SERVER_OP_READ_TEMPERATURE))
-                delay(TEMPERATURE_INTERVAL)
-            }
+            tankApi.sendCommand(ServerPacket(AppId.MY_ID, SERVER_OP_DB_TEMPERATURE))
         }
     }
 
     private fun changeWater(ratio: Double) {
+        // TODO - End-peer 에서 모든걸 제어하는건 너무 위험하다.. 도중에 연결이 끊어지면????
+        //      - 아래 내용 전부를 서버에 보내고 서버에서 처리해야 한다.
         viewModelScope.launch(Dispatchers.IO) {
             // Before draining we have to close in-water solenoid valve.
             enableInWaterValve(false)

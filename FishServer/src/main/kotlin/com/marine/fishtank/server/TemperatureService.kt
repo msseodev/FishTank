@@ -26,7 +26,7 @@ class TemperatureService: ArduinoListener {
 
         DataBase.insertTemperature(Temperature(
             temperature = temperature,
-            time = Date(System.currentTimeMillis())
+            time = System.currentTimeMillis()
         ))
     }
 

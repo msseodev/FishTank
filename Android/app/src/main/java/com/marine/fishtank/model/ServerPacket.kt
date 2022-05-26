@@ -19,10 +19,10 @@ const val SERVER_OP_PURIFIER_2 = 205
 const val SERVER_OP_HEATER = 206
 
 data class ServerPacket(
-    val clientId: Int = AppId.MY_ID,
+    val clientId: Int = 0,
     val opCode: Int,
     val data: Int = 0,
-    val doubleData: Double = 0.0
+    val temperatureList: List<Temperature> = emptyList()
 ) {
     companion object {
         fun createFromJson(json: String) = Gson().fromJson(json, ServerPacket::class.java)
