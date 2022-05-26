@@ -5,17 +5,28 @@ import com.marine.fishtank.server.database.DataBase
 import com.marine.fishtank.server.util.Log
 import kotlinx.coroutines.runBlocking
 
-//private const val PORT_NAME = "COM3"
-private const val PORT_NAME = "/dev/ttyUSB0"
+private const val PORT_NAME_WINDOW = "COM3"
+private const val PORT_NAME_LINUX = "/dev/ttyUSB0"
 private const val TAG = "MAIN"
 fun main(args: Array<String>) {
     Log.d(TAG, "Starting FishTank server.")
 
-    runBlocking {
-        ArduinoDevice.initialize(PORT_NAME)
-        DataBase.initialize()
+    val os = System.getProperty("os.name")
+    Log.d(TAG, "OS=$os")
 
-        TemperatureService().start()
+    val port = if(os.contains("window", true)) {
+        PORT_NAME_WINDOW
+    } else {
+        PORT_NAME_LINUX
+    }
+
+    runBlocking {
+        ArduinoDevice.initialize(port)
+
+        if(port == PORT_NAME_LINUX) {
+            DataBase.initialize()
+            TemperatureService().start()
+        }
 
         val acceptor = SocketAcceptor()
         acceptor.startListen()

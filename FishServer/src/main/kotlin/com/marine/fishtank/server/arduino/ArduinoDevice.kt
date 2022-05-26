@@ -46,6 +46,8 @@ object ArduinoDevice {
                     SerialPort.PARITY_NONE
                 )
                 port?.eventsMask = SerialPort.MASK_RXCHAR
+
+                Log.i(TAG, "Arduino device is connected!")
             } catch (ex: SerialPortException) {
                 Log.e(TAG, ex.toString())
                 //throw IOException("Can not connect device($portName)", ex)
