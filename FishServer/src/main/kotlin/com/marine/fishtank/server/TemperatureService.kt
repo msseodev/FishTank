@@ -12,7 +12,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.sql.Date
 
-private const val TEMPERATURE_INTERVAL = 1000L * 60
+private const val TEMPERATURE_INTERVAL = 1000L * 60 * 5
 private const val SERVICE_ID = Integer.MAX_VALUE
 
 private const val TAG = "TemperatureService"
