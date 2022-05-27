@@ -59,7 +59,7 @@ class FishTankFragment : Fragment() {
         viewModel.initializeLiveData.observe(viewLifecycleOwner) { connect ->
             if(connect) {
                 Log.i(TAG, "Connect to fish server successful.")
-                viewModel.startFetchTemperature()
+                viewModel.startFetchTemperature(1)
             } else {
                 Log.e(TAG, "Fail to connect!")
             }
@@ -91,7 +91,8 @@ fun FishTankScreen(viewModel: FishTankViewModel,
     val initializeData: Boolean by viewModel.initializeLiveData.observeAsState(false)
 
     val tabTitles = listOf("Control", "Monitor", "Setting")
-    val pagerState = rememberPagerState()
+    // Default page -> monitor
+    val pagerState = rememberPagerState(0)
 
     // Surface = TAB 전체화면
     Surface(
@@ -124,7 +125,7 @@ fun FishTankScreen(viewModel: FishTankViewModel,
             ) { tabIndex ->
                 when (tabIndex) {
                     0 -> ControlTab(uiState, eventHandler)
-                    1 -> MonitorPage(temperatureState, eventHandler)
+                    1 -> MonitorPage(temperatureState, uiState, eventHandler)
                     2 -> EtcPage(initializeData)
                 }
             }
@@ -150,18 +151,40 @@ fun EtcPage(initResult: Boolean) {
 }
 
 @Composable
-fun MonitorPage(temperatureList: List<Temperature>, eventHandler: (UiEvent) -> Unit) {
-    Chart(temperatureList, eventHandler)
+fun MonitorPage(temperatureList: List<Temperature>, uiState: UiState, eventHandler: (UiEvent) -> Unit) {
+    Log.d(TAG, "MonitorPage!")
+
+    val position = remember { mutableStateOf(1f) }
+
+    Column {
+        Chart(temperatureList, modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(400.dp, 600.dp), eventHandler)
+
+        Log.d(TAG, "Slider! days=${position.value}")
+        Slider(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp),
+            value = position.value,
+            valueRange = 1f..30f,
+            steps = 0,
+            onValueChange = { value:Float ->
+                position.value = value
+            },
+            onValueChangeFinished = {
+                eventHandler(UiEvent.OnChangeTemperatureRange(position.value.toInt()))
+            }
+        )
+        Spacer(modifier = Modifier.height(5.dp))
+        Text(text = position.value.toInt().toString())
+    }
 }
 
 @Composable
-fun Chart(temperatureList: List<Temperature>, eventHandler: (UiEvent) -> Unit) {
+fun Chart(temperatureList: List<Temperature>, modifier: Modifier, eventHandler: (UiEvent) -> Unit) {
     Log.d(TAG, "Composing Chart!")
 
     AndroidView(
-        modifier = Modifier
-            .fillMaxHeight()
-            .fillMaxWidth(),
+        modifier = modifier,
         factory = { context ->
             Log.d(TAG, "Factory LineChart")
             LineChart(context).apply {
@@ -196,7 +219,7 @@ fun Chart(temperatureList: List<Temperature>, eventHandler: (UiEvent) -> Unit) {
                         override fun getFormattedValue(value: Float): String {
                             val entry = data.dataSets[0].getEntryForIndex(value.toInt())
                             val tmp = entry.data as Temperature
-                            return SimpleDateFormat("HH:mm:ss").format(Date(tmp.time))
+                            return SimpleDateFormat("MM-dd HH:mm").format(Date(tmp.time))
                         }
                     }
                 }
@@ -236,7 +259,7 @@ fun Chart(temperatureList: List<Temperature>, eventHandler: (UiEvent) -> Unit) {
                     circleRadius = 4f
                     fillAlpha = 65
                     fillColor = ColorTemplate.getHoloBlue()
-                    highLightColor = android.graphics.Color.rgb(110, 117, 117)
+                    highLightColor = R.color.purple_200
                     setDrawCircleHole(true)
                 }
 
@@ -268,8 +291,8 @@ fun Chart(temperatureList: List<Temperature>, eventHandler: (UiEvent) -> Unit) {
             it.data.notifyDataChanged()
             it.notifyDataSetChanged()
 
-            it.setVisibleXRangeMaximum(10f)
-            it.moveViewToX(it.data.entryCount.toFloat())
+            //it.setVisibleXRangeMaximum(10f)
+            //it.moveViewToX(it.data.entryCount.toFloat())
         })
 }
 

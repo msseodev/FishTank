@@ -28,11 +28,15 @@ data class UiState(
     var purifierState: Boolean = false,
 
     var temperature: Double = 0.0,
+    var temperatureDays: Float = 0f,
 
     var resultText: String = "",
 )
 
-sealed class UiEvent(val value: Boolean = false) {
+sealed class UiEvent(
+    val value: Boolean = false,
+    val intValue: Int = 0
+) {
     class OutWaterEvent(enable: Boolean) : UiEvent(enable)
     class InWaterEvent(enable: Boolean) : UiEvent(enable)
     class LightEvent(enable: Boolean) : UiEvent(enable)
@@ -42,6 +46,7 @@ sealed class UiEvent(val value: Boolean = false) {
     class LedEvent(enable: Boolean) : UiEvent(enable)
 
     class ChangeWater : UiEvent()
+    class OnChangeTemperatureRange(count: Int) : UiEvent(intValue = count)
 }
 
 class FishTankViewModel : ViewModel() {
@@ -94,9 +99,11 @@ class FishTankViewModel : ViewModel() {
         }
     }
 
-    fun startFetchTemperature() {
+    fun startFetchTemperature(days: Int) {
         viewModelScope.launch(Dispatchers.IO) {
-            tankApi.sendCommand(ServerPacket(AppId.MY_ID, SERVER_OP_DB_TEMPERATURE))
+            tankApi.sendCommand(ServerPacket(clientId = AppId.MY_ID, opCode = SERVER_OP_DB_TEMPERATURE, data = days))
+            val daysInFl = days.toFloat()
+            Log.d(TAG, "DaysInFl=$daysInFl")
         }
     }
 
@@ -240,6 +247,9 @@ class FishTankViewModel : ViewModel() {
                         )
                     )
                     enableBoardLed(uiEvent.value)
+                }
+                is UiEvent.OnChangeTemperatureRange -> {
+                    startFetchTemperature(uiEvent.intValue)
                 }
             }
         }
