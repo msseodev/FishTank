@@ -158,12 +158,16 @@ fun MonitorPage(temperatureList: List<Temperature>, uiState: UiState, eventHandl
     Log.d(TAG, "MonitorPage!")
 
     val position = remember { mutableStateOf(1f) }
+    val positionRange = remember { mutableStateOf(10f) }
 
     Column {
         Chart(
-            temperatureList, modifier = Modifier
+            temperatureList,
+            modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(400.dp, 600.dp), eventHandler
+                .heightIn(400.dp, 600.dp),
+            maximumCount = positionRange.value,
+            eventHandler = eventHandler
         )
 
         Log.d(TAG, "Slider! days=${position.value}")
@@ -183,14 +187,38 @@ fun MonitorPage(temperatureList: List<Temperature>, uiState: UiState, eventHandl
         )
         Spacer(modifier = Modifier.height(5.dp))
         Text(
-            modifier = Modifier.padding(20.dp),
+            modifier = Modifier.padding(horizontal = 20.dp),
             text = "${position.value.toInt()} Days"
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+        Slider(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 15.dp),
+            value = positionRange.value,
+            valueRange = 1f..30f,
+            steps = 0,
+            onValueChange = { value: Float ->
+                positionRange.value = value
+            },
+            onValueChangeFinished = {
+
+            }
+        )
+        Spacer(modifier = Modifier.height(5.dp))
+        Text(
+            modifier = Modifier.padding(horizontal = 20.dp),
+            text = "${positionRange.value.toInt()} MAX"
         )
     }
 }
 
 @Composable
-fun Chart(temperatureList: List<Temperature>, modifier: Modifier, eventHandler: (UiEvent) -> Unit) {
+fun Chart(temperatureList: List<Temperature>,
+          modifier: Modifier,
+          maximumCount: Float,
+          eventHandler: (UiEvent) -> Unit) {
     Log.d(TAG, "Composing Chart!")
 
     AndroidView(
@@ -289,7 +317,7 @@ fun Chart(temperatureList: List<Temperature>, modifier: Modifier, eventHandler: 
             }
         },
         update = {
-            Log.d(TAG, "Update LineChart")
+            Log.d(TAG, "Update LineChart mx=$maximumCount")
 
             val entryList = mutableListOf<Entry>()
             for (tmp in temperatureList.withIndex()) {
@@ -305,7 +333,7 @@ fun Chart(temperatureList: List<Temperature>, modifier: Modifier, eventHandler: 
             it.notifyDataSetChanged()
             it.invalidate()
 
-            it.setVisibleXRange(1f, 10f)
+            it.setVisibleXRange(1f, maximumCount)
             it.moveViewToX((temperatureList.size - 1).toFloat())
 
             // it.setVisibleXRangeMaximum(10f)
