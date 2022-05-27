@@ -5,6 +5,7 @@ import com.marine.fishtank.server.arduino.ArduinoListener
 import com.marine.fishtank.server.database.DataBase
 import com.marine.fishtank.server.model.*
 import com.marine.fishtank.server.util.Log
+import com.marine.fishtank.server.util.TimeUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -14,11 +15,10 @@ import java.io.DataOutputStream
 import java.net.Socket
 import java.sql.Date
 import java.text.SimpleDateFormat
+import java.util.concurrent.TimeUnit
 
 private const val MAGIC_VALUE = 235621
 private const val TAG = "Client"
-
-private const val MILS_DAYS_14 = 1000L * 60 * 60 * 24 * 14
 
 class Client(private val socket: Socket) : ArduinoListener {
     private var dataOutputStream: DataOutputStream = DataOutputStream(socket.getOutputStream())
@@ -79,8 +79,8 @@ class Client(private val socket: Socket) : ArduinoListener {
                     ArduinoDevice.getTemperature(packet.clientId)
                 }
                 SERVER_OP_DB_TEMPERATURE -> {
-                    // Last 14 days for now...
-                    val from = Date(System.currentTimeMillis() - MILS_DAYS_14)
+                    val daysInMils = TimeUtils.MILS_DAY * packet.data
+                    val from = Date(System.currentTimeMillis() - daysInMils)
                     val until = Date(System.currentTimeMillis())
                     val temperatures = DataBase.fetchTemperature(from, until)
 
@@ -88,7 +88,7 @@ class Client(private val socket: Socket) : ArduinoListener {
                     val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
                     Log.d(
                         TAG,
-                        "Fetching from ${formatter.format(from)} until ${formatter.format(until)} tempSize=${temperatures.size} $temperatures"
+                        "Fetching from ${formatter.format(from)} until ${formatter.format(until)} tempSize=${temperatures.size}"
                     )
 
                     withContext(Dispatchers.IO) {
