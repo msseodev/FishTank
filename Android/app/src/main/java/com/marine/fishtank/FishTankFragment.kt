@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.components.YAxis
@@ -57,7 +58,7 @@ class FishTankFragment : Fragment() {
         val sTime = System.currentTimeMillis()
 
         viewModel.initializeLiveData.observe(viewLifecycleOwner) { connect ->
-            if(connect) {
+            if (connect) {
                 Log.i(TAG, "Connect to fish server successful.")
                 viewModel.startFetchTemperature(1)
             } else {
@@ -82,8 +83,10 @@ class FishTankFragment : Fragment() {
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
-fun FishTankScreen(viewModel: FishTankViewModel,
-                   eventHandler: (UiEvent) -> Unit) {
+fun FishTankScreen(
+    viewModel: FishTankViewModel,
+    eventHandler: (UiEvent) -> Unit
+) {
     Log.d(TAG, "Composing FishTankScreen")
 
     val uiState: UiState by viewModel.uiState.observeAsState(UiState())
@@ -141,7 +144,7 @@ fun EtcPage(initResult: Boolean) {
         Text("Setting!!!")
 
         Text(
-            if(initResult) {
+            if (initResult) {
                 "Init Success"
             } else {
                 "Init fail"
@@ -157,17 +160,21 @@ fun MonitorPage(temperatureList: List<Temperature>, uiState: UiState, eventHandl
     val position = remember { mutableStateOf(1f) }
 
     Column {
-        Chart(temperatureList, modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(400.dp, 600.dp), eventHandler)
+        Chart(
+            temperatureList, modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(400.dp, 600.dp), eventHandler
+        )
 
         Log.d(TAG, "Slider! days=${position.value}")
         Slider(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 15.dp),
             value = position.value,
             valueRange = 1f..30f,
             steps = 0,
-            onValueChange = { value:Float ->
+            onValueChange = { value: Float ->
                 position.value = value
             },
             onValueChangeFinished = {
@@ -175,7 +182,10 @@ fun MonitorPage(temperatureList: List<Temperature>, uiState: UiState, eventHandl
             }
         )
         Spacer(modifier = Modifier.height(5.dp))
-        Text(text = position.value.toInt().toString())
+        Text(
+            modifier = Modifier.padding(20.dp),
+            text = "${position.value.toInt()} Days"
+        )
     }
 }
 
@@ -211,13 +221,16 @@ fun Chart(temperatureList: List<Temperature>, modifier: Modifier, eventHandler: 
                 xAxis.apply {
                     textSize = 11f
                     textColor = android.graphics.Color.BLACK
-                    setDrawGridLines(true)
+                    setDrawGridLines(false)
                     setDrawAxisLine(true)
                     position = XAxis.XAxisPosition.BOTTOM
 
                     valueFormatter = object : ValueFormatter() {
                         override fun getFormattedValue(value: Float): String {
-                            val entry = data.dataSets[0].getEntryForIndex(value.toInt())
+                            if (data.dataSets.isEmpty()) {
+                                return ""
+                            }
+                            val entry = data.dataSets[0].getEntryForXValue(value, 0f)
                             val tmp = entry.data as Temperature
                             return SimpleDateFormat("MM-dd HH:mm").format(Date(tmp.time))
                         }
@@ -256,11 +269,11 @@ fun Chart(temperatureList: List<Temperature>, modifier: Modifier, eventHandler: 
                     color = ColorTemplate.getHoloBlue()
                     setCircleColor(android.graphics.Color.BLACK)
                     lineWidth = 3f
-                    circleRadius = 4f
+                    circleRadius = 3f
                     fillAlpha = 65
                     fillColor = ColorTemplate.getHoloBlue()
                     highLightColor = R.color.purple_200
-                    setDrawCircleHole(true)
+                    setDrawCircleHole(false)
                 }
 
                 // create a data object with the data sets
@@ -279,7 +292,7 @@ fun Chart(temperatureList: List<Temperature>, modifier: Modifier, eventHandler: 
             Log.d(TAG, "Update LineChart")
 
             val entryList = mutableListOf<Entry>()
-            for(tmp in temperatureList.withIndex()) {
+            for (tmp in temperatureList.withIndex()) {
                 entryList.add(
                     Entry(tmp.index.toFloat(), tmp.value.temperature, tmp.value)
                 )
@@ -290,9 +303,13 @@ fun Chart(temperatureList: List<Temperature>, modifier: Modifier, eventHandler: 
 
             it.data.notifyDataChanged()
             it.notifyDataSetChanged()
+            it.invalidate()
 
-            //it.setVisibleXRangeMaximum(10f)
-            //it.moveViewToX(it.data.entryCount.toFloat())
+            it.setVisibleXRange(1f, 10f)
+            it.moveViewToX((temperatureList.size - 1).toFloat())
+
+            // it.setVisibleXRangeMaximum(10f)
+            //it.moveViewToX((temperatureList.size - 1).toFloat())
         })
 }
 
