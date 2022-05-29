@@ -6,13 +6,13 @@ import com.marine.fishtank.server.database.DataBase
 import com.marine.fishtank.server.model.FishPacket
 import com.marine.fishtank.server.model.Temperature
 import com.marine.fishtank.server.util.Log
+import com.marine.fishtank.server.util.TimeUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.sql.Date
 
-private const val TEMPERATURE_INTERVAL = 1000L * 60 * 5
+private const val TEMPERATURE_INTERVAL = TimeUtils.MILS_MINUTE * 5
 private const val SERVICE_ID = Integer.MAX_VALUE
 
 private const val TAG = "TemperatureService"

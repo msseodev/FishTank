@@ -5,8 +5,6 @@ import com.marine.fishtank.server.database.DataBase
 import com.marine.fishtank.server.util.Log
 import kotlinx.coroutines.runBlocking
 
-private const val PORT_NAME_WINDOW = "COM3"
-private const val PORT_NAME_LINUX = "/dev/ttyUSB0"
 private const val TAG = "MAIN"
 fun main(args: Array<String>) {
     val portName = args[0]
