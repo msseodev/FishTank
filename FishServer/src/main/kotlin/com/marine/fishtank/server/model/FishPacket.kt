@@ -1,9 +1,8 @@
 package com.marine.fishtank.server.model
 
-import com.google.gson.Gson
-
 const val OP_GET_TEMPERATURE: Short = 1000
 const val OP_PIN_IO: Short = 1001
+const val OP_READ_DIGIT_PIN: Short = 1002
 
 const val MAGIC: Short = 31256
 const val PACKET_SIZE = 20

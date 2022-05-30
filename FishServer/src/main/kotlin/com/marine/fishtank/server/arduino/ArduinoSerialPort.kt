@@ -21,7 +21,7 @@ private const val READ_TIMEOUT = MAX_READ_ATTEMPT * READ_INTERVAL // ms
 private const val TAG = "ArduinoSerial"
 
 class ArduinoSerialPort(portName: String): SerialPort(portName) {
-    suspend fun readPacket(): FishPacket? {
+    fun readPacket(): FishPacket? {
         try {
             val bytes = readBytes(PACKET_SIZE, READ_TIMEOUT)
 

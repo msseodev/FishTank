@@ -47,6 +47,8 @@ sealed class UiEvent(
 
     class ChangeWater : UiEvent()
     class OnChangeTemperatureRange(count: Int) : UiEvent(intValue = count)
+
+    class OnPlayButtonClick : UiEvent()
 }
 
 class FishTankViewModel : ViewModel() {
@@ -263,6 +265,9 @@ class FishTankViewModel : ViewModel() {
                 }
                 is UiEvent.OnChangeTemperatureRange -> {
                     startFetchTemperature(uiEvent.intValue)
+                }
+                is UiEvent.OnPlayButtonClick -> {
+
                 }
             }
         }

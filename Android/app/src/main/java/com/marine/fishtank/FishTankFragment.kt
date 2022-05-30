@@ -1,22 +1,23 @@
 package com.marine.fishtank
 
+import android.media.MediaPlayer
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.SurfaceView
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -34,9 +35,6 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.pagerTabIndicatorOffset
 import com.google.accompanist.pager.rememberPagerState
-import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.ui.StyledPlayerView
 import com.marine.fishtank.model.Temperature
 import com.marine.fishtank.viewmodel.FishTankViewModel
 import com.marine.fishtank.viewmodel.FishTankViewModelFactory
@@ -133,7 +131,7 @@ fun FishTankScreen(
                 when (tabIndex) {
                     0 -> ControlTab(uiState, eventHandler)
                     1 -> MonitorPage(temperatureState, uiState, eventHandler)
-                    2 -> EtcPage(initializeData)
+                    2 -> EtcPage(eventHandler)
                 }
             }
         }
@@ -143,22 +141,34 @@ fun FishTankScreen(
 }
 
 @Composable
-fun EtcPage(initResult: Boolean) {
+fun EtcPage(eventHandler: (UiEvent) -> Unit) {
     Column {
+        val context = LocalContext.current
+        val surfaceView = SurfaceView(context)
+        val holder = surfaceView?.holder
+        val uri = Uri.parse("rtsp://220.121.230.90:8888/stream1")
+
+        OutlinedButton(
+            onClick = {
+                val mediaPlayer = MediaPlayer().apply {
+                    setDisplay(holder)
+                    setDataSource(context, uri)
+                    prepare()
+                    start()
+                }
+            }
+        ) {
+            Text(text = "Play")
+        }
+
         AndroidView(
             modifier = Modifier.fillMaxSize(),
             factory = { context ->
-            StyledPlayerView(context).apply {
-                player = ExoPlayer.Builder(context).build().apply {
-                    setMediaItem(MediaItem.fromUri("rtsp://220.121.230.90:8888/stream1"))
-                    prepare()
-                    play()
-                }
+
+
+                return@AndroidView surfaceView
             }
-        })
-
-
-
+        )
     }
 }
 

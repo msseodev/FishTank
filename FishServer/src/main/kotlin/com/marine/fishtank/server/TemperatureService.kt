@@ -40,11 +40,14 @@ class TemperatureService: ArduinoListener {
         }
 
         isRunning = true
-        ArduinoDevice.registerListener(SERVICE_ID, this@TemperatureService)
 
         scope.launch {
-            while(true) {
-                ArduinoDevice.getTemperature(SERVICE_ID)
+            while(isRunning) {
+                val temperature = ArduinoDevice.getTemperature(SERVICE_ID)
+                DataBase.insertTemperature(Temperature(
+                    temperature = temperature,
+                    time = System.currentTimeMillis()
+                ))
                 delay(TEMPERATURE_INTERVAL)
             }
         }
