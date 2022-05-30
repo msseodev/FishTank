@@ -17,11 +17,14 @@ const val SERVER_OP_LIGHT = 203
 const val SERVER_OP_PURIFIER_1 = 204
 const val SERVER_OP_PURIFIER_2 = 205
 const val SERVER_OP_HEATER = 206
+const val SERVER_OP_READ_IN_WATER = 207
+const val SERVER_OP_READ_OUT_WATER = 208
 
 data class ServerPacket(
     val clientId: Int = 0,
     val opCode: Int,
     val data: Int = 0,
+    val pinState: Boolean = false,
     val temperatureList: List<Temperature> = emptyList()
 ) {
     companion object {

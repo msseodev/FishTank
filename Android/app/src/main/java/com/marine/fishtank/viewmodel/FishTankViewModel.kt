@@ -79,6 +79,12 @@ class FishTankViewModel : ViewModel() {
                     // List of temperature!
                     temperatureLiveData.postValue(packet.temperatureList)
                 }
+                SERVER_OP_READ_IN_WATER -> {
+                    _uiState.postValue(_uiState.value?.copy(inWaterValveState = packet.pinState))
+                }
+                SERVER_OP_READ_OUT_WATER -> {
+                    _uiState.postValue(_uiState.value?.copy(outWaterValveState = packet.pinState))
+                }
             }
         }
     }
@@ -96,6 +102,13 @@ class FishTankViewModel : ViewModel() {
             }
 
             tankApi.registerServerPacketListener(packetListener)
+        }
+    }
+
+    fun readState() {
+        viewModelScope.launch(Dispatchers.IO) {
+            tankApi.sendCommand(ServerPacket(clientId = AppId.MY_ID, opCode = SERVER_OP_READ_IN_WATER))
+            tankApi.sendCommand(ServerPacket(clientId = AppId.MY_ID, opCode = SERVER_OP_READ_OUT_WATER))
         }
     }
 

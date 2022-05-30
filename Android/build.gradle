@@ -6,6 +6,7 @@ buildscript {
         accompanist_version = '0.23.1'
         coroutine_version = "1.6.0"
         navigation_version = "2.4.2"
+        exoplayer_verion = "2.17.1"
     }
 }
 

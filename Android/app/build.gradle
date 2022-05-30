@@ -96,6 +96,10 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutine_version"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutine_version"
 
+    // ExoPlayer
+    implementation "com.google.android.exoplayer:exoplayer:$exoplayer_verion"
+    implementation "com.google.android.exoplayer:exoplayer-rtsp:$exoplayer_verion"
+
     // Test
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
