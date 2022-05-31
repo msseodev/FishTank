@@ -1,7 +1,10 @@
 package com.marine.fishtank.viewmodel
 
+import android.app.Application
 import android.util.Log
 import androidx.lifecycle.*
+import com.marine.fishtank.ConnectionSetting
+import com.marine.fishtank.SettingsRepository
 import com.marine.fishtank.api.TankApi
 import com.marine.fishtank.api.TankApiImpl
 import com.marine.fishtank.model.*
@@ -51,10 +54,14 @@ sealed class UiEvent(
     class OnPlayButtonClick : UiEvent()
 }
 
-class FishTankViewModel : ViewModel() {
+class FishTankViewModel(application: Application) : AndroidViewModel(application) {
     val temperatureLiveData = MutableLiveData<List<Temperature>>()
-
     val initializeLiveData = MutableLiveData<Boolean>()
+    private val settingsRepository = SettingsRepository.getInstance(context = application)
+
+    val lastConnectionSetting: ConnectionSetting?
+        get() = _lastConnectionSetting
+    private var _lastConnectionSetting: ConnectionSetting? = null
 
     private val tankApi: TankApi = TankApiImpl()
 
@@ -98,12 +105,25 @@ class FishTankViewModel : ViewModel() {
         )
 
         viewModelScope.launch(Dispatchers.IO) {
-            val connectResult = tankApi.connect(SERVER_URL, SERVER_PORT)
-            withContext(Dispatchers.Main) {
-                initializeLiveData.value = connectResult
-            }
+            settingsRepository.settingFlow.collect { connectionSetting ->
+                if(_lastConnectionSetting != connectionSetting) {
+                    if(_lastConnectionSetting?.serverUrl != connectionSetting.serverUrl
+                        || _lastConnectionSetting?.serverPort != connectionSetting.serverPort) {
+                        // Server url is updated or it is first time!
+                        val connectResult = tankApi.connect(connectionSetting.serverUrl, connectionSetting.serverPort)
+                        withContext(Dispatchers.Main) {
+                            initializeLiveData.value = connectResult
+                        }
+                        tankApi.registerServerPacketListener(packetListener)
+                    }
 
-            tankApi.registerServerPacketListener(packetListener)
+                    if(_lastConnectionSetting?.rtspUrl != connectionSetting.rtspUrl) {
+                        // rtsp url is updated.
+                    }
+
+                    _lastConnectionSetting = connectionSetting
+                }
+            }
         }
     }
 
@@ -273,15 +293,4 @@ class FishTankViewModel : ViewModel() {
         }
     }
 
-}
-
-
-class FishTankViewModelFactory() : ViewModelProvider.Factory {
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(FishTankViewModel::class.java)) {
-            return FishTankViewModel() as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
 }

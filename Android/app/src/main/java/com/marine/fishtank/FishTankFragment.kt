@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.components.YAxis
@@ -37,7 +38,6 @@ import com.google.accompanist.pager.pagerTabIndicatorOffset
 import com.google.accompanist.pager.rememberPagerState
 import com.marine.fishtank.model.Temperature
 import com.marine.fishtank.viewmodel.FishTankViewModel
-import com.marine.fishtank.viewmodel.FishTankViewModelFactory
 import com.marine.fishtank.viewmodel.UiEvent
 import com.marine.fishtank.viewmodel.UiState
 import kotlinx.coroutines.CoroutineScope
@@ -51,7 +51,7 @@ private const val TAG = "FishTankFragment"
 
 class FishTankFragment : Fragment() {
     private val viewModel: FishTankViewModel by viewModels {
-        FishTankViewModelFactory()
+        ViewModelProvider.AndroidViewModelFactory(requireActivity().application)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -93,9 +93,9 @@ fun FishTankScreen(
 
     val uiState: UiState by viewModel.uiState.observeAsState(UiState())
     val temperatureState: List<Temperature> by viewModel.temperatureLiveData.observeAsState(emptyList())
-    val initializeData: Boolean by viewModel.initializeLiveData.observeAsState(false)
+    val connectState: Boolean by viewModel.initializeLiveData.observeAsState(false)
 
-    val tabTitles = listOf("Control", "Monitor", "Setting")
+    val tabTitles = listOf("Control", "Monitor", "Camera")
     // Default page -> monitor
     val pagerState = rememberPagerState(0)
 
@@ -129,9 +129,9 @@ fun FishTankScreen(
                 verticalAlignment = Alignment.Top
             ) { tabIndex ->
                 when (tabIndex) {
-                    0 -> ControlTab(uiState, eventHandler)
+                    0 -> ControlTab(uiState, connectState, eventHandler)
                     1 -> MonitorPage(temperatureState, uiState, eventHandler)
-                    2 -> EtcPage(eventHandler)
+                    2 -> CameraPage(uiState, eventHandler)
                 }
             }
         }
@@ -141,7 +141,7 @@ fun FishTankScreen(
 }
 
 @Composable
-fun EtcPage(eventHandler: (UiEvent) -> Unit) {
+fun CameraPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
     Column {
         val context = LocalContext.current
         val surfaceView = SurfaceView(context)
@@ -361,7 +361,7 @@ fun Chart(temperatureList: List<Temperature>,
 }
 
 @Composable
-fun ControlTab(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
+fun ControlTab(uiState: UiState, connectResult: Boolean, eventHandler: (UiEvent) -> Unit) {
     Log.d(TAG, "Composing ControlTab! $uiState")
     Column(modifier = Modifier.padding(10.dp)) {
         Text(text = "Functions")
@@ -370,44 +370,45 @@ fun ControlTab(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
         // Create Radio
         RadioGroup(
             listOf(
-                RadioBtn(uiState.outWaterValveState, stringResource(R.string.open_water_out)) { eventHandler(UiEvent.OutWaterEvent(true)) },
-                RadioBtn(!uiState.outWaterValveState, stringResource(R.string.close_water_out)) { eventHandler(UiEvent.OutWaterEvent(false)) }
+                RadioBtn(uiState.outWaterValveState, stringResource(R.string.open_water_out), connectResult) { eventHandler(UiEvent.OutWaterEvent(true)) },
+                RadioBtn(!uiState.outWaterValveState, stringResource(R.string.close_water_out), connectResult) { eventHandler(UiEvent.OutWaterEvent(false)) }
             )
         )
         RadioGroup(
             listOf(
-                RadioBtn(uiState.inWaterValveState, stringResource(R.string.open_water_in)) { eventHandler(UiEvent.InWaterEvent(true)) },
-                RadioBtn(!uiState.inWaterValveState, stringResource(R.string.close_water_in)) { eventHandler(UiEvent.InWaterEvent(false)) }
+                RadioBtn(uiState.inWaterValveState, stringResource(R.string.open_water_in), connectResult) { eventHandler(UiEvent.InWaterEvent(true)) },
+                RadioBtn(!uiState.inWaterValveState, stringResource(R.string.close_water_in), connectResult) { eventHandler(UiEvent.InWaterEvent(false)) }
             )
         )
         RadioGroup(
             listOf(
-                RadioBtn(false, stringResource(R.string.pump_run)) { eventHandler(UiEvent.PumpEvent(true)) },
-                RadioBtn(false, stringResource(R.string.pump_stop)) { eventHandler(UiEvent.PumpEvent(false)) }
+                RadioBtn(false, stringResource(R.string.pump_run), connectResult) { eventHandler(UiEvent.PumpEvent(true)) },
+                RadioBtn(false, stringResource(R.string.pump_stop), connectResult) { eventHandler(UiEvent.PumpEvent(false)) }
             )
         )
         RadioGroup(
             listOf(
-                RadioBtn(false, stringResource(R.string.purifier_on)) { eventHandler(UiEvent.PurifierEvent(true)) },
-                RadioBtn(false, stringResource(R.string.purifier_off)) { eventHandler(UiEvent.PurifierEvent(false)) }
+                RadioBtn(false, stringResource(R.string.purifier_on), connectResult) { eventHandler(UiEvent.PurifierEvent(true)) },
+                RadioBtn(false, stringResource(R.string.purifier_off), connectResult) { eventHandler(UiEvent.PurifierEvent(false)) }
             )
         )
         RadioGroup(
             listOf(
-                RadioBtn(false, stringResource(R.string.heater_on)) { eventHandler(UiEvent.HeaterEvent(true)) },
-                RadioBtn(false, stringResource(R.string.heater_off)) { eventHandler(UiEvent.HeaterEvent(false)) }
+                RadioBtn(false, stringResource(R.string.heater_on), connectResult) { eventHandler(UiEvent.HeaterEvent(true)) },
+                RadioBtn(false, stringResource(R.string.heater_off), connectResult) { eventHandler(UiEvent.HeaterEvent(false)) }
             )
         )
         RadioGroup(
             listOf(
-                RadioBtn(false, stringResource(R.string.board_led_on)) { eventHandler(UiEvent.LedEvent(true)) },
-                RadioBtn(false, stringResource(R.string.board_led_off)) { eventHandler(UiEvent.LedEvent(false)) }
+                RadioBtn(false, stringResource(R.string.board_led_on), connectResult) { eventHandler(UiEvent.LedEvent(true)) },
+                RadioBtn(false, stringResource(R.string.board_led_off), connectResult) { eventHandler(UiEvent.LedEvent(false)) }
             )
         )
         OutlinedButton(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(15.dp),
+            enabled = connectResult,
             onClick = { eventHandler(UiEvent.ChangeWater()) }) {
             Text(text = stringResource(id = R.string.change_water))
         }
@@ -417,6 +418,7 @@ fun ControlTab(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
 data class RadioBtn(
     var selected: Boolean = false,
     var text: String,
+    var enabled: Boolean = false,
     var onclick: () -> Unit
 )
 
@@ -443,6 +445,7 @@ fun RadioGroup(radioList: List<RadioBtn>) {
             ) {
                 RadioButton(
                     selected = selected,
+                    enabled = radioBtn.enabled,
                     onClick = onClickHandle
                 )
                 Text(text = radioBtn.text)
