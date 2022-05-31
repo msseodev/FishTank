@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -19,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
@@ -95,7 +97,7 @@ fun FishTankScreen(
     val temperatureState: List<Temperature> by viewModel.temperatureLiveData.observeAsState(emptyList())
     val connectState: Boolean by viewModel.initializeLiveData.observeAsState(false)
 
-    val tabTitles = listOf("Control", "Monitor", "Camera")
+    val tabTitles = listOf("Control", "Monitor", "Camera", "Setting")
     // Default page -> monitor
     val pagerState = rememberPagerState(0)
 
@@ -129,9 +131,10 @@ fun FishTankScreen(
                 verticalAlignment = Alignment.Top
             ) { tabIndex ->
                 when (tabIndex) {
-                    0 -> ControlTab(uiState, connectState, eventHandler)
+                    0 -> ControlPage(uiState, connectState, eventHandler)
                     1 -> MonitorPage(temperatureState, uiState, eventHandler)
                     2 -> CameraPage(uiState, eventHandler)
+                    3 -> SettingPage(uiState = uiState, eventHandler = eventHandler)
                 }
             }
         }
@@ -141,12 +144,76 @@ fun FishTankScreen(
 }
 
 @Composable
+fun SettingPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
+    Log.d(TAG, "Composing Setting Page!")
+
+    var serverUrlText by remember { mutableStateOf(uiState.connectionSetting.serverUrl) }
+    var serverPortText by remember { mutableStateOf(uiState.connectionSetting.serverPort.toString()) }
+    var rtspUrlText by remember { mutableStateOf(uiState.connectionSetting.rtspUrl) }
+
+    Column(
+        modifier = Modifier
+            .padding(15.dp)
+            .fillMaxHeight(),
+        verticalArrangement = Arrangement.SpaceBetween
+    ) {
+
+        Column {
+            OutlinedTextField(
+                value = serverUrlText,
+                label = { Text(text = stringResource(id = R.string.setting_server_url)) },
+                onValueChange = { serverUrlText = it }
+            )
+
+            Spacer(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(30.dp)
+            )
+
+            OutlinedTextField(
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                label = { Text(text = stringResource(id = R.string.setting_server_port)) },
+                value = serverPortText,
+                onValueChange = { serverPortText = it.filter { letter -> letter.isDigit() } }
+            )
+
+            Spacer(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(30.dp)
+            )
+
+            OutlinedTextField(
+                value = rtspUrlText,
+                label = { Text(text = stringResource(id = R.string.setting_rtsp_url)) },
+                onValueChange = { rtspUrlText = it }
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f, false),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            OutlinedButton(
+                onClick = { eventHandler(UiEvent.SettingChange(
+                    ConnectionSetting(serverUrlText, serverPortText.toInt(), rtspUrlText)
+                )) }) {
+                Text(text = stringResource(id = R.string.setting_save))
+            }
+        }
+    }
+}
+
+@Composable
 fun CameraPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
     Column {
         val context = LocalContext.current
         val surfaceView = SurfaceView(context)
         val holder = surfaceView?.holder
-        val uri = Uri.parse("rtsp://220.121.230.90:8888/stream1")
+        val uri = Uri.parse(uiState.connectionSetting.rtspUrl)
 
         OutlinedButton(
             onClick = {
@@ -216,7 +283,7 @@ fun MonitorPage(temperatureList: List<Temperature>, uiState: UiState, eventHandl
                 .fillMaxWidth()
                 .padding(horizontal = 15.dp),
             value = positionRange.value,
-            valueRange = 1f..30f,
+            valueRange = 1f..288f,
             steps = 0,
             onValueChange = { value: Float ->
                 positionRange.value = value
@@ -234,10 +301,12 @@ fun MonitorPage(temperatureList: List<Temperature>, uiState: UiState, eventHandl
 }
 
 @Composable
-fun Chart(temperatureList: List<Temperature>,
-          modifier: Modifier,
-          maximumCount: Float,
-          eventHandler: (UiEvent) -> Unit) {
+fun Chart(
+    temperatureList: List<Temperature>,
+    modifier: Modifier,
+    maximumCount: Float,
+    eventHandler: (UiEvent) -> Unit
+) {
     Log.d(TAG, "Composing Chart!")
 
     AndroidView(
@@ -361,7 +430,7 @@ fun Chart(temperatureList: List<Temperature>,
 }
 
 @Composable
-fun ControlTab(uiState: UiState, connectResult: Boolean, eventHandler: (UiEvent) -> Unit) {
+fun ControlPage(uiState: UiState, connectResult: Boolean, eventHandler: (UiEvent) -> Unit) {
     Log.d(TAG, "Composing ControlTab! $uiState")
     Column(modifier = Modifier.padding(10.dp)) {
         Text(text = "Functions")
@@ -370,38 +439,96 @@ fun ControlTab(uiState: UiState, connectResult: Boolean, eventHandler: (UiEvent)
         // Create Radio
         RadioGroup(
             listOf(
-                RadioBtn(uiState.outWaterValveState, stringResource(R.string.open_water_out), connectResult) { eventHandler(UiEvent.OutWaterEvent(true)) },
-                RadioBtn(!uiState.outWaterValveState, stringResource(R.string.close_water_out), connectResult) { eventHandler(UiEvent.OutWaterEvent(false)) }
+                RadioBtn(
+                    uiState.outWaterValveState,
+                    stringResource(R.string.open_water_out),
+                    connectResult
+                ) { eventHandler(UiEvent.OutWaterEvent(true)) },
+                RadioBtn(
+                    !uiState.outWaterValveState,
+                    stringResource(R.string.close_water_out),
+                    connectResult
+                ) { eventHandler(UiEvent.OutWaterEvent(false)) }
             )
         )
         RadioGroup(
             listOf(
-                RadioBtn(uiState.inWaterValveState, stringResource(R.string.open_water_in), connectResult) { eventHandler(UiEvent.InWaterEvent(true)) },
-                RadioBtn(!uiState.inWaterValveState, stringResource(R.string.close_water_in), connectResult) { eventHandler(UiEvent.InWaterEvent(false)) }
+                RadioBtn(
+                    uiState.inWaterValveState,
+                    stringResource(R.string.open_water_in),
+                    connectResult
+                ) { eventHandler(UiEvent.InWaterEvent(true)) },
+                RadioBtn(
+                    !uiState.inWaterValveState,
+                    stringResource(R.string.close_water_in),
+                    connectResult
+                ) { eventHandler(UiEvent.InWaterEvent(false)) }
             )
         )
         RadioGroup(
             listOf(
-                RadioBtn(false, stringResource(R.string.pump_run), connectResult) { eventHandler(UiEvent.PumpEvent(true)) },
-                RadioBtn(false, stringResource(R.string.pump_stop), connectResult) { eventHandler(UiEvent.PumpEvent(false)) }
+                RadioBtn(
+                    false,
+                    stringResource(R.string.pump_run),
+                    connectResult
+                ) { eventHandler(UiEvent.PumpEvent(true)) },
+                RadioBtn(false, stringResource(R.string.pump_stop), connectResult) {
+                    eventHandler(
+                        UiEvent.PumpEvent(
+                            false
+                        )
+                    )
+                }
             )
         )
         RadioGroup(
             listOf(
-                RadioBtn(false, stringResource(R.string.purifier_on), connectResult) { eventHandler(UiEvent.PurifierEvent(true)) },
-                RadioBtn(false, stringResource(R.string.purifier_off), connectResult) { eventHandler(UiEvent.PurifierEvent(false)) }
+                RadioBtn(
+                    false,
+                    stringResource(R.string.purifier_on),
+                    connectResult
+                ) { eventHandler(UiEvent.PurifierEvent(true)) },
+                RadioBtn(
+                    false,
+                    stringResource(R.string.purifier_off),
+                    connectResult
+                ) { eventHandler(UiEvent.PurifierEvent(false)) }
             )
         )
         RadioGroup(
             listOf(
-                RadioBtn(false, stringResource(R.string.heater_on), connectResult) { eventHandler(UiEvent.HeaterEvent(true)) },
-                RadioBtn(false, stringResource(R.string.heater_off), connectResult) { eventHandler(UiEvent.HeaterEvent(false)) }
+                RadioBtn(false, stringResource(R.string.heater_on), connectResult) {
+                    eventHandler(
+                        UiEvent.HeaterEvent(
+                            true
+                        )
+                    )
+                },
+                RadioBtn(false, stringResource(R.string.heater_off), connectResult) {
+                    eventHandler(
+                        UiEvent.HeaterEvent(
+                            false
+                        )
+                    )
+                }
             )
         )
         RadioGroup(
             listOf(
-                RadioBtn(false, stringResource(R.string.board_led_on), connectResult) { eventHandler(UiEvent.LedEvent(true)) },
-                RadioBtn(false, stringResource(R.string.board_led_off), connectResult) { eventHandler(UiEvent.LedEvent(false)) }
+                RadioBtn(false, stringResource(R.string.board_led_on), connectResult) {
+                    eventHandler(
+                        UiEvent.LedEvent(
+                            true
+                        )
+                    )
+                },
+                RadioBtn(false, stringResource(R.string.board_led_off), connectResult) {
+                    eventHandler(
+                        UiEvent.LedEvent(
+                            false
+                        )
+                    )
+                }
             )
         )
         OutlinedButton(

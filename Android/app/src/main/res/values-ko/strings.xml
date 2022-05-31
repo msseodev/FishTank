@@ -23,4 +23,9 @@
 
     <string name="board_led_on">LED On</string>
     <string name="board_led_off">LED Off</string>
+
+    <string name="setting_server_url">서버 URL</string>
+    <string name="setting_server_port">서버 Port</string>
+    <string name="setting_rtsp_url">RTSP URL</string>
+    <string name="setting_save">저장</string>
 </resources>

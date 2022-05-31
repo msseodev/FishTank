@@ -4,6 +4,7 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.*
 import com.marine.fishtank.ConnectionSetting
+import com.marine.fishtank.DEFAULT_CONNECTION_SETTING
 import com.marine.fishtank.SettingsRepository
 import com.marine.fishtank.api.TankApi
 import com.marine.fishtank.api.TankApiImpl
@@ -34,6 +35,9 @@ data class UiState(
     var temperatureDays: Float = 0f,
 
     var resultText: String = "",
+
+    var connectionSetting: ConnectionSetting = DEFAULT_CONNECTION_SETTING,
+    var serverUrl: String = ""
 )
 
 sealed class UiEvent(
@@ -52,6 +56,7 @@ sealed class UiEvent(
     class OnChangeTemperatureRange(count: Int) : UiEvent(intValue = count)
 
     class OnPlayButtonClick : UiEvent()
+    class SettingChange(val connectionSetting: ConnectionSetting) : UiEvent()
 }
 
 class FishTankViewModel(application: Application) : AndroidViewModel(application) {
@@ -107,13 +112,18 @@ class FishTankViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch(Dispatchers.IO) {
             settingsRepository.settingFlow.collect { connectionSetting ->
                 if(_lastConnectionSetting != connectionSetting) {
+                    Log.d(TAG, "ConnectionSetting updated! $connectionSetting")
+                    _uiState.value?.let {
+                        _uiState.postValue(it.copy(
+                            connectionSetting = connectionSetting
+                        ))
+                    }
+
                     if(_lastConnectionSetting?.serverUrl != connectionSetting.serverUrl
                         || _lastConnectionSetting?.serverPort != connectionSetting.serverPort) {
                         // Server url is updated or it is first time!
                         val connectResult = tankApi.connect(connectionSetting.serverUrl, connectionSetting.serverPort)
-                        withContext(Dispatchers.Main) {
-                            initializeLiveData.value = connectResult
-                        }
+                        initializeLiveData.postValue(connectResult)
                         tankApi.registerServerPacketListener(packetListener)
                     }
 
@@ -288,6 +298,12 @@ class FishTankViewModel(application: Application) : AndroidViewModel(application
                 }
                 is UiEvent.OnPlayButtonClick -> {
 
+                }
+                is UiEvent.SettingChange -> {
+                    val setting = uiEvent.connectionSetting
+                    settingsRepository.saveServerUrl(setting.serverUrl)
+                    settingsRepository.saveServerPort(setting.serverPort)
+                    settingsRepository.saveRtspUrl(setting.rtspUrl)
                 }
             }
         }

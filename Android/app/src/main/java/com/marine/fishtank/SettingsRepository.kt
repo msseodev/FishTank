@@ -15,12 +15,17 @@ private const val DEFAULT_SERVER_PORT = 53265
 
 private const val DEFAULT_RTSP_URL = "rtsp://220.121.230.90:8888/fishtank"
 
-val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
+val DEFAULT_CONNECTION_SETTING = ConnectionSetting(
+    serverUrl = DEFAULT_SERVER_URL,
+    serverPort = DEFAULT_SERVER_PORT,
+    rtspUrl = DEFAULT_RTSP_URL
+)
 
 data class ConnectionSetting(
-    val serverUrl: String,
-    val serverPort: Int,
-    val rtspUrl: String
+    var serverUrl: String,
+    var serverPort: Int,
+    var rtspUrl: String
 ) {
     override fun equals(other: Any?): Boolean {
         if(other !is ConnectionSetting) return false
@@ -28,7 +33,12 @@ data class ConnectionSetting(
                 && other.serverPort == this.serverPort
                 && other.rtspUrl == this.rtspUrl
     }
+
+    override fun hashCode(): Int {
+        return serverUrl.hashCode() + serverPort + rtspUrl.hashCode()
+    }
 }
+
 
 class SettingsRepository private constructor(
     private val context: Context
