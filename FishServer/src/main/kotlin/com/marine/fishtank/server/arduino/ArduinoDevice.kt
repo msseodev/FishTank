@@ -26,10 +26,15 @@ private const val LOW: Short = 0x00
 
 private const val TAG = "ArduinoDevice"
 
+private const val REPAIR_MAX_TRY = 5
+
 object ArduinoDevice {
     private var port: ArduinoSerialPort? = null
 
+    private lateinit var portName: String
+
     fun connect(portName: String): Boolean {
+        this.portName = portName
         port = ArduinoSerialPort(portName)
 
         if (port?.isOpened == false) {
@@ -175,9 +180,36 @@ object ArduinoDevice {
         return response?.data?.toInt()?.toShort() == HIGH
     }
 
-    private fun sendAndGetResponse(packet: FishPacket): FishPacket? {
-        port?.writePacket(packet)
-        return port?.readPacket()
+    private fun sendAndGetResponse(packet: FishPacket, depth: Int = 0): FishPacket? {
+        val writeResult = port?.writePacket(packet)
+        if(writeResult != true) {
+            // Fail to write.
+            Log.e(TAG, "Fail to write!")
+            repairConnection()
+
+            if(depth < REPAIR_MAX_TRY) {
+                sendAndGetResponse(packet, depth + 1)
+            }
+            return null
+        }
+
+        val response = port?.readPacket()
+        if(response == null) {
+            // Fail to read!
+            Log.e(TAG, "Fail to read packet!")
+            repairConnection()
+
+            if(depth < REPAIR_MAX_TRY) {
+                sendAndGetResponse(packet, depth + 1)
+            }
+        }
+
+        return response
+    }
+
+    fun repairConnection() {
+        disConnect()
+        connect(portName)
     }
 
     fun disConnect() {

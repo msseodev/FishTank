@@ -64,7 +64,7 @@ class ArduinoSerialPort(portName: String): SerialPort(portName) {
         return null
     }
 
-    fun writePacket(packet: FishPacket) {
+    fun writePacket(packet: FishPacket): Boolean {
         Log.d(TAG, "Write $packet")
         val byteBuffer = ByteBuffer.allocate(PACKET_SIZE).apply {
             order(ByteOrder.LITTLE_ENDIAN)
@@ -76,6 +76,6 @@ class ArduinoSerialPort(portName: String): SerialPort(portName) {
             putShort(packet.pinMode)
             putFloat(packet.data)
         }
-        writeBytes(byteBuffer.array())
+        return writeBytes(byteBuffer.array())
     }
 }
