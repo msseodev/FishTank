@@ -48,16 +48,13 @@ task release() {
 
 task copyScript {
     def releaseDir = "$buildDir/out"
-
     mkdir "$releaseDir"
-    copy {
-        from "src/script/launchFish.sh"
-        into "$releaseDir"
-    }
 
-    copy {
-        from "src/script/stop.sh"
-        into "$releaseDir"
+    fileTree("src/script").each {file ->
+        copy {
+            from file.path
+            into "$releaseDir"
+        }
     }
 
     copy {

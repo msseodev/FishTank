@@ -4,10 +4,7 @@ import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.SurfaceView
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.KeyboardOptions
@@ -18,11 +15,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.view.doOnAttach
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
@@ -47,7 +47,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
-
+import androidx.compose.ui.unit.Density
 
 private const val TAG = "FishTankFragment"
 
@@ -209,30 +209,60 @@ fun SettingPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
 
 @Composable
 fun CameraPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
-    Column {
-        val context = LocalContext.current
-        val surfaceView = SurfaceView(context)
-        val holder = surfaceView?.holder
-        val uri = Uri.parse(uiState.connectionSetting.rtspUrl)
+    var width by remember { mutableStateOf(0.dp) }
+    var height by remember { mutableStateOf(0.dp) }
 
-        OutlinedButton(
-            onClick = {
-                val mediaPlayer = MediaPlayer().apply {
-                    setDisplay(holder)
-                    setDataSource(context, uri)
-                    prepare()
-                    start()
-                }
+    val configuration = LocalConfiguration.current
+    val screenHeight = configuration.screenHeightDp.dp
+    val screenWidth = configuration.screenWidthDp.dp
+    val localDensity = LocalDensity.current
+
+    val mediaPlayer = remember {
+        MediaPlayer().apply {
+            setOnCompletionListener {
+                Log.d(TAG, "MediaPlayer Complete!")
+//                it.prepare()
+//                it.start()
             }
-        ) {
-            Text(text = "Play")
+            setOnVideoSizeChangedListener { mediaPlayer, w, h ->
+                val videoWidth = with(localDensity) { w.toDp() }
+                val ratio = videoWidth.value / screenWidth.value
+                val videoHeight = with(localDensity) { h.toDp() }
+                width = screenWidth
+                height = videoHeight + (videoHeight * ratio)
+                Log.d(TAG, "Set player ${width}x${height}")
+            }
         }
+    }
 
+
+    Row(verticalAlignment = Alignment.CenterVertically) {
         AndroidView(
-            modifier = Modifier.fillMaxSize(),
+            modifier = if(width.value > 0) {
+                Modifier.width(width).height(height)
+            } else {
+                Modifier.fillMaxSize()
+            },
             factory = { context ->
+                // val context = LocalContext.current
+                val surfaceView = SurfaceView(context)
+                surfaceView.holder.addCallback(object: SurfaceHolder.Callback{
+                    override fun surfaceCreated(holder: SurfaceHolder) {
+                        mediaPlayer.setDisplay(holder)
+                        mediaPlayer.isLooping = true
+                        CoroutineScope(Dispatchers.IO).launch {
+                            mediaPlayer.setDataSource(surfaceView.context, Uri.parse(uiState.connectionSetting.rtspUrl))
+                            mediaPlayer.prepare()
+                            mediaPlayer.start()
+                        }
+                    }
 
+                    override fun surfaceChanged(p0: SurfaceHolder, p1: Int, p2: Int, p3: Int) {
+                    }
 
+                    override fun surfaceDestroyed(p0: SurfaceHolder) {
+                    }
+                })
                 return@AndroidView surfaceView
             }
         )

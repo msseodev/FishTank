@@ -1,6 +1,7 @@
 #!/bin/bash
 
 PID_FILE="exe/pid"
+PID_FILE_DEBUG="exe/pid_debug"
 
 if [ -f "$PID_FILE" ]; then
 	runningPid=`cat $PID_FILE`
@@ -19,7 +20,7 @@ do
 	if [ "$driver" = "ch341" ] 
 	then
 		echo "$usbDev is Arduino"
-		serverJar=`find Fish*.jar`
+		serverJar=`find fish*.jar`
 		echo "Starting Server with $usbDev"
 
 		datePrefix=`date +%y-%m-%d`
@@ -27,13 +28,15 @@ do
 
 		pid=$!
 		echo $pid > $PID_FILE
-	elif [ "$driver" = "ftdi_sio"]
+	elif [ "$driver" = "ftdi_sio" ]
 	then
 	  echo "$usbDev is second Serial"
 
 	  stty -F $usbDev raw 57600
     cat $usbDev > log/serial-$datePrefix-out.log &
 
+    pid=$!
+    echo $pid > $PID_FILE_DEBUG
 	fi
 
 
