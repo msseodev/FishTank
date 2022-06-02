@@ -15,7 +15,7 @@ fun main(args: Array<String>) {
     Log.d(TAG, "OS=$os")
 
     runBlocking {
-        ArduinoDevice.initialize(portName)
+        ArduinoDevice.connect(portName)
 
         if(!os.contains("window", true)) {
             // Not window -> Raspberry pi.

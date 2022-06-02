@@ -7,8 +7,6 @@ import com.marine.fishtank.server.model.OP_READ_DIGIT_PIN
 import com.marine.fishtank.server.util.Log
 import jssc.SerialPort
 import jssc.SerialPortException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 
 private const val PIN_BOARD_LED: Short = 13
 
@@ -30,15 +28,19 @@ private const val TAG = "ArduinoDevice"
 
 object ArduinoDevice {
     private var port: ArduinoSerialPort? = null
-    private val listenerMap = mutableMapOf<Int, ArduinoListener>()
-    private val scope = CoroutineScope(Dispatchers.IO)
 
-    fun initialize(portName: String) {
+    fun connect(portName: String): Boolean {
         port = ArduinoSerialPort(portName)
 
         if (port?.isOpened == false) {
             try {
-                port?.openPort()
+                val openResult = port?.openPort()
+
+                if(openResult != true) {
+                    Log.e(TAG, "Open $portName failed!")
+                    return false
+                }
+
                 port?.setParams(
                     SerialPort.BAUDRATE_57600,
                     SerialPort.DATABITS_8,
@@ -48,11 +50,14 @@ object ArduinoDevice {
                 port?.eventsMask = SerialPort.MASK_RXCHAR
 
                 Log.i(TAG, "Arduino device is connected!")
+                return true
             } catch (ex: SerialPortException) {
                 Log.e(TAG, ex.toString())
                 //throw IOException("Can not connect device($portName)", ex)
             }
         }
+
+        return false
     }
 
     fun getTemperature(clientId: Int): Float {
@@ -175,7 +180,7 @@ object ArduinoDevice {
         return port?.readPacket()
     }
 
-    fun deInitialize() {
+    fun disConnect() {
         port?.closePort()
     }
 }
