@@ -1,9 +1,7 @@
 package com.marine.fishtank.server
 
 import com.marine.fishtank.server.arduino.ArduinoDevice
-import com.marine.fishtank.server.arduino.ArduinoListener
 import com.marine.fishtank.server.database.DataBase
-import com.marine.fishtank.server.model.FishPacket
 import com.marine.fishtank.server.model.Temperature
 import com.marine.fishtank.server.util.Log
 import com.marine.fishtank.server.util.TimeUtils
@@ -17,18 +15,9 @@ private const val SERVICE_ID = Integer.MAX_VALUE
 
 private const val TAG = "TemperatureService"
 
-class TemperatureService: ArduinoListener {
+class TemperatureService {
     private val scope = CoroutineScope(Dispatchers.IO)
     private var isRunning = false
-
-    override fun onMessage(packet: FishPacket) {
-        val temperature = packet.data
-
-        DataBase.insertTemperature(Temperature(
-            temperature = temperature,
-            time = System.currentTimeMillis()
-        ))
-    }
 
     /**
      * 지속적으로 Temperature 을 읽어 DB 에 저장한다.
@@ -44,10 +33,14 @@ class TemperatureService: ArduinoListener {
         scope.launch {
             while(isRunning) {
                 val temperature = ArduinoDevice.getTemperature(SERVICE_ID)
-                DataBase.insertTemperature(Temperature(
-                    temperature = temperature,
-                    time = System.currentTimeMillis()
-                ))
+                if(temperature > 0) {
+                    DataBase.insertTemperature(
+                        Temperature(
+                            temperature = temperature,
+                            time = System.currentTimeMillis()
+                        )
+                    )
+                }
                 delay(TEMPERATURE_INTERVAL)
             }
         }
