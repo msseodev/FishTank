@@ -1,10 +1,21 @@
 plugins {
     id 'java'
     id 'org.jetbrains.kotlin.jvm' version '1.4.32'
+    id 'org.hidetake.ssh' version '2.10.1'
+}
+
+remotes {
+    server {
+        host = project.properties["serverUrl"]
+        port = project.properties["serverPort"].toInteger()
+        user = project.properties["userName"]
+        password = project.properties["password"]
+        knownHosts = allowAnyHosts
+    }
 }
 
 group 'com.marine.fishtank.server'
-version '1.0-SNAPSHOT'
+version '1.0'
 
 repositories {
     mavenCentral()
@@ -30,6 +41,8 @@ test {
 }
 
 jar {
+    baseName "fishServer"
+
     manifest {
         attributes 'Main-Class': 'com.marine.fishtank.server.MainKt'
     }
@@ -39,4 +52,18 @@ jar {
         }
     }
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    println("jarFile=${project.buildDir}")
 }
+
+/*
+task scp {
+    ssh.run {
+        session(remotes.server) {
+            final jarName = project.buildDir
+            println "Deploy ${jarName}"
+
+            put from: "${jarName}", into: project.properties["serverDir"]
+        }
+    }
+}*/
