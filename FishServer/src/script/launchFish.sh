@@ -1,5 +1,13 @@
 #!/bin/bash
 
+PID_FILE="exe/pid"
+
+if [ -f "$PID_FILE" ]; then
+	runningPid=`cat $PID_FILE`
+	echo "FishServer is running on $runningPid"
+	exit 1
+fi
+
 usbDevs=`ls /dev/ttyUSB*`
 
 for usbDev in ${usbDevs[@]};
@@ -13,8 +21,22 @@ do
 		echo "$usbDev is Arduino"
 		serverJar=`find Fish*.jar`
 		echo "Starting Server with $usbDev"
-		java -jar $serverJar $usbDev
+
+		datePrefix=`date +%y-%m-%d`
+		java -jar $serverJar $usbDev &> log/$datePrefix-out.log &
+
+		pid=$!
+		echo $pid > $PID_FILE
+	elif [ "$driver" = "ftdi_sio"]
+	then
+	  echo "$usbDev is second Serial"
+
+	  stty -F $usbDev raw 57600
+    cat $usbDev > log/serial-$datePrefix-out.log &
+
 	fi
+
+
 done
 
 

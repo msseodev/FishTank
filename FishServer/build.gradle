@@ -40,6 +40,32 @@ test {
     useJUnitPlatform()
 }
 
+task release() {
+    dependsOn("jar")
+    dependsOn("copyScript")
+    dependsOn("publishFishTank")
+}
+
+task copyScript {
+    def releaseDir = "$buildDir/out"
+
+    mkdir "$releaseDir"
+    copy {
+        from "src/script/launchFish.sh"
+        into "$releaseDir"
+    }
+
+    copy {
+        from "src/script/stop.sh"
+        into "$releaseDir"
+    }
+
+    copy {
+        from "$buildDir/libs/fishServer-${version}.jar"
+        into "$releaseDir"
+    }
+}
+
 jar {
     baseName "fishServer"
 
@@ -56,14 +82,18 @@ jar {
     println("jarFile=${project.buildDir}")
 }
 
-/*
-task scp {
-    ssh.run {
-        session(remotes.server) {
-            final jarName = project.buildDir
-            println "Deploy ${jarName}"
 
-            put from: "${jarName}", into: project.properties["serverDir"]
+task publishFishTank {
+    doLast {
+        ssh.run {
+            session(remotes.server) {
+                // Any Gradle methods or properties are available in a session closure
+                fileTree("$buildDir/out").each {
+                    // do some operations
+                    println "Deploy ${it.name}"
+                    put from: "${it.path}", into: "./fishtank"
+                }
+            }
         }
     }
-}*/
+}
