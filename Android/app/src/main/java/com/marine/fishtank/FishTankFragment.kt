@@ -16,13 +16,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.view.doOnAttach
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
@@ -47,7 +45,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
-import androidx.compose.ui.unit.Density
+import kotlinx.coroutines.delay
 
 private const val TAG = "FishTankFragment"
 
@@ -209,6 +207,9 @@ fun SettingPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
 
 @Composable
 fun CameraPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
+    Log.d(TAG, "Composing CameraPage!")
+
+    val composableScope = rememberCoroutineScope()
     var width by remember { mutableStateOf(0.dp) }
     var height by remember { mutableStateOf(0.dp) }
 
@@ -225,18 +226,44 @@ fun CameraPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
 //                it.start()
             }
             setOnVideoSizeChangedListener { mediaPlayer, w, h ->
-                val videoWidth = with(localDensity) { w.toDp() }
-                val ratio = videoWidth.value / screenWidth.value
-                val videoHeight = with(localDensity) { h.toDp() }
-                width = screenWidth
-                height = videoHeight + (videoHeight * ratio)
-                Log.d(TAG, "Set player ${width}x${height}")
+                if(w > 0 && h > 0) {
+                    val videoWidth = with(localDensity) { w.toDp() }
+                    val ratio = screenWidth.value / videoWidth.value
+                    val videoHeight = with(localDensity) { h.toDp() }
+                    width = screenWidth
+                    height = videoHeight * ratio
+                    if(height.value > screenHeight.value) {
+                        height = screenHeight
+                    }
+
+                    Log.d(TAG, "Set player ${width}x${height}")
+
+                    composableScope.launch {
+                        var lastFrame = 0L
+                        var lastDroppedFrame = 0L
+                        while(true) {
+                            val frames = mediaPlayer.metrics.get(MediaPlayer.MetricsConstants.FRAMES) as Long
+                            val fps = frames - lastFrame
+                            lastFrame = frames
+
+                            val droppedFrames = mediaPlayer.metrics.get(MediaPlayer.MetricsConstants.FRAMES_DROPPED) as Long
+                            val dropFps = droppedFrames - lastDroppedFrame
+                            lastDroppedFrame = dropFps
+
+                            Log.i(TAG, "FPS=$fps, DroppedFps=$dropFps")
+                            delay(1000)
+                        }
+                    }
+                }
             }
         }
     }
 
-
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
         AndroidView(
             modifier = if(width.value > 0) {
                 Modifier.width(width).height(height)
@@ -248,9 +275,12 @@ fun CameraPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
                 val surfaceView = SurfaceView(context)
                 surfaceView.holder.addCallback(object: SurfaceHolder.Callback{
                     override fun surfaceCreated(holder: SurfaceHolder) {
+                        Log.d(TAG, "surfaceCreated")
+
                         mediaPlayer.setDisplay(holder)
                         mediaPlayer.isLooping = true
-                        CoroutineScope(Dispatchers.IO).launch {
+                        composableScope.launch {
+                            Log.i(TAG, "Set datasource to ${uiState.connectionSetting.rtspUrl}")
                             mediaPlayer.setDataSource(surfaceView.context, Uri.parse(uiState.connectionSetting.rtspUrl))
                             mediaPlayer.prepare()
                             mediaPlayer.start()
