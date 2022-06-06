@@ -24,6 +24,8 @@ private const val MODE_OUTPUT: Short = 0x01
 private const val HIGH: Short = 0x01
 private const val LOW: Short = 0x00
 
+private const val
+
 private const val TAG = "ArduinoDevice"
 
 private const val REPAIR_MAX_TRY = 5
@@ -178,6 +180,10 @@ object ArduinoDevice {
         )
 
         return response?.data?.toInt()?.toShort() == HIGH
+    }
+
+    fun changeWater(ratio: Float) {
+        // TODO - 분당출수량 578ml
     }
 
     private fun sendAndGetResponse(packet: FishPacket, depth: Int = 0): FishPacket? {
