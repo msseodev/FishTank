@@ -104,6 +104,17 @@ object DataBase {
         return statement.executeQuery().toTask()
     }
 
+    fun getLastReplaceTask(): Task? {
+        val sql = "SELECT * FROM ${Task.TB_TASK} " +
+                "WHERE ${Task.COL_TYPE}=? " +
+                "ORDER BY ${Task.COL_EXECUTE_TIME} ASC " +
+                "LIMIT 1"
+        val statement = connection.prepareStatement(sql).apply {
+            setInt(1, Task.TYPE_REPLACE_WATER)
+        }
+        return statement.executeQuery().toTask()
+    }
+
     private fun assertInit() {
         if (!isInit) {
             throw IllegalAccessException("You MUST init first!")

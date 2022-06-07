@@ -21,12 +21,9 @@ private const val PIN_RELAY_HEATER: Short = 43
 
 private const val MODE_INPUT: Short = 0x00
 private const val MODE_OUTPUT: Short = 0x01
-private const val HIGH: Short = 0x01
-private const val LOW: Short = 0x00
+const val HIGH: Short = 0x01
+const val LOW: Short = 0x00
 
-private const val WATER_VOLUME = 100000 // ml
-private const val WATER_OUT_IN_MINUTE = 578 // ml
-private const val WATER_REPLACE_RATIO_MIN = 0.5
 
 private const val TAG = "ArduinoDevice"
 
@@ -184,55 +181,7 @@ object ArduinoDevice {
         return response?.data?.toInt()?.toShort() == HIGH
     }
 
-    fun replaceWater(ratio: Float) {
-        if (ratio < 0 || ratio > WATER_REPLACE_RATIO_MIN) {
-            // Wrong param.
-            Log.e(TAG, "Wrong ratio parameter! ratio=$ratio")
-            return
-        }
 
-        // Calculate the amount of water that needs to be replaced.
-        val amountOfWater = (WATER_VOLUME * ratio)
-        val outTime = amountOfWater / WATER_OUT_IN_MINUTE
-        val outTimeInSec = (outTime * 60).toInt()
-        Log.i(TAG, "Replace water=$amountOfWater, outTime=$outTimeInSec sec")
-
-        // Create tasks.
-        DataBase.insertTask(
-            Task(
-                type = Task.TYPE_VALVE_IN_WATER,
-                data = LOW.toInt(),
-                state = Task.STATE_STANDBY
-            )
-        )
-
-        DataBase.insertTask(
-            Task(
-                type = Task.TYPE_VALVE_OUT_WATER,
-                data = LOW.toInt(),
-                state = Task.STATE_STANDBY
-            )
-        )
-
-        val finishTime = System.currentTimeMillis() + (outTimeInSec * 1000L)
-        DataBase.insertTask(
-            Task(
-                type = Task.TYPE_VALVE_OUT_WATER,
-                data = HIGH.toInt(),
-                executeTime = finishTime,
-                state = Task.STATE_STANDBY
-            )
-        )
-
-        DataBase.insertTask(
-            Task(
-                type = Task.TYPE_VALVE_IN_WATER,
-                data = HIGH.toInt(),
-                executeTime = finishTime + 1000L,
-                state = Task.STATE_STANDBY
-            )
-        )
-    }
 
     private fun sendAndGetResponse(packet: FishPacket, depth: Int = 0): FishPacket? {
         val writeResult = port?.writePacket(packet)

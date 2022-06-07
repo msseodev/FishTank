@@ -19,6 +19,7 @@ private const val TAG = "Client"
 
 class Client(private val socket: Socket,
              private val disconnectCallback: OnClientDisconnect) {
+    private val taskManager = TaskManager()
 
     private var dataOutputStream: DataOutputStream = DataOutputStream(socket.getOutputStream())
     private var dataInputStream: DataInputStream = DataInputStream(socket.getInputStream())
@@ -126,7 +127,7 @@ class Client(private val socket: Socket,
                     )
                 }
                 SERVER_OP_WATER_REPLACE -> {
-                    ArduinoDevice.replaceWater(packet.data * 0.01f)
+                    taskManager.createReplaceWaterTask(packet.data * 0.01f)
                 }
             }
         } catch (e: Exception) {

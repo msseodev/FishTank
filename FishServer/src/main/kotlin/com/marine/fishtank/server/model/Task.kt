@@ -10,6 +10,8 @@ data class Task(
     val state: Int = STATE_STANDBY
 ) {
     companion object {
+        const val TYPE_REPLACE_WATER = 0
+
         const val TYPE_VALVE_OUT_WATER = 1
         const val TYPE_VALVE_IN_WATER = 2
         const val TYPE_PURIFIER = 3
