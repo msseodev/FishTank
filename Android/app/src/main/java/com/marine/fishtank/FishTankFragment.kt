@@ -42,6 +42,7 @@ import com.google.accompanist.pager.pagerTabIndicatorOffset
 import com.google.accompanist.pager.rememberPagerState
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.source.rtsp.RtspMediaSource
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
 import com.google.android.exoplayer2.ui.StyledPlayerView
 import com.marine.fishtank.model.Temperature
@@ -239,8 +240,10 @@ fun CameraPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
             },
             update = {
                 if(!exoPlayer.isPlaying) {
-                    val mediaItem = MediaItem.fromUri(Uri.parse(uiState.connectionSetting.rtspUrl))
-                    exoPlayer.setMediaItem(mediaItem)
+                    val mediaSource = RtspMediaSource.Factory()
+                        .setForceUseRtpTcp(true)
+                        .createMediaSource(MediaItem.fromUri(Uri.parse(uiState.connectionSetting.rtspUrl)))
+                    exoPlayer.setMediaSource(mediaSource)
                     exoPlayer.prepare()
                     exoPlayer.play()
                 }
