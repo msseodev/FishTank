@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.map
 private const val DEFAULT_SERVER_URL = "220.121.230.90"
 private const val DEFAULT_SERVER_PORT = 53265
 
-private const val DEFAULT_RTSP_URL = "rtsp://220.121.230.90:8888/fishtank"
+private const val DEFAULT_RTSP_URL = "rtsp://msseo:1116@220.121.230.90:8888/fishtank"
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 val DEFAULT_CONNECTION_SETTING = ConnectionSetting(
