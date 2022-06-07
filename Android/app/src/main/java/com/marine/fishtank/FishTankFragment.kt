@@ -4,7 +4,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.*
-import androidx.compose.foundation.gestures.scrollable
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
@@ -15,16 +15,14 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.text.isDigitsOnly
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
@@ -56,6 +54,8 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 private const val TAG = "FishTankFragment"
+
+private const val REPLACE_MAX = 70
 
 class FishTankFragment : Fragment() {
     private val viewModel: FishTankViewModel by viewModels {
@@ -206,9 +206,13 @@ fun SettingPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
             horizontalArrangement = Arrangement.Center
         ) {
             OutlinedButton(
-                onClick = { eventHandler(UiEvent.SettingChange(
-                    ConnectionSetting(serverUrlText, serverPortText.toInt(), rtspUrlText)
-                )) }) {
+                onClick = {
+                    eventHandler(
+                        UiEvent.SettingChange(
+                            ConnectionSetting(serverUrlText, serverPortText.toInt(), rtspUrlText)
+                        )
+                    )
+                }) {
                 Text(text = stringResource(id = R.string.setting_save))
             }
         }
@@ -239,7 +243,7 @@ fun CameraPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
                 }
             },
             update = {
-                if(!exoPlayer.isPlaying) {
+                if (!exoPlayer.isPlaying) {
                     val mediaSource = RtspMediaSource.Factory()
                         .setForceUseRtpTcp(true)
                         .createMediaSource(MediaItem.fromUri(Uri.parse(uiState.connectionSetting.rtspUrl)))
@@ -449,10 +453,13 @@ fun ControlPage(uiState: UiState, connectResult: Boolean, eventHandler: (UiEvent
     Log.d(TAG, "Composing ControlTab! $uiState")
 
     val scrollState = rememberScrollState()
+    var ratioValue by remember { mutableStateOf(30) }
+    val context = LocalContext.current
 
-    Column(modifier = Modifier
-        .padding(10.dp)
-        .verticalScroll(scrollState)
+    Column(
+        modifier = Modifier
+            .padding(10.dp)
+            .verticalScroll(scrollState)
     ) {
         Text(text = "Functions")
         Divider(modifier = Modifier.padding(vertical = 5.dp))
@@ -552,13 +559,38 @@ fun ControlPage(uiState: UiState, connectResult: Boolean, eventHandler: (UiEvent
                 }
             )
         )
-        OutlinedButton(
+
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(15.dp),
-            enabled = connectResult,
-            onClick = { eventHandler(UiEvent.ChangeWater()) }) {
-            Text(text = stringResource(id = R.string.change_water))
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            OutlinedTextField(
+                modifier = Modifier.weight(1f),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                trailingIcon = { Text(text = "%") },
+                label = { Text(text = stringResource(id = R.string.replace_ratio)) },
+                value = ratioValue.toString(),
+                onValueChange = { ratioValue = if(it.isNotEmpty() && it.isDigitsOnly()) it.toInt() else 0 }
+            )
+
+            OutlinedButton(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 10.dp),
+                enabled = connectResult,
+                onClick = {
+                    if (ratioValue > REPLACE_MAX || ratioValue <= 0) {
+                        Toast.makeText(context, "Replace amount should between 0 and $REPLACE_MAX", Toast.LENGTH_SHORT)
+                            .show()
+                    } else {
+                        eventHandler(UiEvent.ReplaceWater(ratioValue))
+                    }
+                }) {
+                Text(text = stringResource(id = R.string.change_water))
+            }
         }
     }
 }

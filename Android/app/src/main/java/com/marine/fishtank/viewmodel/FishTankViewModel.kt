@@ -12,7 +12,6 @@ import com.marine.fishtank.model.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlin.math.round
 
 private const val TAG = "FishTankViewModel"
@@ -49,7 +48,7 @@ sealed class UiEvent(
     class PurifierEvent(enable: Boolean) : UiEvent(enable)
     class LedEvent(enable: Boolean) : UiEvent(enable)
 
-    class ChangeWater : UiEvent()
+    class ReplaceWater(val ratio: Int) : UiEvent()
     class OnChangeTemperatureRange(count: Int) : UiEvent(intValue = count)
 
     class OnPlayButtonClick : UiEvent()
@@ -149,34 +148,15 @@ class FishTankViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    private fun changeWater(ratio: Double) {
-        // TODO - End-peer 에서 모든걸 제어하는건 너무 위험하다.. 도중에 연결이 끊어지면????
-        //      - 아래 내용 전부를 서버에 보내고 서버에서 처리해야 한다.
+    private fun replaceWater(ratio: Int) {
         viewModelScope.launch(Dispatchers.IO) {
-            // Before draining we have to close in-water solenoid valve.
-            enableInWaterValve(false)
-
-            // Open out-water valve.
-            enableOutWaterValve(true)
-            // Wait some delay.
-            delay(1000L * 2)
-
-            val pumpOperationTime = calculateWaterPumpTime(ratio)
-            Log.d(TAG, "Pump operation time=$pumpOperationTime seconds.")
-
-            // Start water-pump!
-            enablePump(true)
-            delay(pumpOperationTime * 1000L)
-
-            // Stop water-pump!
-            enablePump(false)
-            delay(1000L * 2)
-
-            // Close out-water valve. Water draining is done!
-            enableOutWaterValve(false)
-
-            // Now we have to supply water. We assume that in-water has ball-top valve.
-            enableInWaterValve(true)
+            tankApi.sendCommand(
+                ServerPacket(
+                    clientId = AppId.MY_ID,
+                    opCode = SERVER_OP_WATER_REPLACE,
+                    data = ratio
+                )
+            )
         }
     }
 
@@ -273,14 +253,13 @@ class FishTankViewModel(application: Application) : AndroidViewModel(application
                     )
                     enablePurifier(uiEvent.value)
                 }
-                is UiEvent.ChangeWater -> {
+                is UiEvent.ReplaceWater -> {
                     _uiState.postValue(
                         _uiState.value?.copy(
                             resultText = "Start change-water"
                         )
                     )
-                    // TODO - Change this ratio later!
-                    changeWater(0.3)
+                    replaceWater(uiEvent.ratio)
                 }
                 is UiEvent.LedEvent -> {
                     _uiState.postValue(

@@ -28,4 +28,6 @@
     <string name="setting_server_port">서버 Port</string>
     <string name="setting_rtsp_url">RTSP URL</string>
     <string name="setting_save">저장</string>
+
+    <string name="replace_ratio">Replace ratio</string>
 </resources>

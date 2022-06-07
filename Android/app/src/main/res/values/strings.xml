@@ -29,4 +29,6 @@
     <string name="setting_rtsp_url">RTSP URL</string>
     <string name="setting_save">Save</string>
 
+    <string name="replace_ratio">Replace ratio</string>
+
 </resources>
