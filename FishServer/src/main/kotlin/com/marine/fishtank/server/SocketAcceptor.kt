@@ -8,10 +8,8 @@ import java.net.ServerSocket
 private const val PORT = 53265
 private const val TAG = "SocketAcceptor"
 
-class SocketAcceptor {
+class SocketAcceptor: OnClientDisconnect {
     private val serverSocket = ServerSocket(PORT)
-    private val coroutineScope = CoroutineScope(Dispatchers.IO)
-
     private val clientList = mutableListOf<Client>()
 
     fun startListen() {
@@ -21,7 +19,7 @@ class SocketAcceptor {
 
             Log.d(TAG,"Accept=${socket.inetAddress.hostAddress}")
 
-            val client = Client(socket)
+            val client = Client(socket, this)
             val isVerified = client.handShake()
             if (!isVerified) {
                 // Deny this client.
@@ -35,5 +33,7 @@ class SocketAcceptor {
         }
     }
 
-
+    override fun onClientDisconnected(client: Client) {
+        clientList.remove(client)
+    }
 }

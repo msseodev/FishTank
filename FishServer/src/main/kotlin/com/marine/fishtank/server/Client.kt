@@ -17,7 +17,9 @@ import java.text.SimpleDateFormat
 private const val MAGIC_VALUE = 235621
 private const val TAG = "Client"
 
-class Client(private val socket: Socket) {
+class Client(private val socket: Socket,
+             private val disconnectCallback: OnClientDisconnect) {
+
     private var dataOutputStream: DataOutputStream = DataOutputStream(socket.getOutputStream())
     private var dataInputStream: DataInputStream = DataInputStream(socket.getInputStream())
     private val clientScope = CoroutineScope(Dispatchers.IO)
@@ -36,7 +38,7 @@ class Client(private val socket: Socket) {
         }
     }
 
-    private suspend fun handleMessage(json: String) {
+    private fun handleMessage(json: String) {
         try {
             Log.d(TAG, "Message from client=$json")
             val packet = ServerPacket.createFromJson(json)
@@ -138,6 +140,8 @@ class Client(private val socket: Socket) {
         } catch (e: Exception) {
             e.printStackTrace()
         }
+
+        disconnectCallback.onClientDisconnected(this)
     }
 
     fun handShake(): Boolean {
