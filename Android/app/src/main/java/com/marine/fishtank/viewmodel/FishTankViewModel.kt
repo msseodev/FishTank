@@ -16,9 +16,6 @@ import kotlinx.coroutines.withContext
 import kotlin.math.round
 
 private const val TAG = "FishTankViewModel"
-private const val SERVER_URL = "220.121.230.90"
-//private const val SERVER_URL = "192.168.0.12"
-private const val SERVER_PORT = 53265
 
 // 어항 물 용량
 private const val TANK_WATER_VOLUME = 100

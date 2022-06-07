@@ -10,10 +10,10 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-private const val DEFAULT_SERVER_URL = "220.121.230.90"
+private const val DEFAULT_SERVER_URL = "fish.marineseo.xyz"
 private const val DEFAULT_SERVER_PORT = 53265
 
-private const val DEFAULT_RTSP_URL = "rtsp://msseo:1116@220.121.230.90:8888/fishtank"
+private const val DEFAULT_RTSP_URL = "rtsp://msseo:1116@$DEFAULT_SERVER_URL:8888/fishtank"
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 val DEFAULT_CONNECTION_SETTING = ConnectionSetting(
@@ -55,7 +55,6 @@ class SettingsRepository private constructor(
                 rtspUrl = pref[keyRtspUrl] ?: DEFAULT_RTSP_URL
             )
         }
-
 
     val serverUrlFlow: Flow<String> = context.dataStore.data
         .map { pref -> pref[keyServerUrl] ?: DEFAULT_SERVER_URL }
