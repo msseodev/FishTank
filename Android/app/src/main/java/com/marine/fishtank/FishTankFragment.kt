@@ -4,9 +4,12 @@ import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.*
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -17,6 +20,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -38,6 +42,7 @@ import com.google.accompanist.pager.pagerTabIndicatorOffset
 import com.google.accompanist.pager.rememberPagerState
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
 import com.google.android.exoplayer2.ui.StyledPlayerView
 import com.marine.fishtank.model.Temperature
 import com.marine.fishtank.viewmodel.FishTankViewModel
@@ -108,7 +113,7 @@ fun FishTankScreen(
     ) {
         Column {
             TabRow(
-                backgroundColor = Color.Cyan,
+                backgroundColor = colorResource(id = R.color.purple_500),
                 selectedTabIndex = pagerState.currentPage,
                 indicator = { tabPositions -> // 3.
                     TabRowDefaults.Indicator(
@@ -150,11 +155,13 @@ fun SettingPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
     var serverUrlText by remember { mutableStateOf(uiState.connectionSetting.serverUrl) }
     var serverPortText by remember { mutableStateOf(uiState.connectionSetting.serverPort.toString()) }
     var rtspUrlText by remember { mutableStateOf(uiState.connectionSetting.rtspUrl) }
+    val scrollState = rememberScrollState()
 
     Column(
         modifier = Modifier
             .padding(15.dp)
-            .fillMaxHeight(),
+            .fillMaxHeight()
+            .verticalScroll(scrollState),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
 
@@ -211,14 +218,6 @@ fun SettingPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
 fun CameraPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
     Log.d(TAG, "Composing CameraPage!")
 
-    val composableScope = rememberCoroutineScope()
-    var width by remember { mutableStateOf(0.dp) }
-    var height by remember { mutableStateOf(0.dp) }
-
-    val configuration = LocalConfiguration.current
-    val screenHeight = configuration.screenHeightDp.dp
-    val screenWidth = configuration.screenWidthDp.dp
-    val localDensity = LocalDensity.current
     val context = LocalContext.current
 
     val exoPlayer = remember {
@@ -231,16 +230,11 @@ fun CameraPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
         verticalArrangement = Arrangement.Center
     ) {
         AndroidView(
-            modifier = if(width.value > 0) {
-                Modifier
-                    .width(width)
-                    .height(height)
-            } else {
-                Modifier.fillMaxSize()
-            },
+            modifier = Modifier.fillMaxSize(),
             factory = { context ->
                 StyledPlayerView(context).apply {
                     player = exoPlayer
+                    resizeMode = RESIZE_MODE_FIT
                 }
             },
             update = {
@@ -261,13 +255,15 @@ fun MonitorPage(temperatureList: List<Temperature>, uiState: UiState, eventHandl
 
     val position = remember { mutableStateOf(1f) }
     val positionRange = remember { mutableStateOf(10f) }
+    val scrollState = rememberScrollState()
 
     Column {
         Chart(
             temperatureList,
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(400.dp, 600.dp),
+                .heightIn(400.dp, 600.dp)
+                .verticalScroll(scrollState),
             maximumCount = positionRange.value,
             eventHandler = eventHandler
         )
@@ -448,7 +444,13 @@ fun Chart(
 @Composable
 fun ControlPage(uiState: UiState, connectResult: Boolean, eventHandler: (UiEvent) -> Unit) {
     Log.d(TAG, "Composing ControlTab! $uiState")
-    Column(modifier = Modifier.padding(10.dp)) {
+
+    val scrollState = rememberScrollState()
+
+    Column(modifier = Modifier
+        .padding(10.dp)
+        .verticalScroll(scrollState)
+    ) {
         Text(text = "Functions")
         Divider(modifier = Modifier.padding(vertical = 5.dp))
 
