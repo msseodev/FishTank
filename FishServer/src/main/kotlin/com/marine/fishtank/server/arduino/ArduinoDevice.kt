@@ -24,7 +24,6 @@ private const val MODE_OUTPUT: Short = 0x01
 private const val HIGH: Short = 0x01
 private const val LOW: Short = 0x00
 
-private const val
 
 private const val TAG = "ArduinoDevice"
 

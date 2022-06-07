@@ -19,6 +19,6 @@ echo $! > $PID_FILE_SERVER
 
 sleep 2
 
-libcamera-vid --width 1920 --height 1080 -n -t 0 --inline -o - | ffmpeg -re -i pipe:0 -c:v copy -f rtsp -muxdelay 0.1 "rtsp://${USERNAME}:${PASSWORD}@localhost:8888/fishtank" &> $LOG_FILE &
+libcamera-vid --width 1920 --height 1080 -n -t 0 --inline -o - | ffmpeg -re -i pipe:0 -c:v copy -f rtsp -muxdelay 0.1 "rtsp://${USER_NAME}:${PASSWORD}@localhost:8888/fishtank" &> $LOG_FILE &
 
 echo $! > $PID_FILE_CAMERA
