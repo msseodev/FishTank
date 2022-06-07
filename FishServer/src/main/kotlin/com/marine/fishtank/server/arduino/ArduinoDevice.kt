@@ -1,9 +1,7 @@
 package com.marine.fishtank.server.arduino
 
-import com.marine.fishtank.server.model.FishPacket
-import com.marine.fishtank.server.model.OP_GET_TEMPERATURE
-import com.marine.fishtank.server.model.OP_PIN_IO
-import com.marine.fishtank.server.model.OP_READ_DIGIT_PIN
+import com.marine.fishtank.server.database.DataBase
+import com.marine.fishtank.server.model.*
 import com.marine.fishtank.server.util.Log
 import jssc.SerialPort
 import jssc.SerialPortException
@@ -26,6 +24,9 @@ private const val MODE_OUTPUT: Short = 0x01
 private const val HIGH: Short = 0x01
 private const val LOW: Short = 0x00
 
+private const val WATER_VOLUME = 100000 // ml
+private const val WATER_OUT_IN_MINUTE = 578 // ml
+private const val WATER_REPLACE_RATIO_MIN = 0.5
 
 private const val TAG = "ArduinoDevice"
 
@@ -44,7 +45,7 @@ object ArduinoDevice {
             try {
                 val openResult = port?.openPort()
 
-                if(openResult != true) {
+                if (openResult != true) {
                     Log.e(TAG, "Open $portName failed!")
                     return false
                 }
@@ -183,30 +184,76 @@ object ArduinoDevice {
         return response?.data?.toInt()?.toShort() == HIGH
     }
 
-    fun changeWater(ratio: Float) {
-        // TODO - 분당출수량 578ml
+    fun replaceWater(ratio: Float) {
+        if (ratio < 0 || ratio > WATER_REPLACE_RATIO_MIN) {
+            // Wrong param.
+            Log.e(TAG, "Wrong ratio parameter! ratio=$ratio")
+            return
+        }
+
+        // Calculate the amount of water that needs to be replaced.
+        val amountOfWater = (WATER_VOLUME * ratio)
+        val outTime = amountOfWater / WATER_OUT_IN_MINUTE
+        val outTimeInSec = (outTime * 60).toInt()
+        Log.i(TAG, "Replace water=$amountOfWater, outTime=$outTimeInSec sec")
+
+        // Create tasks.
+        DataBase.insertTask(
+            Task(
+                type = Task.TYPE_VALVE_IN_WATER,
+                data = LOW.toInt(),
+                state = Task.STATE_STANDBY
+            )
+        )
+
+        DataBase.insertTask(
+            Task(
+                type = Task.TYPE_VALVE_OUT_WATER,
+                data = LOW.toInt(),
+                state = Task.STATE_STANDBY
+            )
+        )
+
+        val finishTime = System.currentTimeMillis() + (outTimeInSec * 1000L)
+        DataBase.insertTask(
+            Task(
+                type = Task.TYPE_VALVE_OUT_WATER,
+                data = HIGH.toInt(),
+                executeTime = finishTime,
+                state = Task.STATE_STANDBY
+            )
+        )
+
+        DataBase.insertTask(
+            Task(
+                type = Task.TYPE_VALVE_IN_WATER,
+                data = HIGH.toInt(),
+                executeTime = finishTime + 1000L,
+                state = Task.STATE_STANDBY
+            )
+        )
     }
 
     private fun sendAndGetResponse(packet: FishPacket, depth: Int = 0): FishPacket? {
         val writeResult = port?.writePacket(packet)
-        if(writeResult != true) {
+        if (writeResult != true) {
             // Fail to write.
             Log.e(TAG, "Fail to write!")
             repairConnection()
 
-            if(depth < REPAIR_MAX_TRY) {
+            if (depth < REPAIR_MAX_TRY) {
                 sendAndGetResponse(packet, depth + 1)
             }
             return null
         }
 
         val response = port?.readPacket()
-        if(response == null) {
+        if (response == null) {
             // Fail to read!
             Log.e(TAG, "Fail to read packet!")
             repairConnection()
 
-            if(depth < REPAIR_MAX_TRY) {
+            if (depth < REPAIR_MAX_TRY) {
                 sendAndGetResponse(packet, depth + 1)
             }
         }

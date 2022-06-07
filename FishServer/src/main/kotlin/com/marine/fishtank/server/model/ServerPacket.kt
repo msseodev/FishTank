@@ -20,7 +20,7 @@ const val SERVER_OP_HEATER = 206
 const val SERVER_OP_READ_IN_WATER = 207
 const val SERVER_OP_READ_OUT_WATER = 208
 
-const val SERVER_OP_CHANGE_WATER = 300
+const val SERVER_OP_WATER_REPLACE = 300
 
 data class ServerPacket(
     val clientId: Int = 0,

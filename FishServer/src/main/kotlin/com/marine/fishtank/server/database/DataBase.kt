@@ -1,5 +1,6 @@
 package com.marine.fishtank.server.database
 
+import com.marine.fishtank.server.model.Task
 import com.marine.fishtank.server.model.Temperature
 import com.marine.fishtank.server.util.Log
 import java.sql.Connection
@@ -74,6 +75,33 @@ object DataBase {
         }
 
         return statement.executeQuery().toTemperature()
+    }
+
+    fun insertTask(task: Task) {
+        assertInit()
+
+        val sql = "INSERT INTO ${Task.TB_TASK}(${Task.COL_USER_ID}, ${Task.COL_TYPE}, ${Task.COL_DATA},${Task.COL_EXECUTE_TIME}, ${Task.COL_STATE})" +
+                "VALUES(?,?,?,?,?)"
+        val statement = connection.prepareStatement(sql).apply {
+            setString(1, task.userId)
+            setInt(2, task.type)
+            setInt(3, task.data)
+            setTimestamp(4, Timestamp(task.executeTime))
+            setInt(5, task.state)
+        }
+        statement.executeUpdate()
+    }
+
+    fun fetchTask(): Task? {
+        val sql = "SELECT * FROM ${Task.TB_TASK} " +
+                "WHERE ${Task.COL_STATE}=? AND ${Task.COL_EXECUTE_TIME} < ? " +
+                "ORDER BY ${Task.COL_EXECUTE_TIME} ASC " +
+                "LIMIT 1"
+        val statement = connection.prepareStatement(sql).apply {
+            setInt(1, Task.STATE_STANDBY)
+            setTimestamp(2, Timestamp(System.currentTimeMillis()))
+        }
+        return statement.executeQuery().toTask()
     }
 
     private fun assertInit() {

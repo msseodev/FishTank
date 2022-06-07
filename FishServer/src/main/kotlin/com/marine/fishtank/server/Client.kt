@@ -125,6 +125,9 @@ class Client(private val socket: Socket,
                         ).toJson()
                     )
                 }
+                SERVER_OP_WATER_REPLACE -> {
+                    ArduinoDevice.replaceWater(packet.data * 0.01f)
+                }
             }
         } catch (e: Exception) {
             Log.e(TAG, e.toString())

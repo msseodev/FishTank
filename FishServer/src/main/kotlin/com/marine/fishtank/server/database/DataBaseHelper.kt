@@ -1,5 +1,6 @@
 package com.marine.fishtank.server.database
 
+import com.marine.fishtank.server.model.Task
 import com.marine.fishtank.server.model.Temperature
 import com.marine.fishtank.server.model.User
 import java.sql.Date
@@ -23,6 +24,21 @@ fun ResultSet.toTemperature(): List<Temperature> {
     }
 
     return list
+}
+
+fun ResultSet.toTask(): Task? {
+    if(!first()) {
+        return null
+    }
+
+    return Task(
+        id = getInt(Task.COL_ID),
+        userId = getString(Task.COL_USER_ID),
+        type = getInt(Task.COL_TYPE),
+        data = getInt(Task.COL_DATA),
+        executeTime = getTimestamp(Task.COL_EXECUTE_TIME).time,
+        state = getInt(Task.COL_STATE)
+    )
 }
 
 fun Date.format(): String {
