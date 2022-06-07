@@ -7,6 +7,8 @@ import com.marine.fishtank.server.model.OP_READ_DIGIT_PIN
 import com.marine.fishtank.server.util.Log
 import jssc.SerialPort
 import jssc.SerialPortException
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 
 private const val PIN_BOARD_LED: Short = 13
 
@@ -212,9 +214,13 @@ object ArduinoDevice {
         return response
     }
 
-    fun repairConnection() {
-        disConnect()
-        connect(portName)
+    private fun repairConnection() {
+        runBlocking {
+            disConnect()
+            delay(500L)
+            connect(portName)
+            delay(1000L)
+        }
     }
 
     fun disConnect() {
