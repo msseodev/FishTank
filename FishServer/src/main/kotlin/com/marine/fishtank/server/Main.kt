@@ -17,11 +17,9 @@ fun main(args: Array<String>) {
     runBlocking {
         ArduinoDevice.connect(portName)
 
-        if(!os.contains("window", true)) {
-            // Not window -> Raspberry pi.
-            DataBase.initialize()
-            TemperatureService().start()
-        }
+        DataBase.initialize()
+        TemperatureService().start()
+        TaskService().start()
 
         val acceptor = SocketAcceptor()
         acceptor.startListen()

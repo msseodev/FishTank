@@ -41,7 +41,7 @@ class TaskManager {
         DataBase.insertTask(
             Task(
                 type = Task.TYPE_VALVE_IN_WATER,
-                data = LOW.toInt(),
+                data = Task.DATA_OPEN,
                 state = Task.STATE_STANDBY
             )
         )
@@ -49,7 +49,7 @@ class TaskManager {
         DataBase.insertTask(
             Task(
                 type = Task.TYPE_VALVE_OUT_WATER,
-                data = LOW.toInt(),
+                data = Task.DATA_CLOSE,
                 state = Task.STATE_STANDBY
             )
         )
@@ -58,7 +58,7 @@ class TaskManager {
         DataBase.insertTask(
             Task(
                 type = Task.TYPE_VALVE_OUT_WATER,
-                data = HIGH.toInt(),
+                data = Task.DATA_OPEN,
                 executeTime = finishTime,
                 state = Task.STATE_STANDBY
             )
@@ -67,7 +67,7 @@ class TaskManager {
         DataBase.insertTask(
             Task(
                 type = Task.TYPE_VALVE_IN_WATER,
-                data = HIGH.toInt(),
+                data = Task.DATA_CLOSE,
                 executeTime = finishTime + 1000L,
                 state = Task.STATE_STANDBY
             )
@@ -82,5 +82,9 @@ class TaskManager {
             }
         }
         return false
+    }
+
+    fun fetchTask(): Task? {
+        return DataBase.fetchTask()
     }
 }

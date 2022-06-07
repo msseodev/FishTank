@@ -3,11 +3,11 @@ package com.marine.fishtank.server.model
 
 data class Task(
     val id: Int = 0,
-    val userId: String = "System",
-    val type: Int,
-    val data: Int = 0,
-    val executeTime: Long = System.currentTimeMillis(),
-    val state: Int = STATE_STANDBY
+    var userId: String = "System",
+    var type: Int,
+    var data: Int = 0,
+    var executeTime: Long = System.currentTimeMillis(),
+    var state: Int = STATE_STANDBY
 ) {
     companion object {
         const val TYPE_REPLACE_WATER = 0
@@ -20,6 +20,9 @@ data class Task(
         const val STATE_STANDBY = 0
         const val STATE_EXECUTING = 1
         const val STATE_FINISH = 2
+
+        const val DATA_CLOSE = 0
+        const val DATA_OPEN = 1
 
 
         const val TB_TASK = "task"

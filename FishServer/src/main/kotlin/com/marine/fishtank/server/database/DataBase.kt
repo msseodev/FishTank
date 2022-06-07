@@ -115,6 +115,21 @@ object DataBase {
         return statement.executeQuery().toTask()
     }
 
+    fun updateTask(task: Task) {
+        val sql = "UPDATE ${Task.TB_TASK} " +
+                "SET ${Task.COL_TYPE}=?, ${Task.COL_STATE}=?, ${Task.COL_DATA}=?, ${Task.COL_USER_ID}=?, ${Task.COL_EXECUTE_TIME}=? " +
+                "WHERE ${Task.COL_ID}=?"
+        val statement = connection.prepareStatement(sql).apply {
+            setInt(1, task.type)
+            setInt(2, task.state)
+            setInt(3, task.data)
+            setString(4, task.userId)
+            setTimestamp(5, Timestamp(task.executeTime))
+            setInt(6, task.id)
+        }
+        statement.executeUpdate()
+    }
+
     private fun assertInit() {
         if (!isInit) {
             throw IllegalAccessException("You MUST init first!")

@@ -1,6 +1,5 @@
 package com.marine.fishtank.server.arduino
 
-import com.marine.fishtank.server.database.DataBase
 import com.marine.fishtank.server.model.*
 import com.marine.fishtank.server.util.Log
 import jssc.SerialPort
@@ -83,14 +82,14 @@ object ArduinoDevice {
         )
     }
 
-    fun enableOutWaterValve(clientId: Int, enable: Boolean) {
+    fun enableOutWaterValve(clientId: Int, open: Boolean) {
         sendAndGetResponse(
             FishPacket(
                 clientId = clientId,
                 opCode = OP_PIN_IO,
                 pin = PIN_RELAY_OUT_WATER,
                 pinMode = MODE_OUTPUT,
-                data = (if (enable) LOW else HIGH).toFloat()
+                data = (if (open) LOW else HIGH).toFloat()
             )
         )
     }
