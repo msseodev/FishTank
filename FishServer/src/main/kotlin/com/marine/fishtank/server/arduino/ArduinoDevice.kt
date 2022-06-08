@@ -180,8 +180,6 @@ object ArduinoDevice {
         return response?.data?.toInt()?.toShort() == HIGH
     }
 
-
-
     private fun sendAndGetResponse(packet: FishPacket, depth: Int = 0): FishPacket? {
         val writeResult = port?.writePacket(packet)
         if (writeResult != true) {
@@ -212,9 +210,9 @@ object ArduinoDevice {
     private fun repairConnection() {
         runBlocking {
             disConnect()
-            delay(500L)
+            delay(2000L)
             connect(portName)
-            delay(1000L)
+            delay(2000L)
         }
     }
 

@@ -6,13 +6,11 @@ import androidx.lifecycle.*
 import com.marine.fishtank.ConnectionSetting
 import com.marine.fishtank.DEFAULT_CONNECTION_SETTING
 import com.marine.fishtank.SettingsRepository
+import com.marine.fishtank.api.OnServerPacketListener
 import com.marine.fishtank.api.TankApi
-import com.marine.fishtank.api.TankApiImpl
 import com.marine.fishtank.model.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.math.round
 
 private const val TAG = "FishTankViewModel"
 
@@ -64,13 +62,13 @@ class FishTankViewModel(application: Application) : AndroidViewModel(application
         get() = _lastConnectionSetting
     private var _lastConnectionSetting: ConnectionSetting? = null
 
-    private val tankApi: TankApi = TankApiImpl()
+    private val tankApi: TankApi = TankApi
 
     private val _uiState = MutableLiveData<UiState>()
     val uiState: LiveData<UiState>
         get() = _uiState
 
-    private val packetListener = object : TankApi.OnServerPacketListener {
+    private val packetListener = object : OnServerPacketListener {
         override fun onServerPacket(packet: ServerPacket) {
             // packet sent by server.
             Log.d(TAG, "onServerPacket=$packet")

@@ -129,9 +129,20 @@ class Client(private val socket: Socket,
                 SERVER_OP_WATER_REPLACE -> {
                     taskManager.createReplaceWaterTask(packet.data * 0.01f)
                 }
+                SERVER_OP_SIGN_IN -> {
+                    val user = packet.obj as User
+                    val logInResult = DataBase.logIn(user.id, user.password)
+                    dataOutputStream.writeUTF(
+                        ServerPacket(
+                            clientId = id,
+                            opCode = packet.opCode,
+                            obj = logInResult
+                        ).toJson()
+                    )
+                }
             }
         } catch (e: Exception) {
-            Log.e(TAG, e.toString())
+            e.printStackTrace()
         }
     }
 

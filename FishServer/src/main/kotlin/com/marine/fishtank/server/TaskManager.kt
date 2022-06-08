@@ -41,7 +41,7 @@ class TaskManager {
         DataBase.insertTask(
             Task(
                 type = Task.TYPE_VALVE_IN_WATER,
-                data = Task.DATA_OPEN,
+                data = Task.DATA_CLOSE,
                 state = Task.STATE_STANDBY
             )
         )
@@ -49,7 +49,7 @@ class TaskManager {
         DataBase.insertTask(
             Task(
                 type = Task.TYPE_VALVE_OUT_WATER,
-                data = Task.DATA_CLOSE,
+                data = Task.DATA_OPEN,
                 state = Task.STATE_STANDBY
             )
         )
@@ -58,7 +58,7 @@ class TaskManager {
         DataBase.insertTask(
             Task(
                 type = Task.TYPE_VALVE_OUT_WATER,
-                data = Task.DATA_OPEN,
+                data = Task.DATA_CLOSE,
                 executeTime = finishTime,
                 state = Task.STATE_STANDBY
             )
@@ -67,7 +67,7 @@ class TaskManager {
         DataBase.insertTask(
             Task(
                 type = Task.TYPE_VALVE_IN_WATER,
-                data = Task.DATA_CLOSE,
+                data = Task.DATA_OPEN,
                 executeTime = finishTime + 1000L,
                 state = Task.STATE_STANDBY
             )
@@ -77,7 +77,7 @@ class TaskManager {
     fun recentReplaceWaterTaskExist(): Boolean {
         val replaceTask = DataBase.getLastReplaceTask()
         replaceTask?.let {task ->
-            if(task.executeTime > System.currentTimeMillis() + TimeUtils.MILS_HOUR) {
+            if(task.executeTime < System.currentTimeMillis() + TimeUtils.MILS_HOUR) {
                 return true
             }
         }

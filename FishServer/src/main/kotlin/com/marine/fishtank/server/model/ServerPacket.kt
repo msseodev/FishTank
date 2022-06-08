@@ -4,6 +4,7 @@ import com.google.gson.Gson
 
 // For test, mega2560 led control.
 const val SERVER_OP_MEGA_LED = 10
+const val SERVER_OP_SIGN_IN = 50
 
 const val SERVER_OP_GET_HISTORY = 100
 const val SERVER_OP_LISTEN_STATUS = 101
@@ -27,10 +28,18 @@ data class ServerPacket(
     val opCode: Int,
     val data: Int = 0,
     val pinState: Boolean = false,
-    val temperatureList: List<Temperature> = emptyList()
+    val temperatureList: List<Temperature> = emptyList(),
+    val obj: Any = Any()
 ) {
     companion object {
-        fun createFromJson(json: String) = Gson().fromJson(json, ServerPacket::class.java)
+        fun createFromJson(json: String): ServerPacket {
+            val gson = Gson()
+            val packet = gson.fromJson(json, ServerPacket::class.java)
+
+            val user = gson.fromJson(gson.toJson(packet.obj), User::class.java)
+
+            return packet.copy(obj = user)
+        }
     }
 }
 

@@ -3,11 +3,15 @@ package com.marine.fishtank.api
 import com.marine.fishtank.model.ServerPacket
 import com.marine.fishtank.model.toJson
 
-class TankApiImpl: TankApi, MessageListener {
-    private val client = Client()
-    private var listener: TankApi.OnServerPacketListener? = null
+interface OnServerPacketListener {
+    fun onServerPacket(packet: ServerPacket)
+}
 
-    override fun connect(url: String, port: Int): Boolean {
+object TankApi: MessageListener {
+    private val client = Client()
+    private var listener: OnServerPacketListener? = null
+
+    fun connect(url: String, port: Int): Boolean {
         val connectResult = client.connect(url, port)
         if(connectResult) {
             client.registerListener(this)
@@ -15,22 +19,22 @@ class TankApiImpl: TankApi, MessageListener {
         return connectResult
     }
 
-    override fun sendCommand(packet: ServerPacket) {
+    fun sendCommand(packet: ServerPacket) {
         client.send(packet.toJson())
     }
 
-    override fun disConnect() {
+    fun disConnect() {
         client.stopListen()
         client.unRegisterListener()
         client.disConnect()
     }
 
-    override fun registerServerPacketListener(listener: TankApi.OnServerPacketListener) {
+    fun registerServerPacketListener(listener: OnServerPacketListener) {
         this.listener = listener
         client.startListen()
     }
 
-    override fun unRegisterServerPacketListener() {
+    fun unRegisterServerPacketListener() {
         this.listener = null
     }
 
