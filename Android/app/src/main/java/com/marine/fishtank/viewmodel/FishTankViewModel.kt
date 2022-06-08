@@ -189,13 +189,6 @@ class FishTankViewModel(application: Application) : AndroidViewModel(application
         tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_MEGA_LED, data = if (enable) 1 else 0))
     }
 
-    private fun calculateWaterPumpTime(ratio: Double): Int {
-        // TODO - WaterPump 의 분당 출수량을 측정하여 ratio 에 따라 동작시간을 계산하여 리턴
-
-        val targetOutVolume = TANK_WATER_VOLUME * ratio
-        return round((targetOutVolume / 2.0) * 60).toInt()
-    }
-
     fun uiEvent(uiEvent: UiEvent) {
         viewModelScope.launch(Dispatchers.IO) {
             when (uiEvent) {
