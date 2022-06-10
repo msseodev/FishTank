@@ -90,6 +90,7 @@ class Client {
 
     fun disConnect() {
         Log.d(TAG, "Disconnecting....")
+        stopListen()
         socket?.close()
         socket = null
 

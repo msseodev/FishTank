@@ -132,6 +132,7 @@ class Client(private val socket: Socket,
                 SERVER_OP_SIGN_IN -> {
                     val user = packet.obj as User
                     val logInResult = DataBase.logIn(user.id, user.password)
+                    Log.d(TAG, "LogInResult=$logInResult id=${user.id} password=${user.password}")
                     dataOutputStream.writeUTF(
                         ServerPacket(
                             clientId = id,

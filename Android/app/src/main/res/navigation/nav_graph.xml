@@ -16,6 +16,9 @@
         tools:layout="@layout/fragment_log_in" >
         <action
             android:id="@+id/action_logInFragment_to_fishTankFragment"
-            app:destination="@id/fishTankFragment" />
+            app:destination="@id/fishTankFragment"
+            app:launchSingleTop="true"
+            app:popUpTo="@id/fishTankFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 </navigation>
