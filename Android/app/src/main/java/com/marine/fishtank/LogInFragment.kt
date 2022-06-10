@@ -18,6 +18,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -101,7 +102,12 @@ fun LogInScreen(viewModel: LogInViewModel, onEvent: (LogInEvent) -> Unit) {
                 label = { Text(text = "id") },
                 placeholder = { Text("id") },
                 onValueChange = { userIdText = it },
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    backgroundColor = Color.White
+                )
             )
+
+            Spacer(modifier = Modifier.height(10.dp))
 
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
@@ -116,13 +122,15 @@ fun LogInScreen(viewModel: LogInViewModel, onEvent: (LogInEvent) -> Unit) {
                         Icons.Filled.Visibility
                     else Icons.Filled.VisibilityOff
 
-                    // Please provide localized description for accessibility services
                     val description = if (passwordVisible) "Hide password" else "Show password"
 
                     IconButton(onClick = {passwordVisible = !passwordVisible}){
                         Icon(imageVector  = image, description)
                     }
-                }
+                },
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    backgroundColor = Color.White
+                )
             )
 
             Spacer(modifier = Modifier.height(40.dp))
