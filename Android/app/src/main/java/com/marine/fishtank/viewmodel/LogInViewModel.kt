@@ -23,7 +23,7 @@ class LogInViewModel(application: Application) : AndroidViewModel(application) {
     private val settingsRepository = SettingsRepository.getInstance(context = application)
 
     val signInResult = MutableLiveData<SignInResult>()
-    val connectResult = MutableLiveData(false)
+    val connectResult = MutableLiveData<Boolean>()
 
     private val tankApi: TankApi by lazy {
         TankApi.apply {
