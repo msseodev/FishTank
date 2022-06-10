@@ -24,7 +24,7 @@ do
 		echo "Starting Server with $usbDev"
 
 		datePrefix=`date +%y-%m-%d`
-		java -jar $serverJar $usbDev &> log/$datePrefix-out.log &
+		java -jar $serverJar $usbDev &> log/server-$datePrefix.log &
 
 		pid=$!
 		echo $pid > $PID_FILE
