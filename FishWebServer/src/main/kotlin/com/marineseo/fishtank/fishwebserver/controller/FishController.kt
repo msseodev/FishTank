@@ -7,10 +7,12 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/fish")
-class BasicController {
+class FishController {
 
-    @GetMapping()
+    @GetMapping("/test")
     fun test(): ResponseEntity<String> {
-        return ResponseEntity.ok("Hi I am ...")
+        return ResponseEntity.ok("Hi I am fish...")
     }
+
+
 }
