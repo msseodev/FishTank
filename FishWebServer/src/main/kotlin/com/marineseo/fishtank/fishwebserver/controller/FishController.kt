@@ -5,7 +5,9 @@ import com.marineseo.fishtank.fishwebserver.model.RESULT_SUCCESS
 import com.marineseo.fishtank.fishwebserver.model.Temperature
 import com.marineseo.fishtank.fishwebserver.service.ArduinoService
 import com.marineseo.fishtank.fishwebserver.service.TaskService
+import com.marineseo.fishtank.fishwebserver.service.UserService
 import org.slf4j.LoggerFactory
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -17,7 +19,8 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/fish")
 class FishController(
     private val arduinoService: ArduinoService,
-    private val taskService: TaskService
+    private val taskService: TaskService,
+    private val userService: UserService
 ) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
@@ -35,9 +38,17 @@ class FishController(
     }
 
     @PostMapping("/signin")
-    fun signIn(): ResponseEntity<String> {
-        // TODO
-        return ResponseEntity.ok("YOUR_TOKEN")
+    fun signIn(@RequestParam("id") id: String,
+               @RequestParam("password") password: String): ResponseEntity<String> {
+        if(!userService.signIn(id, password)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null)
+        }
+
+        // Sign in success!!
+        val token = userService.generateUserToken()
+        logger.info("$id sign-in! token=$token")
+
+        return ResponseEntity.ok(token)
     }
 
     @PostMapping("/readDBTemperature")
