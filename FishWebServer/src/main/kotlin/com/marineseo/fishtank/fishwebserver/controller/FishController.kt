@@ -52,8 +52,9 @@ class FishController(
     }
 
     @PostMapping("/readDBTemperature")
-    fun readDBTemperature(): ResponseEntity<List<Temperature>> {
-        return ResponseEntity.ok(emptyList())
+    fun readDBTemperature(@RequestParam("days") days: Int): ResponseEntity<List<Temperature>> {
+        val temperatureList = taskService.readTemperature(days)
+        return ResponseEntity.ok(temperatureList)
     }
 
     @PostMapping("/outWater")
