@@ -1,11 +1,13 @@
-package com.marineseo.fishtank.fishwebserver.arduino
+package com.marineseo.fishtank.fishwebserver.service
 
 import com.marine.fishtank.server.model.*
+import com.marineseo.fishtank.fishwebserver.arduino.ArduinoSerialPort
 import jssc.SerialPort
 import jssc.SerialPortException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 
 private const val PIN_BOARD_LED: Short = 13
 
@@ -24,18 +26,19 @@ const val HIGH: Short = 0x01
 const val LOW: Short = 0x00
 
 
-private const val TAG = "ArduinoDevice"
+private const val TAG = "ArduinoService"
 
 private const val REPAIR_MAX_TRY = 5
+private const val COMMON_CLIENT_ID = 56432
 
-object ArduinoDevice {
-    private var port: ArduinoSerialPort? = null
-    private lateinit var portName: String
-
+@Service
+class ArduinoService {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
+    private var port: ArduinoSerialPort? = null
+    private lateinit var portName: String
     fun connect(portName: String): Boolean {
-        ArduinoDevice.portName = portName
+        this.portName = portName
         port = ArduinoSerialPort(portName)
 
         if (port?.isOpened == false) {
@@ -66,100 +69,88 @@ object ArduinoDevice {
         return false
     }
 
-    fun getTemperature(clientId: Int): Float {
-        val response = sendAndGetResponse(FishPacket(clientId = clientId, opCode = OP_GET_TEMPERATURE))
+    fun getTemperature(): Float {
+        val response = sendAndGetResponse(FishPacket(clientId = COMMON_CLIENT_ID, opCode = OP_GET_TEMPERATURE))
         return response?.data ?: 0f
     }
 
-    fun enableBoardLed(clientId: Int, enable: Boolean) {
-        sendAndGetResponse(
+    fun enableBoardLed(enable: Boolean): Boolean {
+        return sendAndGetResponse(
             FishPacket(
-                clientId = clientId,
+                clientId = COMMON_CLIENT_ID,
                 opCode = OP_PIN_IO,
                 pin = PIN_BOARD_LED,
                 pinMode = MODE_OUTPUT,
                 data = (if (enable) LOW else HIGH).toFloat()
             )
-        )
+        ) != null
     }
 
-    fun enableOutWaterValve(clientId: Int, open: Boolean) {
-        sendAndGetResponse(
+    fun enableOutWaterValve(open: Boolean): Boolean {
+        return sendAndGetResponse(
             FishPacket(
-                clientId = clientId,
+                clientId = COMMON_CLIENT_ID,
                 opCode = OP_PIN_IO,
                 pin = PIN_RELAY_OUT_WATER,
                 pinMode = MODE_OUTPUT,
                 data = (if (open) LOW else HIGH).toFloat()
             )
-        )
+        ) != null
     }
 
-    fun enableInWaterValve(clientId: Int, open: Boolean) {
+    fun enableInWaterValve(open: Boolean): Boolean {
         // NOTE! in-water solenoid valve is NO(Normally open)
-        sendAndGetResponse(
+        return sendAndGetResponse(
             FishPacket(
-                clientId = clientId,
+                clientId = COMMON_CLIENT_ID,
                 opCode = OP_PIN_IO,
                 pin = PIN_RELAY_IN_WATER,
                 pinMode = MODE_OUTPUT,
                 data = (if (open) HIGH else LOW).toFloat()
             )
-        )
+        ) != null
     }
 
-    fun enableLight(clientId: Int, enable: Boolean) {
-        sendAndGetResponse(
+    fun enableLight( enable: Boolean): Boolean {
+        return sendAndGetResponse(
             FishPacket(
-                clientId = clientId,
+                clientId = COMMON_CLIENT_ID,
                 opCode = OP_PIN_IO,
                 pin = PIN_RELAY_LIGHT,
                 pinMode = MODE_OUTPUT,
                 data = (if (enable) LOW else HIGH).toFloat()
             )
-        )
+        ) != null
     }
 
-    fun enablePurifier1(clientId: Int, enable: Boolean) {
-        sendAndGetResponse(
+    fun enablePurifier(enable: Boolean): Boolean {
+        return sendAndGetResponse(
             FishPacket(
-                clientId = clientId,
+                clientId = COMMON_CLIENT_ID,
                 opCode = OP_PIN_IO,
                 pin = PIN_RELAY_PURIFIER1,
                 pinMode = MODE_OUTPUT,
                 data = (if (enable) LOW else HIGH).toFloat()
             )
-        )
+        ) != null
     }
 
-    fun enablePurifier2(clientId: Int, enable: Boolean) {
-        sendAndGetResponse(
+    fun enableHeater( enable: Boolean): Boolean {
+        return sendAndGetResponse(
             FishPacket(
-                clientId = clientId,
-                opCode = OP_PIN_IO,
-                pin = PIN_RELAY_PURIFIER2,
-                pinMode = MODE_OUTPUT,
-                data = (if (enable) LOW else HIGH).toFloat()
-            )
-        )
-    }
-
-    fun enableHeater(clientId: Int, enable: Boolean) {
-        sendAndGetResponse(
-            FishPacket(
-                clientId = clientId,
+                clientId = COMMON_CLIENT_ID,
                 opCode = OP_PIN_IO,
                 pin = PIN_RELAY_HEATER,
                 pinMode = MODE_OUTPUT,
                 data = (if (enable) LOW else HIGH).toFloat()
             )
-        )
+        ) != null
     }
 
-    fun isInWaterValveOpen(clientId: Int): Boolean {
+    fun isInWaterValveOpen(): Boolean {
         val response = sendAndGetResponse(
             FishPacket(
-                clientId = clientId,
+                clientId = COMMON_CLIENT_ID,
                 opCode = OP_READ_DIGIT_PIN,
                 pin = PIN_RELAY_IN_WATER,
                 pinMode = MODE_INPUT
@@ -168,10 +159,10 @@ object ArduinoDevice {
         return response?.data?.toInt()?.toShort() == LOW
     }
 
-    fun isOutWaterValveOpen(clientId: Int): Boolean {
+    fun isOutWaterValveOpen(): Boolean {
         val response = sendAndGetResponse(
             FishPacket(
-                clientId = clientId,
+                clientId = COMMON_CLIENT_ID,
                 opCode = OP_READ_DIGIT_PIN,
                 pin = PIN_RELAY_OUT_WATER,
                 pinMode = MODE_INPUT

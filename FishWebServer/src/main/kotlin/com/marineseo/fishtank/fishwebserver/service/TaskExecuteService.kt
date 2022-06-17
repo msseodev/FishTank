@@ -1,6 +1,5 @@
 package com.marineseo.fishtank.fishwebserver.service
 
-import com.marineseo.fishtank.fishwebserver.arduino.ArduinoDevice
 import com.marineseo.fishtank.fishwebserver.mapper.DatabaseMapper
 import com.marineseo.fishtank.fishwebserver.model.Task
 import kotlinx.coroutines.CoroutineScope
@@ -18,6 +17,7 @@ private const val TAG = "TaskExecuteService"
 @Service
 class TaskExecuteService(
     private val taskService: TaskService,
+    private val arduinoService: ArduinoService,
     private val mapper: DatabaseMapper
 ) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
@@ -38,13 +38,13 @@ class TaskExecuteService(
 
                         }
                         Task.TYPE_VALVE_IN_WATER -> {
-                            ArduinoDevice.enableInWaterValve(
+                            arduinoService.enableInWaterValve(
                                 clientId =  SERVICE_ID,
                                 open = it.data == Task.DATA_OPEN
                             )
                         }
                         Task.TYPE_VALVE_OUT_WATER -> {
-                            ArduinoDevice.enableOutWaterValve(
+                            arduinoService.enableOutWaterValve(
                                 clientId = SERVICE_ID,
                                 open = it.data == Task.DATA_OPEN
                             )

@@ -1,6 +1,5 @@
 package com.marineseo.fishtank.fishwebserver.service
 
-import com.marineseo.fishtank.fishwebserver.arduino.ArduinoDevice
 import com.marineseo.fishtank.fishwebserver.mapper.DatabaseMapper
 import com.marineseo.fishtank.fishwebserver.model.Temperature
 import com.marineseo.fishtank.fishwebserver.util.TimeUtils
@@ -18,6 +17,7 @@ private const val TAG = "TemperatureService"
 
 @Service
 class TemperatureService(
+    private val arduinoService: ArduinoService,
     private val mapper: DatabaseMapper
 ) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
@@ -38,7 +38,7 @@ class TemperatureService(
 
         scope.launch {
             while(isRunning) {
-                val temperature = ArduinoDevice.getTemperature(SERVICE_ID)
+                val temperature = arduinoService.getTemperature(SERVICE_ID)
                 if(temperature > 0) {
                     mapper.insertTemperature(
                         Temperature(
