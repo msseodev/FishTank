@@ -2,10 +2,13 @@ package com.marineseo.fishtank.fishwebserver.service
 
 import com.marineseo.fishtank.fishwebserver.mapper.DatabaseMapper
 import com.marineseo.fishtank.fishwebserver.model.Task
+import com.marineseo.fishtank.fishwebserver.model.Temperature
 import com.marineseo.fishtank.fishwebserver.util.TimeUtils
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.sql.Date
 import java.sql.Timestamp
+import java.text.SimpleDateFormat
 
 private const val WATER_VOLUME = 100000 // ml
 private const val WATER_OUT_IN_MINUTE = 578 // ml
@@ -92,5 +95,20 @@ class TaskService(
 
     fun fetchTask(): Task? {
         return mapper.fetchTask(Timestamp(System.currentTimeMillis()))
+    }
+
+    fun readTemperature(days: Int): List<Temperature> {
+        val daysInMils = TimeUtils.MILS_DAY * days
+        val from = Date(System.currentTimeMillis() - daysInMils)
+        val until = Date(System.currentTimeMillis())
+        val temperatures = mapper.fetchTemperature(from, until)
+
+        // for logging
+        val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+        logger.debug(
+            "Fetching from ${formatter.format(from)} until ${formatter.format(until)} tempSize=${temperatures.size}"
+        )
+
+        return temperatures
     }
 }
