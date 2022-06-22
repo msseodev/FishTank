@@ -50,9 +50,12 @@ class LogInFragment : Fragment() {
                 Toast.makeText(context, "FAIL to connect server!", Toast.LENGTH_SHORT).show()
             }
         }
+
         viewModel.signInResult.observe(viewLifecycleOwner) { signIn ->
             if(signIn.result) {
                 navigate(Screen.LogIn, Screen.FishTank)
+            } else {
+                Toast.makeText(context, "Fail to sign-in", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -72,6 +75,12 @@ class LogInFragment : Fragment() {
             }
         }
     }
+
+    override fun onResume() {
+        super.onResume()
+
+        viewModel.fetchSavedUser()
+    }
 }
 
 @Composable
@@ -81,6 +90,11 @@ fun LogInScreen(viewModel: LogInViewModel, onEvent: (LogInEvent) -> Unit) {
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
 
     val enable by viewModel.connectResult.observeAsState(false)
+    val userId by viewModel.userIdData.observeAsState()
+    val password by viewModel.userPasswordData.observeAsState()
+
+    userIdText = userId ?: ""
+    passwordText = password ?: ""
 
     Surface(
         modifier = Modifier
@@ -94,7 +108,6 @@ fun LogInScreen(viewModel: LogInViewModel, onEvent: (LogInEvent) -> Unit) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
                 value = userIdText,
