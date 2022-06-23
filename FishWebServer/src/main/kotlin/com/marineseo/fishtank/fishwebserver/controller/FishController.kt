@@ -29,36 +29,51 @@ class FishController(
         return ResponseEntity.ok("Hi I am fish...")
     }
 
+    @PostMapping("/signin")
+    fun signIn(
+        @RequestParam("id") id: String,
+        @RequestParam("password") password: String
+    ): ResponseEntity<String> {
+        val user = userService.signIn(id, password) ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null)
+
+        // Sign in success!!
+        val token = user.token
+        logger.info("$id sign-in! token=$token")
+
+        return ResponseEntity.ok(token)
+    }
+
     @PostMapping("/boardLed")
-    fun enableBoardLed(@RequestParam("enable") enable: Boolean): ResponseEntity<Int> {
+    fun enableBoardLed(
+        @RequestParam("token") token: String,
+        @RequestParam("enable") enable: Boolean
+    ): ResponseEntity<Int> {
+        if (userService.getUserByToken(token) == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null)
+
         return ResponseEntity.ok(
             if (arduinoService.enableBoardLed(enable)) RESULT_SUCCESS
             else RESULT_FAIL_DEVICE_CONNECTION
         )
     }
 
-    @PostMapping("/signin")
-    fun signIn(@RequestParam("id") id: String,
-               @RequestParam("password") password: String): ResponseEntity<String> {
-        if(!userService.signIn(id, password)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null)
-        }
-
-        // Sign in success!!
-        val token = userService.generateUserToken()
-        logger.info("$id sign-in! token=$token")
-
-        return ResponseEntity.ok(token)
-    }
-
     @PostMapping("/readDBTemperature")
-    fun readDBTemperature(@RequestParam("days") days: Int): ResponseEntity<List<Temperature>> {
+    fun readDBTemperature(
+        @RequestParam("token") token: String,
+        @RequestParam("days") days: Int
+    ): ResponseEntity<List<Temperature>> {
+        if (userService.getUserByToken(token) == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null)
+
         val temperatureList = taskService.readTemperature(days)
         return ResponseEntity.ok(temperatureList)
     }
 
     @PostMapping("/outWater")
-    fun enableOutWater(@RequestParam("enable") enable: Boolean): ResponseEntity<Int> {
+    fun enableOutWater(
+        @RequestParam("token") token: String,
+        @RequestParam("enable") enable: Boolean
+    ): ResponseEntity<Int> {
+        if (userService.getUserByToken(token) == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null)
+
         return ResponseEntity.ok(
             if (arduinoService.enableOutWaterValve(enable)) RESULT_SUCCESS
             else RESULT_FAIL_DEVICE_CONNECTION
@@ -66,7 +81,12 @@ class FishController(
     }
 
     @PostMapping("/inWater")
-    fun enableInWater(@RequestParam("enable") enable: Boolean): ResponseEntity<Int> {
+    fun enableInWater(
+        @RequestParam("token") token: String,
+        @RequestParam("enable") enable: Boolean
+    ): ResponseEntity<Int> {
+        if (userService.getUserByToken(token) == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null)
+
         return ResponseEntity.ok(
             if (arduinoService.enableInWaterValve(enable)) RESULT_SUCCESS
             else RESULT_FAIL_DEVICE_CONNECTION
@@ -74,7 +94,12 @@ class FishController(
     }
 
     @PostMapping("/light")
-    fun enableLight(@RequestParam("enable") enable: Boolean): ResponseEntity<Int> {
+    fun enableLight(
+        @RequestParam("token") token: String,
+        @RequestParam("enable") enable: Boolean
+    ): ResponseEntity<Int> {
+        if (userService.getUserByToken(token) == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null)
+
         return ResponseEntity.ok(
             if (arduinoService.enableLight(enable)) RESULT_SUCCESS
             else RESULT_FAIL_DEVICE_CONNECTION
@@ -82,7 +107,12 @@ class FishController(
     }
 
     @PostMapping("/purifier")
-    fun enablePurifier(@RequestParam("enable") enable: Boolean): ResponseEntity<Int> {
+    fun enablePurifier(
+        @RequestParam("token") token: String,
+        @RequestParam("enable") enable: Boolean
+    ): ResponseEntity<Int> {
+        if (userService.getUserByToken(token) == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null)
+
         return ResponseEntity.ok(
             if (arduinoService.enablePurifier(enable)) RESULT_SUCCESS
             else RESULT_FAIL_DEVICE_CONNECTION
@@ -90,7 +120,12 @@ class FishController(
     }
 
     @PostMapping("/heater")
-    fun enableHeater(@RequestParam("enable") enable: Boolean): ResponseEntity<Int> {
+    fun enableHeater(
+        @RequestParam("token") token: String,
+        @RequestParam("enable") enable: Boolean
+    ): ResponseEntity<Int> {
+        if (userService.getUserByToken(token) == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null)
+
         return ResponseEntity.ok(
             if (arduinoService.enableHeater(enable)) RESULT_SUCCESS
             else RESULT_FAIL_DEVICE_CONNECTION
@@ -98,21 +133,30 @@ class FishController(
     }
 
     @PostMapping("/read/inWater")
-    fun readInWater(): ResponseEntity<Boolean> {
+    fun readInWater(@RequestParam("token") token: String): ResponseEntity<Boolean> {
+        if (userService.getUserByToken(token) == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null)
+
         return ResponseEntity.ok(
             arduinoService.isInWaterValveOpen()
         )
     }
 
     @PostMapping("/read/outWater")
-    fun readOutWater(): ResponseEntity<Boolean> {
+    fun readOutWater(@RequestParam("token") token: String): ResponseEntity<Boolean> {
+        if (userService.getUserByToken(token) == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null)
+
         return ResponseEntity.ok(
             arduinoService.isOutWaterValveOpen()
         )
     }
 
     @PostMapping("/func/replaceWater")
-    fun replaceWater(@RequestParam("percentage") percentage: Float): ResponseEntity<Int> {
+    fun replaceWater(
+        @RequestParam("token") token: String,
+        @RequestParam("percentage") percentage: Float
+    ): ResponseEntity<Int> {
+        if (userService.getUserByToken(token) == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null)
+
         taskService.createReplaceWaterTask(percentage)
         return ResponseEntity.ok(RESULT_SUCCESS)
     }
