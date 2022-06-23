@@ -10,7 +10,6 @@ const val RESULT_FAIL_DEVICE_CONNECTION = 2
 data class ServerResponse(
     val token: String,
     val result: Int
-
 ) {
     companion object {
         fun createFromJson(json: String): ServerResponse {

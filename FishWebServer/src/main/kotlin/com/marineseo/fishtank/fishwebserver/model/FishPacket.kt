@@ -1,4 +1,4 @@
-package com.marine.fishtank.server.model
+package com.marineseo.fishtank.fishwebserver.model
 
 const val OP_GET_TEMPERATURE: Short = 1000
 const val OP_PIN_IO: Short = 1001

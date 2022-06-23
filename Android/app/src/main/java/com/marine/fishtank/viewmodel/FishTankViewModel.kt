@@ -3,6 +3,7 @@ package com.marine.fishtank.viewmodel
 import android.app.Application
 import android.util.Log
 import androidx.lifecycle.*
+import com.marine.fishtank.BuildConfig
 import com.marine.fishtank.ConnectionSetting
 import com.marine.fishtank.DEFAULT_CONNECTION_SETTING
 import com.marine.fishtank.SettingsRepository
@@ -11,6 +12,7 @@ import com.marine.fishtank.api.TankApi
 import com.marine.fishtank.model.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlin.math.tan
 
 private const val TAG = "FishTankViewModel"
 
@@ -58,207 +60,82 @@ class FishTankViewModel(application: Application) : AndroidViewModel(application
     val initializeLiveData = MutableLiveData<Boolean>()
     private val settingsRepository = SettingsRepository.getInstance(context = application)
 
-    val lastConnectionSetting: ConnectionSetting?
-        get() = _lastConnectionSetting
-    private var _lastConnectionSetting: ConnectionSetting? = null
-
-    private val tankApi: TankApi = TankApi
+    private val tankApi: TankApi = TankApi.getInstance(BuildConfig.SERVER_URL)
 
     private val _uiState = MutableLiveData<UiState>()
     val uiState: LiveData<UiState>
         get() = _uiState
-
-    private val packetListener = object : OnServerPacketListener {
-        override fun onServerPacket(packet: ServerPacket) {
-            // packet sent by server.
-            Log.d(TAG, "onServerPacket=$packet")
-            when (packet.opCode) {
-                SERVER_OP_READ_TEMPERATURE -> {
-                    // only one temperature!
-                    if(packet.temperatureList.isNotEmpty()) {
-                        val list = mutableListOf<Temperature>()
-                        list.add(packet.temperatureList[0])
-                        temperatureLiveData.postValue(
-                            list
-                        )
-                    }
-                }
-                SERVER_OP_DB_TEMPERATURE -> {
-                    // List of temperature!
-                    temperatureLiveData.postValue(packet.temperatureList)
-                }
-                SERVER_OP_READ_IN_WATER -> {
-                    _uiState.postValue(_uiState.value?.copy(inWaterValveState = packet.pinState))
-                }
-                SERVER_OP_READ_OUT_WATER -> {
-                    _uiState.postValue(_uiState.value?.copy(outWaterValveState = packet.pinState))
-                }
-            }
-        }
-    }
 
     fun init() {
         // Post first empty value to copy later.
         _uiState.postValue(
             UiState()
         )
-
-        viewModelScope.launch(Dispatchers.IO) {
-            settingsRepository.settingFlow.collect { connectionSetting ->
-                if(_lastConnectionSetting != connectionSetting) {
-                    Log.d(TAG, "ConnectionSetting updated! $connectionSetting")
-                    _uiState.value?.let {
-                        _uiState.postValue(it.copy(
-                            connectionSetting = connectionSetting
-                        ))
-                    }
-
-                    if(_lastConnectionSetting?.serverUrl != connectionSetting.serverUrl
-                        || _lastConnectionSetting?.serverPort != connectionSetting.serverPort) {
-                        // Server url is updated or it is first time!
-                        val connectResult = tankApi.connect(connectionSetting.serverUrl, connectionSetting.serverPort)
-                        initializeLiveData.postValue(connectResult)
-                        tankApi.registerServerPacketListener(packetListener)
-                    }
-
-                    if(_lastConnectionSetting?.rtspUrl != connectionSetting.rtspUrl) {
-                        // rtsp url is updated.
-                    }
-
-                    _lastConnectionSetting = connectionSetting
-                }
-            }
-        }
     }
 
     fun readState() {
         viewModelScope.launch(Dispatchers.IO) {
-            tankApi.sendCommand(ServerPacket(clientId = AppId.MY_ID, opCode = SERVER_OP_READ_IN_WATER))
-            tankApi.sendCommand(ServerPacket(clientId = AppId.MY_ID, opCode = SERVER_OP_READ_OUT_WATER))
-        }
-    }
+            val inWaterState = tankApi.readInWaterState()
+            val outWaterState = tankApi.readOutWaterState()
 
-    fun startFetchTemperature(days: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
-            tankApi.sendCommand(ServerPacket(clientId = AppId.MY_ID, opCode = SERVER_OP_DB_TEMPERATURE, data = days))
-            val daysInFl = days.toFloat()
-            Log.d(TAG, "DaysInFl=$daysInFl")
-        }
-    }
-
-    private fun replaceWater(ratio: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
-            tankApi.sendCommand(
-                ServerPacket(
-                    clientId = AppId.MY_ID,
-                    opCode = SERVER_OP_WATER_REPLACE,
-                    data = ratio
+            _uiState.postValue(
+                _uiState.value?.copy(
+                    inWaterValveState = inWaterState,
+                    outWaterValveState = outWaterState
                 )
             )
         }
     }
 
-    private fun enableOutWaterValve(open: Boolean) {
-        tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_OUT_WATER, data = if (open) 1 else 0))
+    fun startFetchTemperature(days: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            temperatureLiveData.postValue(
+                tankApi.readDBTemperature(days)
+            )
+        }
     }
 
-    private fun enableInWaterValve(open: Boolean) {
-        tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_IN_WATER, data = if (open) 1 else 0))
-    }
-
-    private fun enablePump(run: Boolean) {
-        tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_WATER_PUMP, data = if (run) 1 else 0))
-    }
-
-    private fun enableLight(enable: Boolean) {
-        tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_LIGHT, data = if (enable) 1 else 0))
-    }
-
-    private fun enableHeater(enable: Boolean) {
-        tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_HEATER, data = if (enable) 1 else 0))
-    }
-
-    private fun enablePurifier(enable: Boolean) {
-        tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_PURIFIER_1, data = if (enable) 1 else 0))
-        tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_PURIFIER_2, data = if (enable) 1 else 0))
-    }
-
-    private fun enableBoardLed(enable: Boolean) {
-        tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_MEGA_LED, data = if (enable) 1 else 0))
+    private fun replaceWater(ratio: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            tankApi.replaceWater(ratio * 0.01F)
+        }
     }
 
     fun uiEvent(uiEvent: UiEvent) {
         viewModelScope.launch(Dispatchers.IO) {
             when (uiEvent) {
                 is UiEvent.OutWaterEvent -> {
-                    _uiState.postValue(
-                        _uiState.value?.copy(
-                            resultText = "${if (uiEvent.value) "Open" else "Close"} Out-Water valve!",
-                            outWaterValveState = uiEvent.value,
-                        )
-                    )
-                    enableOutWaterValve(uiEvent.value)
+                    viewModelScope.launch(Dispatchers.IO) {
+                        tankApi.enableOutWater(uiEvent.value)
+                    }
                 }
                 is UiEvent.InWaterEvent -> {
-                    _uiState.postValue(
-                        _uiState.value?.copy(
-                            inWaterValveState = uiEvent.value,
-                            resultText = "${if (uiEvent.value) "Open" else "Close"} In-Water valve!"
-                        )
-                    )
-                    enableInWaterValve(uiEvent.value)
+                    viewModelScope.launch(Dispatchers.IO) {
+                        tankApi.enableInWater(uiEvent.value)
+                    }
                 }
                 is UiEvent.LightEvent -> {
-                    _uiState.postValue(
-                        _uiState.value?.copy(
-                            lightState = uiEvent.value,
-                            resultText = "Light ${if (uiEvent.value) "On" else "Off"} "
-                        )
-                    )
-                    enableLight(uiEvent.value)
-                }
-                is UiEvent.PumpEvent -> {
-                    _uiState.postValue(
-                        _uiState.value?.copy(
-                            pumpState = uiEvent.value,
-                            resultText = "Pump ${if (uiEvent.value) "On" else "Off"} "
-                        )
-                    )
-                    enablePump(uiEvent.value)
+                    viewModelScope.launch(Dispatchers.IO) {
+                        tankApi.enableLight(uiEvent.value)
+                    }
                 }
                 is UiEvent.HeaterEvent -> {
-                    _uiState.postValue(
-                        _uiState.value?.copy(
-                            heaterState = uiEvent.value,
-                            resultText = "Heater ${if (uiEvent.value) "On" else "Off"} "
-                        )
-                    )
-                    enableHeater(uiEvent.value)
+                    viewModelScope.launch(Dispatchers.IO) {
+                        tankApi.enableHeater(uiEvent.value)
+                    }
                 }
                 is UiEvent.PurifierEvent -> {
-                    _uiState.postValue(
-                        _uiState.value?.copy(
-                            purifierState = uiEvent.value,
-                            resultText = "Purifier ${if (uiEvent.value) "On" else "Off"} "
-                        )
-                    )
-                    enablePurifier(uiEvent.value)
+                    viewModelScope.launch(Dispatchers.IO) {
+                        tankApi.enablePurifier(uiEvent.value)
+                    }
                 }
                 is UiEvent.ReplaceWater -> {
-                    _uiState.postValue(
-                        _uiState.value?.copy(
-                            resultText = "Start change-water"
-                        )
-                    )
                     replaceWater(uiEvent.ratio)
                 }
                 is UiEvent.LedEvent -> {
-                    _uiState.postValue(
-                        _uiState.value?.copy(
-                            resultText = "${if (uiEvent.value) "On" else "Off"} Board LED"
-                        )
-                    )
-                    enableBoardLed(uiEvent.value)
+                    viewModelScope.launch(Dispatchers.IO) {
+                        tankApi.enableBoardLed(uiEvent.value)
+                    }
                 }
                 is UiEvent.OnChangeTemperatureRange -> {
                     startFetchTemperature(uiEvent.intValue)

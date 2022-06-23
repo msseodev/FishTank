@@ -1,7 +1,10 @@
 package com.marineseo.fishtank.fishwebserver.service
 
-import com.marine.fishtank.server.model.*
 import com.marineseo.fishtank.fishwebserver.arduino.ArduinoSerialPort
+import com.marineseo.fishtank.fishwebserver.model.FishPacket
+import com.marineseo.fishtank.fishwebserver.model.OP_GET_TEMPERATURE
+import com.marineseo.fishtank.fishwebserver.model.OP_PIN_IO
+import com.marineseo.fishtank.fishwebserver.model.OP_READ_DIGIT_PIN
 import jssc.SerialPort
 import jssc.SerialPortException
 import kotlinx.coroutines.delay

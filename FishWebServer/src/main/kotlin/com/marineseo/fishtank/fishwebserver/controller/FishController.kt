@@ -15,6 +15,13 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
+private const val KEY_TOKEN = "token"
+private const val KEY_ENABLE = "enable"
+private const val KEY_ID = "id"
+private const val KEY_PASSWORD = "password"
+private const val KEY_DAYS = "days"
+private const val KEY_PERCENTAGE = "percentage"
+
 @RestController
 @RequestMapping("/fish")
 class FishController(
@@ -31,8 +38,8 @@ class FishController(
 
     @PostMapping("/signin")
     fun signIn(
-        @RequestParam("id") id: String,
-        @RequestParam("password") password: String
+        @RequestParam(KEY_ID) id: String,
+        @RequestParam(KEY_PASSWORD) password: String
     ): ResponseEntity<String> {
         val user = userService.signIn(id, password) ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null)
 
@@ -45,8 +52,8 @@ class FishController(
 
     @PostMapping("/boardLed")
     fun enableBoardLed(
-        @RequestParam("token") token: String,
-        @RequestParam("enable") enable: Boolean
+        @RequestParam(KEY_TOKEN) token: String,
+        @RequestParam(KEY_ENABLE) enable: Boolean
     ): ResponseEntity<Int> {
         if (userService.getUserByToken(token) == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null)
 
@@ -58,8 +65,8 @@ class FishController(
 
     @PostMapping("/readDBTemperature")
     fun readDBTemperature(
-        @RequestParam("token") token: String,
-        @RequestParam("days") days: Int
+        @RequestParam(KEY_TOKEN) token: String,
+        @RequestParam(KEY_DAYS) days: Int
     ): ResponseEntity<List<Temperature>> {
         if (userService.getUserByToken(token) == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null)
 
@@ -69,8 +76,8 @@ class FishController(
 
     @PostMapping("/outWater")
     fun enableOutWater(
-        @RequestParam("token") token: String,
-        @RequestParam("enable") enable: Boolean
+        @RequestParam(KEY_TOKEN) token: String,
+        @RequestParam(KEY_ENABLE) enable: Boolean
     ): ResponseEntity<Int> {
         if (userService.getUserByToken(token) == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null)
 
@@ -82,8 +89,8 @@ class FishController(
 
     @PostMapping("/inWater")
     fun enableInWater(
-        @RequestParam("token") token: String,
-        @RequestParam("enable") enable: Boolean
+        @RequestParam(KEY_TOKEN) token: String,
+        @RequestParam(KEY_ENABLE) enable: Boolean
     ): ResponseEntity<Int> {
         if (userService.getUserByToken(token) == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null)
 
@@ -95,8 +102,8 @@ class FishController(
 
     @PostMapping("/light")
     fun enableLight(
-        @RequestParam("token") token: String,
-        @RequestParam("enable") enable: Boolean
+        @RequestParam(KEY_TOKEN) token: String,
+        @RequestParam(KEY_ENABLE) enable: Boolean
     ): ResponseEntity<Int> {
         if (userService.getUserByToken(token) == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null)
 
@@ -108,8 +115,8 @@ class FishController(
 
     @PostMapping("/purifier")
     fun enablePurifier(
-        @RequestParam("token") token: String,
-        @RequestParam("enable") enable: Boolean
+        @RequestParam(KEY_TOKEN) token: String,
+        @RequestParam(KEY_ENABLE) enable: Boolean
     ): ResponseEntity<Int> {
         if (userService.getUserByToken(token) == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null)
 
@@ -121,8 +128,8 @@ class FishController(
 
     @PostMapping("/heater")
     fun enableHeater(
-        @RequestParam("token") token: String,
-        @RequestParam("enable") enable: Boolean
+        @RequestParam(KEY_TOKEN) token: String,
+        @RequestParam(KEY_ENABLE) enable: Boolean
     ): ResponseEntity<Int> {
         if (userService.getUserByToken(token) == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null)
 
@@ -133,7 +140,7 @@ class FishController(
     }
 
     @PostMapping("/read/inWater")
-    fun readInWater(@RequestParam("token") token: String): ResponseEntity<Boolean> {
+    fun readInWater(@RequestParam(KEY_TOKEN) token: String): ResponseEntity<Boolean> {
         if (userService.getUserByToken(token) == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null)
 
         return ResponseEntity.ok(
@@ -142,7 +149,7 @@ class FishController(
     }
 
     @PostMapping("/read/outWater")
-    fun readOutWater(@RequestParam("token") token: String): ResponseEntity<Boolean> {
+    fun readOutWater(@RequestParam(KEY_TOKEN) token: String): ResponseEntity<Boolean> {
         if (userService.getUserByToken(token) == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null)
 
         return ResponseEntity.ok(
@@ -152,8 +159,8 @@ class FishController(
 
     @PostMapping("/func/replaceWater")
     fun replaceWater(
-        @RequestParam("token") token: String,
-        @RequestParam("percentage") percentage: Float
+        @RequestParam(KEY_TOKEN) token: String,
+        @RequestParam(KEY_PERCENTAGE) percentage: Float
     ): ResponseEntity<Int> {
         if (userService.getUserByToken(token) == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null)
 
