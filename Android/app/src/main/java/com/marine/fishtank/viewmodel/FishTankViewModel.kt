@@ -57,7 +57,6 @@ sealed class UiEvent(
 
 class FishTankViewModel(application: Application) : AndroidViewModel(application) {
     val temperatureLiveData = MutableLiveData<List<Temperature>>()
-    val initializeLiveData = MutableLiveData<Boolean>()
     private val settingsRepository = SettingsRepository.getInstance(context = application)
 
     private val tankApi: TankApi = TankApi.getInstance(BuildConfig.SERVER_URL)
