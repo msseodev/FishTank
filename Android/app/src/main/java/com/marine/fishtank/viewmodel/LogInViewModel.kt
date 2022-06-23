@@ -3,15 +3,11 @@ package com.marine.fishtank.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
+import com.marine.fishtank.BuildConfig
 import com.marine.fishtank.SettingsRepository
-import com.marine.fishtank.api.OnServerPacketListener
 import com.marine.fishtank.api.TankApi
-import com.marine.fishtank.model.SERVER_OP_SIGN_IN
-import com.marine.fishtank.model.ServerPacket
-import com.marine.fishtank.model.User
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 data class SignInResult(
@@ -24,48 +20,14 @@ class LogInViewModel(application: Application) : AndroidViewModel(application) {
     private val settingsRepository = SettingsRepository.getInstance(context = application)
 
     val signInResult = MutableLiveData<SignInResult>()
-    val connectResult = MutableLiveData<Boolean>()
     val userIdData = MutableLiveData<String>()
     val userPasswordData = MutableLiveData<String>()
 
-    private val tankApi: TankApi by lazy {
-        TankApi.apply {
-            registerServerPacketListener(packetListener)
-        }
-    }
+    private val tankApi = TankApi.getInstance(BuildConfig.SERVER_URL)
 
-    private val packetListener = object : OnServerPacketListener {
-        override fun onServerPacket(packet: ServerPacket) {
-            when (packet.opCode) {
-                SERVER_OP_SIGN_IN -> {
-                    if (packet.obj is Boolean) {
-                        // sign-in success
-                        signInResult.postValue(
-                            SignInResult(
-                                packet.obj, ""
-                            )
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    fun connectToServer() {
-        scope.launch {
-            settingsRepository.settingFlow.collect { connectionSetting ->
-                connectResult.postValue(
-                    TankApi.connect(connectionSetting.serverUrl, connectionSetting.serverPort)
-                )
-            }
-        }
-    }
-
-    private fun saveUser(id: String, password: String) {
-        scope.launch {
-            settingsRepository.saveUserId(id)
-            settingsRepository.saveUserPassword(password)
-        }
+    private suspend fun saveUser(id: String, password: String) {
+        settingsRepository.saveUserId(id)
+        settingsRepository.saveUserPassword(password)
     }
 
     fun fetchSavedUser() {
@@ -83,8 +45,14 @@ class LogInViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun signIn(userId: String, password: String) {
-        tankApi.sendCommand(ServerPacket(opCode = SERVER_OP_SIGN_IN, obj = User(id = userId, password = password)))
-
-        saveUser(userId, password)
+        scope.launch {
+            val result = tankApi.signIn(userId, password)
+            if(result) {
+                saveUser(userId, password)
+            }
+            signInResult.postValue(
+                SignInResult(result, "Success")
+            )
+        }
     }
 }
