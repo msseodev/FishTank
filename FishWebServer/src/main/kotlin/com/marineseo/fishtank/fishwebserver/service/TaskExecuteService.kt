@@ -39,13 +39,11 @@ class TaskExecuteService(
                         }
                         Task.TYPE_VALVE_IN_WATER -> {
                             arduinoService.enableInWaterValve(
-                                clientId =  SERVICE_ID,
                                 open = it.data == Task.DATA_OPEN
                             )
                         }
                         Task.TYPE_VALVE_OUT_WATER -> {
                             arduinoService.enableOutWaterValve(
-                                clientId = SERVICE_ID,
                                 open = it.data == Task.DATA_OPEN
                             )
                         }
