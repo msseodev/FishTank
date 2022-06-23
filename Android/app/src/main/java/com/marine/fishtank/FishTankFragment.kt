@@ -63,21 +63,9 @@ class FishTankFragment : Fragment() {
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        // Need call to pull the trigger of Composition.
-        val sTime = System.currentTimeMillis()
+        Log.d(TAG, "onCreateView")
 
-        viewModel.initializeLiveData.observe(viewLifecycleOwner) { connect ->
-            if (connect) {
-                Log.i(TAG, "Connect to fish server successful.")
-                viewModel.startFetchTemperature(1)
-                viewModel.readState()
-            } else {
-                Log.e(TAG, "Fail to connect!")
-            }
-        }
         viewModel.init()
-
-        Log.d(TAG, "onCreateView viewModel elapse=${System.currentTimeMillis() - sTime}")
 
         return ComposeView(requireContext()).apply {
             setContent {
@@ -88,6 +76,14 @@ class FishTankFragment : Fragment() {
                 }
             }
         }
+    }
+
+    override fun onResume() {
+        Log.d(TAG, "onResume")
+        super.onResume()
+
+        viewModel.startFetchTemperature(1)
+        viewModel.readState()
     }
 }
 
@@ -101,7 +97,6 @@ fun FishTankScreen(
 
     val uiState: UiState by viewModel.uiState.observeAsState(UiState())
     val temperatureState: List<Temperature> by viewModel.temperatureLiveData.observeAsState(emptyList())
-    val connectState: Boolean by viewModel.initializeLiveData.observeAsState(false)
 
     val tabTitles = listOf("Control", "Monitor", "Camera")
     // Default page -> monitor
@@ -137,7 +132,7 @@ fun FishTankScreen(
                 verticalAlignment = Alignment.Top
             ) { tabIndex ->
                 when (tabIndex) {
-                    0 -> ControlPage(uiState, connectState, eventHandler)
+                    0 -> ControlPage(uiState, eventHandler)
                     1 -> MonitorPage(temperatureState, uiState, eventHandler)
                     2 -> CameraPage(uiState, eventHandler)
                 }
@@ -448,11 +443,11 @@ fun Chart(
 }
 
 @Composable
-fun ControlPage(uiState: UiState, connectResult: Boolean, eventHandler: (UiEvent) -> Unit) {
+fun ControlPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
     Log.d(TAG, "Composing ControlTab! $uiState")
 
     val scrollState = rememberScrollState()
-    var ratioValue by remember { mutableStateOf(30) }
+    var ratioValue by remember { mutableStateOf(20) }
     val context = LocalContext.current
 
     Column(
@@ -469,12 +464,10 @@ fun ControlPage(uiState: UiState, connectResult: Boolean, eventHandler: (UiEvent
                 RadioBtn(
                     uiState.outWaterValveState,
                     stringResource(R.string.open_water_out),
-                    connectResult
                 ) { eventHandler(UiEvent.OutWaterEvent(true)) },
                 RadioBtn(
                     !uiState.outWaterValveState,
                     stringResource(R.string.close_water_out),
-                    connectResult
                 ) { eventHandler(UiEvent.OutWaterEvent(false)) }
             )
         )
@@ -483,12 +476,10 @@ fun ControlPage(uiState: UiState, connectResult: Boolean, eventHandler: (UiEvent
                 RadioBtn(
                     uiState.inWaterValveState,
                     stringResource(R.string.open_water_in),
-                    connectResult
                 ) { eventHandler(UiEvent.InWaterEvent(true)) },
                 RadioBtn(
                     !uiState.inWaterValveState,
                     stringResource(R.string.close_water_in),
-                    connectResult
                 ) { eventHandler(UiEvent.InWaterEvent(false)) }
             )
         )
@@ -497,9 +488,8 @@ fun ControlPage(uiState: UiState, connectResult: Boolean, eventHandler: (UiEvent
                 RadioBtn(
                     false,
                     stringResource(R.string.pump_run),
-                    connectResult
                 ) { eventHandler(UiEvent.PumpEvent(true)) },
-                RadioBtn(false, stringResource(R.string.pump_stop), connectResult) {
+                RadioBtn(false, stringResource(R.string.pump_stop)) {
                     eventHandler(
                         UiEvent.PumpEvent(
                             false
@@ -513,25 +503,23 @@ fun ControlPage(uiState: UiState, connectResult: Boolean, eventHandler: (UiEvent
                 RadioBtn(
                     false,
                     stringResource(R.string.purifier_on),
-                    connectResult
                 ) { eventHandler(UiEvent.PurifierEvent(true)) },
                 RadioBtn(
                     false,
                     stringResource(R.string.purifier_off),
-                    connectResult
                 ) { eventHandler(UiEvent.PurifierEvent(false)) }
             )
         )
         RadioGroup(
             listOf(
-                RadioBtn(false, stringResource(R.string.heater_on), connectResult) {
+                RadioBtn(false, stringResource(R.string.heater_on)) {
                     eventHandler(
                         UiEvent.HeaterEvent(
                             true
                         )
                     )
                 },
-                RadioBtn(false, stringResource(R.string.heater_off), connectResult) {
+                RadioBtn(false, stringResource(R.string.heater_off)) {
                     eventHandler(
                         UiEvent.HeaterEvent(
                             false
@@ -542,14 +530,14 @@ fun ControlPage(uiState: UiState, connectResult: Boolean, eventHandler: (UiEvent
         )
         RadioGroup(
             listOf(
-                RadioBtn(false, stringResource(R.string.board_led_on), connectResult) {
+                RadioBtn(false, stringResource(R.string.board_led_on)) {
                     eventHandler(
                         UiEvent.LedEvent(
                             true
                         )
                     )
                 },
-                RadioBtn(false, stringResource(R.string.board_led_off), connectResult) {
+                RadioBtn(false, stringResource(R.string.board_led_off)) {
                     eventHandler(
                         UiEvent.LedEvent(
                             false
@@ -579,7 +567,6 @@ fun ControlPage(uiState: UiState, connectResult: Boolean, eventHandler: (UiEvent
                 modifier = Modifier
                     .weight(1f)
                     .padding(start = 10.dp),
-                enabled = connectResult,
                 onClick = {
                     if (ratioValue > REPLACE_MAX || ratioValue <= 0) {
                         Toast.makeText(context, "Replace amount should between 0 and $REPLACE_MAX", Toast.LENGTH_SHORT)
@@ -597,7 +584,6 @@ fun ControlPage(uiState: UiState, connectResult: Boolean, eventHandler: (UiEvent
 data class RadioBtn(
     var selected: Boolean = false,
     var text: String,
-    var enabled: Boolean = false,
     var onclick: () -> Unit
 )
 
@@ -624,7 +610,6 @@ fun RadioGroup(radioList: List<RadioBtn>) {
             ) {
                 RadioButton(
                     selected = selected,
-                    enabled = radioBtn.enabled,
                     onClick = onClickHandle
                 )
                 Text(text = radioBtn.text)
