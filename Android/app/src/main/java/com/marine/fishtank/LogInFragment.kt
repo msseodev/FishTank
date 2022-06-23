@@ -42,6 +42,8 @@ class LogInFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        Log.d(TAG, "onCreateView")
+
         viewModel.connectResult.observe(viewLifecycleOwner) { connectResult ->
             if(connectResult) {
                 Log.i(TAG, "Server connect success!")
@@ -77,6 +79,7 @@ class LogInFragment : Fragment() {
     }
 
     override fun onResume() {
+        Log.d(TAG, "onResume")
         super.onResume()
 
         viewModel.fetchSavedUser()
