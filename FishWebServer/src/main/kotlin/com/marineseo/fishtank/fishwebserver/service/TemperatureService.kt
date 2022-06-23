@@ -38,7 +38,7 @@ class TemperatureService(
 
         scope.launch {
             while(isRunning) {
-                val temperature = arduinoService.getTemperature(SERVICE_ID)
+                val temperature = arduinoService.getTemperature()
                 if(temperature > 0) {
                     mapper.insertTemperature(
                         Temperature(

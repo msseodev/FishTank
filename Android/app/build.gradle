@@ -25,7 +25,7 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField "String", "SERVER_URL", '"http://fish.marineseo.xyz"'
+        buildConfigField "String", "SERVER_URL", '"http://fish.marineseo.xyz:8080"'
     }
 
     buildTypes {
@@ -104,8 +104,10 @@ dependencies {
     implementation 'com.google.android.exoplayer:exoplayer-rtsp:2.17.1'
 
     // Retrofit
-    implementation "com.squareup.retrofit2:retrofit:2.9.0"
-    implementation "com.squareup.retrofit2:converter-gson:2.9.0"
+    implementation "com.squareup.retrofit2:retrofit:$retrofit2_version"
+    implementation "com.squareup.retrofit2:converter-gson:$retrofit2_version"
+    implementation "com.squareup.retrofit2:converter-scalars:$retrofit2_version"
+
 
     // Test
     testImplementation 'junit:junit:4.13.2'
