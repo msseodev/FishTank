@@ -42,8 +42,7 @@ class TemperatureService(
                 if(temperature > 0) {
                     mapper.insertTemperature(
                         Temperature(
-                            temperature = temperature,
-                            time = System.currentTimeMillis()
+                            temperature = temperature
                         )
                     )
                 }

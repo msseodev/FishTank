@@ -361,7 +361,7 @@ fun Chart(
                             }
                             val entry = data.dataSets[0].getEntryForXValue(value, 0f)
                             val tmp = entry.data as Temperature
-                            return SimpleDateFormat("MM-dd HH:mm").format(Date(tmp.time))
+                            return SimpleDateFormat("MM-dd HH:mm").format(tmp.time)
                         }
                     }
                 }
