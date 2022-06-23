@@ -1,8 +1,8 @@
 package com.marineseo.fishtank.fishwebserver.arduino
 
-import com.marine.fishtank.server.model.FishPacket
-import com.marine.fishtank.server.model.MAGIC
-import com.marine.fishtank.server.model.PACKET_SIZE
+import com.marineseo.fishtank.fishwebserver.model.FishPacket
+import com.marineseo.fishtank.fishwebserver.model.MAGIC
+import com.marineseo.fishtank.fishwebserver.model.PACKET_SIZE
 import jssc.SerialPort
 import jssc.SerialPortTimeoutException
 import org.slf4j.LoggerFactory
