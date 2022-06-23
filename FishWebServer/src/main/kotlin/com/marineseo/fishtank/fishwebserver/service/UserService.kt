@@ -1,6 +1,7 @@
 package com.marineseo.fishtank.fishwebserver.service
 
 import com.marineseo.fishtank.fishwebserver.mapper.DatabaseMapper
+import com.marineseo.fishtank.fishwebserver.model.User
 import com.marineseo.fishtank.fishwebserver.util.MarineUtils
 import org.springframework.stereotype.Service
 
@@ -9,12 +10,25 @@ const val TOKEN_LENGTH = 64
 class UserService(
     private val mapper: DatabaseMapper
 ) {
-    fun signIn(id: String, password: String): Boolean {
+   private val tokenMap = mutableMapOf<String, User>()
+
+
+    fun signIn(id: String, password: String): User? {
         val user = mapper.getUser(id)
-        return user.password == password
+        return if(user.password == password) {
+            user.apply { token = generateUserToken() }
+            tokenMap[user.token] = user
+            user
+        } else {
+            null
+        }
     }
 
-    fun generateUserToken(): String {
+    private fun generateUserToken(): String {
         return MarineUtils.makeRandomString(TOKEN_LENGTH)
+    }
+
+    fun getUserByToken(token: String): User? {
+        return tokenMap[token]
     }
 }
