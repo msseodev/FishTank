@@ -44,15 +44,6 @@ class LogInFragment : Fragment() {
     ): View {
         Log.d(TAG, "onCreateView")
 
-        viewModel.connectResult.observe(viewLifecycleOwner) { connectResult ->
-            if(connectResult) {
-                Log.i(TAG, "Server connect success!")
-            } else {
-                Log.e(TAG, "FAIL to connect to server!")
-                Toast.makeText(context, "FAIL to connect server!", Toast.LENGTH_SHORT).show()
-            }
-        }
-
         viewModel.signInResult.observe(viewLifecycleOwner) { signIn ->
             if(signIn.result) {
                 navigate(Screen.LogIn, Screen.FishTank)
@@ -60,8 +51,6 @@ class LogInFragment : Fragment() {
                 Toast.makeText(context, "Fail to sign-in", Toast.LENGTH_SHORT).show()
             }
         }
-
-        viewModel.connectToServer()
 
         return ComposeView(requireContext()).apply {
             setContent {
@@ -92,7 +81,6 @@ fun LogInScreen(viewModel: LogInViewModel, onEvent: (LogInEvent) -> Unit) {
     var passwordText by rememberSaveable { mutableStateOf("") }
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
 
-    val enable by viewModel.connectResult.observeAsState(false)
     val userId by viewModel.userIdData.observeAsState()
     val password by viewModel.userPasswordData.observeAsState()
 
@@ -154,7 +142,6 @@ fun LogInScreen(viewModel: LogInViewModel, onEvent: (LogInEvent) -> Unit) {
             OutlinedButton(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = { onEvent(LogInEvent.SignIn(userIdText, passwordText)) },
-                enabled = enable
             ) {
                 Text(text = "SIGN IN")
             }
