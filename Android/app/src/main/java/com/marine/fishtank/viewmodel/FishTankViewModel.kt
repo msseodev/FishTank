@@ -16,45 +16,6 @@ import kotlin.math.tan
 
 private const val TAG = "FishTankViewModel"
 
-// 어항 물 용량
-private const val TANK_WATER_VOLUME = 100
-
-data class UiState(
-    var outWaterValveState: Boolean = false,
-    var inWaterValveState: Boolean = false,
-    var lightState: Boolean = false,
-    var pumpState: Boolean = false,
-    var heaterState: Boolean = false,
-    var purifierState: Boolean = false,
-
-    var temperature: Double = 0.0,
-    var temperatureDays: Float = 0f,
-
-    var resultText: String = "",
-
-    var connectionSetting: ConnectionSetting = DEFAULT_CONNECTION_SETTING,
-    var serverUrl: String = ""
-)
-
-sealed class UiEvent(
-    val value: Boolean = false,
-    val intValue: Int = 0
-) {
-    class OutWaterEvent(enable: Boolean) : UiEvent(enable)
-    class InWaterEvent(enable: Boolean) : UiEvent(enable)
-    class LightEvent(enable: Boolean) : UiEvent(enable)
-    class PumpEvent(enable: Boolean) : UiEvent(enable)
-    class HeaterEvent(enable: Boolean) : UiEvent(enable)
-    class PurifierEvent(enable: Boolean) : UiEvent(enable)
-    class LedEvent(enable: Boolean) : UiEvent(enable)
-
-    class ReplaceWater(val ratio: Int) : UiEvent()
-    class OnChangeTemperatureRange(count: Int) : UiEvent(intValue = count)
-
-    class OnPlayButtonClick : UiEvent()
-    class SettingChange(val connectionSetting: ConnectionSetting) : UiEvent()
-}
-
 class FishTankViewModel(application: Application) : AndroidViewModel(application) {
     val temperatureLiveData = MutableLiveData<List<Temperature>>()
     private val settingsRepository = SettingsRepository.getInstance(context = application)
@@ -151,5 +112,40 @@ class FishTankViewModel(application: Application) : AndroidViewModel(application
             }
         }
     }
+}
 
+data class UiState(
+    var outWaterValveState: Boolean = false,
+    var inWaterValveState: Boolean = false,
+    var lightState: Boolean = false,
+    var pumpState: Boolean = false,
+    var heaterState: Boolean = false,
+    var purifierState: Boolean = false,
+
+    var temperature: Double = 0.0,
+    var temperatureDays: Float = 0f,
+
+    var resultText: String = "",
+
+    var connectionSetting: ConnectionSetting = DEFAULT_CONNECTION_SETTING,
+    var serverUrl: String = ""
+)
+
+sealed class UiEvent(
+    val value: Boolean = false,
+    val intValue: Int = 0
+) {
+    class OutWaterEvent(enable: Boolean) : UiEvent(enable)
+    class InWaterEvent(enable: Boolean) : UiEvent(enable)
+    class LightEvent(enable: Boolean) : UiEvent(enable)
+    class PumpEvent(enable: Boolean) : UiEvent(enable)
+    class HeaterEvent(enable: Boolean) : UiEvent(enable)
+    class PurifierEvent(enable: Boolean) : UiEvent(enable)
+    class LedEvent(enable: Boolean) : UiEvent(enable)
+
+    class ReplaceWater(val ratio: Int) : UiEvent()
+    class OnChangeTemperatureRange(count: Int) : UiEvent(intValue = count)
+
+    class OnPlayButtonClick : UiEvent()
+    class SettingChange(val connectionSetting: ConnectionSetting) : UiEvent()
 }

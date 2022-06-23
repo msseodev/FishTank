@@ -5,10 +5,10 @@ import com.marineseo.fishtank.fishwebserver.model.FishPacket
 import com.marineseo.fishtank.fishwebserver.model.OP_GET_TEMPERATURE
 import com.marineseo.fishtank.fishwebserver.model.OP_PIN_IO
 import com.marineseo.fishtank.fishwebserver.model.OP_READ_DIGIT_PIN
+import com.marineseo.fishtank.fishwebserver.util.runCommand
 import jssc.SerialPort
 import jssc.SerialPortException
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -38,9 +38,70 @@ private const val COMMON_CLIENT_ID = 56432
 class ArduinoService {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
+    private val scope = CoroutineScope(Dispatchers.IO)
     private var port: ArduinoSerialPort? = null
+    private var debugPort: SerialPort? = null
     private lateinit var portName: String
-    fun connect(portName: String): Boolean {
+
+    init {
+        val usbDevs = "ls /dev/ttyUSB*".runCommand()
+        logger.debug("usbDevs=$usbDevs")
+
+        val devArray = usbDevs?.split(" ")
+        devArray?.let {
+            for(dev in it) {
+                val driver = "udevadm info $it | grep ID_USB_DRIVER | cut -d '=' -f 2".runCommand()
+                when(driver) {
+                    "ch341" -> {
+                        logger.debug("$dev id Arduino!")
+                        connect(dev)
+                    }
+                    "ftdi_sio" -> {
+                        logger.debug("$dev is debug port")
+                        runDebugLog(dev)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun runDebugLog(port: String) {
+        scope.launch {
+            try {
+                connectDebugPort(port)
+
+                while(true) {
+                    val msg = debugPort?.readString()
+                    logger.debug(msg)
+
+                    delay(1000L)
+                }
+            } catch (ex: SerialPortException) {
+                logger.error(ex.message)
+            }
+        }
+    }
+
+    private suspend fun connectDebugPort(port: String) {
+        try {
+            debugPort = SerialPort(port)
+            debugPort?.openPort()
+            debugPort?.setParams(
+                SerialPort.BAUDRATE_57600,
+                SerialPort.DATABITS_8,
+                SerialPort.STOPBITS_1,
+                SerialPort.PARITY_NONE
+            )
+            debugPort?.eventsMask = SerialPort.MASK_RXCHAR
+
+            // Wait for some time.
+            delay(4000L)
+        } catch (ex: SerialPortException) {
+            logger.error(ex.message)
+        }
+    }
+
+    private fun connect(portName: String): Boolean {
         this.portName = portName
         port = ArduinoSerialPort(portName)
 
