@@ -103,7 +103,7 @@ fun FishTankScreen(
     val temperatureState: List<Temperature> by viewModel.temperatureLiveData.observeAsState(emptyList())
     val connectState: Boolean by viewModel.initializeLiveData.observeAsState(false)
 
-    val tabTitles = listOf("Control", "Monitor", "Camera", "Setting")
+    val tabTitles = listOf("Control", "Monitor", "Camera")
     // Default page -> monitor
     val pagerState = rememberPagerState(0)
 
@@ -140,7 +140,6 @@ fun FishTankScreen(
                     0 -> ControlPage(uiState, connectState, eventHandler)
                     1 -> MonitorPage(temperatureState, uiState, eventHandler)
                     2 -> CameraPage(uiState, eventHandler)
-                    3 -> SettingPage(uiState = uiState, eventHandler = eventHandler)
                 }
             }
         }
