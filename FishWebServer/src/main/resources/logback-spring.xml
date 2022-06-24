@@ -38,6 +38,11 @@
 
     <appender name="RollingError" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOGS_ABSOLUTE_PATH}/serverError.log</file>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
 
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <!-- rollover daily -->
@@ -61,10 +66,9 @@
 
     <root level="DEBUG">
         <appender-ref ref="STDOUT"/>
-    </root>
-    <logger name="org.springframework" level="ERROR">
         <appender-ref ref="RollingError" />
-    </logger>
+    </root>
+
     <logger name="com.marineseo.fishtank" level="DEBUG">
         <appender-ref ref="RollingGeneral" />
     </logger>

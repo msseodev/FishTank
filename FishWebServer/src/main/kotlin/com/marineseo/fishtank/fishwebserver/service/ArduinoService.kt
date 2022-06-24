@@ -5,12 +5,14 @@ import com.marineseo.fishtank.fishwebserver.model.FishPacket
 import com.marineseo.fishtank.fishwebserver.model.OP_GET_TEMPERATURE
 import com.marineseo.fishtank.fishwebserver.model.OP_PIN_IO
 import com.marineseo.fishtank.fishwebserver.model.OP_READ_DIGIT_PIN
+import com.marineseo.fishtank.fishwebserver.util.DeviceUtils
 import com.marineseo.fishtank.fishwebserver.util.runCommand
 import jssc.SerialPort
 import jssc.SerialPortException
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.io.File
 
 private const val PIN_BOARD_LED: Short = 13
 
@@ -44,22 +46,16 @@ class ArduinoService {
     private lateinit var portName: String
 
     init {
-        val usbDevs = "ls /dev/ttyUSB*".runCommand()
-        logger.debug("usbDevs=$usbDevs")
-
-        val devArray = usbDevs?.split(" ")
-        devArray?.let {
-            for(dev in it) {
-                val driver = "udevadm info $it | grep ID_USB_DRIVER | cut -d '=' -f 2".runCommand()
-                when(driver) {
-                    "ch341" -> {
-                        logger.debug("$dev id Arduino!")
-                        connect(dev)
-                    }
-                    "ftdi_sio" -> {
-                        logger.debug("$dev is debug port")
-                        runDebugLog(dev)
-                    }
+        val usbDevs = DeviceUtils.getFileList("/dev", "ttyUSB*")
+        for(devFile in usbDevs) {
+            when(DeviceUtils.getDriver(devFile)) {
+                "ch341" -> {
+                    logger.debug("${devFile.name} id Arduino!")
+                    connect(devFile.absolutePath)
+                }
+                "ftdi_sio" -> {
+                    logger.debug("${devFile.name} is debug port")
+                    runDebugLog(devFile.absolutePath)
                 }
             }
         }
