@@ -67,10 +67,11 @@ class ArduinoService {
                 connectDebugPort(port)
 
                 while(true) {
-                    val msg = debugPort?.readString()
-                    logger.debug(msg)
+                    debugPort?.readString().let {
+                        logger.debug(it)
+                    }
 
-                    delay(1000L)
+                    delay(2000L)
                 }
             } catch (ex: SerialPortException) {
                 logger.error(ex.message)

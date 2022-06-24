@@ -97,18 +97,4 @@ class TaskService(
         return mapper.fetchTask(Timestamp(System.currentTimeMillis()))
     }
 
-    fun readTemperature(days: Int): List<Temperature> {
-        val daysInMils = TimeUtils.MILS_DAY * days
-        val from = Date(System.currentTimeMillis() - daysInMils)
-        val until = Date(System.currentTimeMillis())
-        val temperatures = mapper.fetchTemperature(from, until)
-
-        // for logging
-        val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-        logger.debug(
-            "Fetching from ${formatter.format(from)} until ${formatter.format(until)} tempSize=${temperatures.size}"
-        )
-
-        return temperatures
-    }
 }
