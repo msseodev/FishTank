@@ -18,12 +18,3 @@ object MarineUtils {
         return buffer.toString()
     }
 }
-
-fun String.runCommand(
-    workingDir: File = File("."),
-    timeoutAmount: Long = 60,
-    timeoutUnit: TimeUnit = TimeUnit.SECONDS
-): String?  {
-    val process = Runtime.getRuntime().exec(this)
-    return process.inputStream.bufferedReader().readText()
-}

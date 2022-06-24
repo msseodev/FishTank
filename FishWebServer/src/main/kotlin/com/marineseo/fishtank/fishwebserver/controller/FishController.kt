@@ -5,6 +5,7 @@ import com.marineseo.fishtank.fishwebserver.model.RESULT_SUCCESS
 import com.marineseo.fishtank.fishwebserver.model.Temperature
 import com.marineseo.fishtank.fishwebserver.service.ArduinoService
 import com.marineseo.fishtank.fishwebserver.service.TaskService
+import com.marineseo.fishtank.fishwebserver.service.TemperatureService
 import com.marineseo.fishtank.fishwebserver.service.UserService
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -27,7 +28,8 @@ private const val KEY_PERCENTAGE = "percentage"
 class FishController(
     private val arduinoService: ArduinoService,
     private val taskService: TaskService,
-    private val userService: UserService
+    private val userService: UserService,
+    private val temperatureService: TemperatureService
 ) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
@@ -70,7 +72,7 @@ class FishController(
     ): ResponseEntity<List<Temperature>> {
         if (userService.getUserByToken(token) == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null)
 
-        val temperatureList = taskService.readTemperature(days)
+        val temperatureList = temperatureService.readTemperature(days)
         return ResponseEntity.ok(temperatureList)
     }
 

@@ -9,6 +9,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.sql.Date
+import java.text.SimpleDateFormat
 
 private const val TEMPERATURE_INTERVAL = TimeUtils.MILS_MINUTE * 5
 private const val SERVICE_ID = Integer.MAX_VALUE
@@ -25,10 +27,14 @@ class TemperatureService(
     private val scope = CoroutineScope(Dispatchers.IO)
     private var isRunning = false
 
+    init {
+        start()
+    }
+
     /**
      * 지속적으로 Temperature 을 읽어 DB 에 저장한다.
      */
-    fun start() {
+    private fun start() {
         if(isRunning) {
             logger.error(TAG, "Already running!")
             return
@@ -51,8 +57,19 @@ class TemperatureService(
         }
     }
 
-    fun stop() {
-        isRunning = false
+    fun readTemperature(days: Int): List<Temperature> {
+        val daysInMils = TimeUtils.MILS_DAY * days
+        val from = Date(System.currentTimeMillis() - daysInMils)
+        val until = Date(System.currentTimeMillis())
+        val temperatures = mapper.fetchTemperature(from, until)
+
+        // for logging
+        val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+        logger.debug(
+            "Fetching from ${formatter.format(from)} until ${formatter.format(until)} tempSize=${temperatures.size}"
+        )
+
+        return temperatures
     }
 
 }
