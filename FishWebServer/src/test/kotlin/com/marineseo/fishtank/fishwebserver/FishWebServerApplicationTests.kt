@@ -1,5 +1,6 @@
 package com.marineseo.fishtank.fishwebserver
 
+import com.marineseo.fishtank.fishwebserver.util.runCommand
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 
@@ -7,7 +8,9 @@ import org.springframework.boot.test.context.SpringBootTest
 class FishWebServerApplicationTests {
 
     @Test
-    fun contextLoads() {
+    fun generalTest() {
+        val routed = "route print".runCommand()
+        println(routed)
     }
 
 }
