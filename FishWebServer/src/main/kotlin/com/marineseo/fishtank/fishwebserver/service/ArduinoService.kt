@@ -11,6 +11,10 @@ import jssc.SerialPort
 import jssc.SerialPortException
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
+import org.springframework.context.ApplicationListener
+import org.springframework.context.event.ContextClosedEvent
+import org.springframework.context.event.ContextStartedEvent
+import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Service
 import java.io.File
 
@@ -37,15 +41,19 @@ private const val REPAIR_MAX_TRY = 5
 private const val COMMON_CLIENT_ID = 56432
 
 @Service
-class ArduinoService {
+class ArduinoService: ApplicationListener<ContextClosedEvent> {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     private val scope = CoroutineScope(Dispatchers.IO)
     private var port: ArduinoSerialPort? = null
     private var debugPort: SerialPort? = null
     private lateinit var portName: String
+    private var runLog = false
 
-    init {
+    @EventListener
+    fun onApplicationStart(ctxStartEvt: ContextStartedEvent) {
+        logger.info("Application start!")
+
         val usbDevs = DeviceUtils.getFileList("/dev", "ttyUSB*")
         for(devFile in usbDevs) {
             when(DeviceUtils.getDriver(devFile)) {
@@ -61,12 +69,20 @@ class ArduinoService {
         }
     }
 
+    override fun onApplicationEvent(event: ContextClosedEvent) {
+        logger.warn("Shutdown Event!!")
+        runLog = false
+
+        scope.cancel("Application ShutDown!")
+
+    }
+
     private fun runDebugLog(port: String) {
         scope.launch {
             try {
                 connectDebugPort(port)
-
-                while(true) {
+                runLog = true
+                while(runLog) {
                     debugPort?.readString().let {
                         logger.debug(it)
                     }
