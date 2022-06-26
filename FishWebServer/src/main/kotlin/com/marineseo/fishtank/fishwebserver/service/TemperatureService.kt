@@ -3,11 +3,12 @@ package com.marineseo.fishtank.fishwebserver.service
 import com.marineseo.fishtank.fishwebserver.mapper.DatabaseMapper
 import com.marineseo.fishtank.fishwebserver.model.Temperature
 import com.marineseo.fishtank.fishwebserver.util.TimeUtils
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
+import org.springframework.context.ApplicationListener
+import org.springframework.context.event.ContextClosedEvent
+import org.springframework.context.event.ContextStartedEvent
+import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Service
 import java.sql.Date
 import java.text.SimpleDateFormat
@@ -21,20 +22,29 @@ private const val TAG = "TemperatureService"
 class TemperatureService(
     private val arduinoService: ArduinoService,
     private val mapper: DatabaseMapper
-) {
+): ApplicationListener<ContextClosedEvent> {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     private val scope = CoroutineScope(Dispatchers.IO)
     private var isRunning = false
 
-    init {
-        start()
+    override fun onApplicationEvent(event: ContextClosedEvent) {
+        logger.warn("Application stop event!")
+        isRunning = false
+        scope.cancel("Application stop!")
+    }
+
+    @EventListener
+    fun onApplicationStart(ctxStartEvt: ContextStartedEvent) {
+        logger.info("Application start!")
+
+        readTemperatureForever()
     }
 
     /**
      * 지속적으로 Temperature 을 읽어 DB 에 저장한다.
      */
-    private fun start() {
+    private fun readTemperatureForever() {
         if(isRunning) {
             logger.error(TAG, "Already running!")
             return
