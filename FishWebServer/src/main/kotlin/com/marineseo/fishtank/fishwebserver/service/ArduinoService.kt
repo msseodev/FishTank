@@ -6,17 +6,13 @@ import com.marineseo.fishtank.fishwebserver.model.OP_GET_TEMPERATURE
 import com.marineseo.fishtank.fishwebserver.model.OP_PIN_IO
 import com.marineseo.fishtank.fishwebserver.model.OP_READ_DIGIT_PIN
 import com.marineseo.fishtank.fishwebserver.util.DeviceUtils
-import com.marineseo.fishtank.fishwebserver.util.runCommand
 import jssc.SerialPort
 import jssc.SerialPortException
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationListener
-import org.springframework.context.event.ContextClosedEvent
-import org.springframework.context.event.ContextStartedEvent
-import org.springframework.context.event.EventListener
+import org.springframework.context.event.*
 import org.springframework.stereotype.Service
-import java.io.File
 
 private const val PIN_BOARD_LED: Short = 13
 
@@ -41,7 +37,7 @@ private const val REPAIR_MAX_TRY = 5
 private const val COMMON_CLIENT_ID = 56432
 
 @Service
-class ArduinoService: ApplicationListener<ContextClosedEvent> {
+class ArduinoService: ApplicationListener<ApplicationContextEvent> {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     private val scope = CoroutineScope(Dispatchers.IO)
@@ -50,8 +46,7 @@ class ArduinoService: ApplicationListener<ContextClosedEvent> {
     private lateinit var portName: String
     private var runLog = false
 
-    @EventListener
-    fun onApplicationStart(ctxStartEvt: ContextStartedEvent) {
+    private fun init() {
         logger.info("Application start!")
 
         val usbDevs = DeviceUtils.getFileList("/dev", "ttyUSB*")
@@ -69,12 +64,26 @@ class ArduinoService: ApplicationListener<ContextClosedEvent> {
         }
     }
 
-    override fun onApplicationEvent(event: ContextClosedEvent) {
-        logger.warn("Shutdown Event!!")
-        runLog = false
+    override fun onApplicationEvent(event: ApplicationContextEvent) {
+        logger.warn("onApplicationEvent - $event")
 
-        scope.cancel("Application ShutDown!")
-
+        when(event) {
+            is ContextStartedEvent -> {
+                init()
+            }
+            is ContextClosedEvent, is ContextStoppedEvent -> {
+                runLog = false
+                scope.cancel("Application ShutDown!")
+                disConnect()
+            }
+            is ContextRefreshedEvent -> {
+                // Refresh
+                runLog = false
+                scope.cancel("Application Refresh!")
+                disConnect()
+                init()
+            }
+        }
     }
 
     private fun runDebugLog(port: String) {

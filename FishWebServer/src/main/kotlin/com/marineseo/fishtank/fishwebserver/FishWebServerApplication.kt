@@ -9,7 +9,5 @@ import java.lang.management.ManagementFactory
 open class FishWebServerApplication
 
 fun main(args: Array<String>) {
-    MDC.put("pid", ManagementFactory.getRuntimeMXBean().name)
-
     runApplication<FishWebServerApplication>(*args)
 }

@@ -8,8 +8,8 @@ import org.apache.ibatis.annotations.Mapper
 import org.apache.ibatis.annotations.Param
 import org.apache.ibatis.annotations.Select
 import org.apache.ibatis.annotations.Update
-import java.sql.Date
 import java.sql.Timestamp
+import java.util.*
 
 const val TB_USER = "user"
 const val COL_USER_ID = "id"
@@ -28,10 +28,10 @@ interface DatabaseMapper {
     fun getUser(@Param("userId") id: String): User
 
     @Insert("INSERT INTO $TB_TEMPERATURE($COL_TEMP_TEMPERATURE, $COL_TEMP_TIME) VALUES(#{temperature},#{time})")
-    fun insertTemperature(@Param("temperature") temperature: Temperature)
+    fun insertTemperature(temperature: Temperature)
 
-    @Select("SELECT * FROM $TB_TEMPERATURE WHERE $COL_TEMP_TIME BETWEEN #{from} AND #{until}")
-    fun fetchTemperature(@Param("from") from: Date, @Param("until") until: Date): List<Temperature>
+    @Select("SELECT * FROM $TB_TEMPERATURE WHERE $COL_TEMP_TIME BETWEEN #{from, jdbcType=TIMESTAMP} AND #{until, jdbcType=TIMESTAMP}")
+    fun fetchTemperature(@Param("from") from: Timestamp, @Param("until") until: Timestamp): List<Temperature>
 
     @Insert( "INSERT INTO ${Task.TB_TASK}" +
             "(${Task.COL_USER_ID}, ${Task.COL_TYPE}, " +

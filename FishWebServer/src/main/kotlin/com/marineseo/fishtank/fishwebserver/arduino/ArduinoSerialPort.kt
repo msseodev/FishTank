@@ -18,8 +18,6 @@ private const val MAX_READ_ATTEMPT = 500
 private const val READ_INTERVAL = 10
 private const val READ_TIMEOUT = MAX_READ_ATTEMPT * READ_INTERVAL // ms
 
-private const val TAG = "ArduinoSerial"
-
 class ArduinoSerialPort(portName: String): SerialPort(portName) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
     
@@ -32,7 +30,7 @@ class ArduinoSerialPort(portName: String): SerialPort(portName) {
             for(b in bytes) {
                 stringBuilder.append(String.format("%X ", b))
             }
-            logger.debug("Raw Packet=${stringBuilder}")
+            //logger.debug("Raw Packet=${stringBuilder}")
 
             val byteBuffer = ByteBuffer.allocate(PACKET_SIZE).apply {
                 order(ByteOrder.LITTLE_ENDIAN)
