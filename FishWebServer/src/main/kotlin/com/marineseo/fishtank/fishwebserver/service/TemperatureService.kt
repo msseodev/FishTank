@@ -6,12 +6,11 @@ import com.marineseo.fishtank.fishwebserver.util.TimeUtils
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationListener
-import org.springframework.context.event.ContextClosedEvent
-import org.springframework.context.event.ContextStartedEvent
-import org.springframework.context.event.EventListener
+import org.springframework.context.event.*
 import org.springframework.stereotype.Service
-import java.sql.Date
+import java.sql.Timestamp
 import java.text.SimpleDateFormat
+import java.util.*
 
 private const val TEMPERATURE_INTERVAL = TimeUtils.MILS_MINUTE * 5
 private const val SERVICE_ID = Integer.MAX_VALUE
@@ -22,22 +21,34 @@ private const val TAG = "TemperatureService"
 class TemperatureService(
     private val arduinoService: ArduinoService,
     private val mapper: DatabaseMapper
-): ApplicationListener<ContextClosedEvent> {
+): ApplicationListener<ApplicationContextEvent> {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     private val scope = CoroutineScope(Dispatchers.IO)
     private var isRunning = false
 
-    override fun onApplicationEvent(event: ContextClosedEvent) {
-        logger.warn("Application stop event!")
-        isRunning = false
-        scope.cancel("Application stop!")
+    override fun onApplicationEvent(event: ApplicationContextEvent) {
+        logger.warn("onApplicationEvent - $event")
+
+        when(event) {
+            is ContextStartedEvent -> {
+                init()
+            }
+            is ContextClosedEvent, is ContextStoppedEvent -> {
+                isRunning = false
+                scope.cancel("Application stop!")
+            }
+            is ContextRefreshedEvent -> {
+                // Refresh.
+                isRunning = false
+                scope.cancel("Application stop!")
+                init()
+            }
+        }
     }
 
-    @EventListener
-    fun onApplicationStart(ctxStartEvt: ContextStartedEvent) {
+    private fun init() {
         logger.info("Application start!")
-
         readTemperatureForever()
     }
 
@@ -69,8 +80,8 @@ class TemperatureService(
 
     fun readTemperature(days: Int): List<Temperature> {
         val daysInMils = TimeUtils.MILS_DAY * days
-        val from = Date(System.currentTimeMillis() - daysInMils)
-        val until = Date(System.currentTimeMillis())
+        val from = Timestamp(System.currentTimeMillis() - daysInMils)
+        val until = Timestamp(System.currentTimeMillis())
         val temperatures = mapper.fetchTemperature(from, until)
 
         // for logging
