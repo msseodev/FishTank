@@ -55,46 +55,49 @@ class FishTankViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    private fun replaceWater(ratio: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
-            tankApi.replaceWater(ratio * 0.01F)
-        }
-    }
-
     fun uiEvent(uiEvent: UiEvent) {
         viewModelScope.launch(Dispatchers.IO) {
             when (uiEvent) {
                 is UiEvent.OutWaterEvent -> {
                     viewModelScope.launch(Dispatchers.IO) {
                         tankApi.enableOutWater(uiEvent.value)
+                        readState()
                     }
                 }
                 is UiEvent.InWaterEvent -> {
                     viewModelScope.launch(Dispatchers.IO) {
                         tankApi.enableInWater(uiEvent.value)
+                        readState()
                     }
                 }
                 is UiEvent.LightEvent -> {
                     viewModelScope.launch(Dispatchers.IO) {
                         tankApi.enableLight(uiEvent.value)
+                        readState()
                     }
                 }
                 is UiEvent.HeaterEvent -> {
                     viewModelScope.launch(Dispatchers.IO) {
                         tankApi.enableHeater(uiEvent.value)
+                        readState()
                     }
                 }
                 is UiEvent.PurifierEvent -> {
                     viewModelScope.launch(Dispatchers.IO) {
                         tankApi.enablePurifier(uiEvent.value)
+                        readState()
                     }
                 }
                 is UiEvent.ReplaceWater -> {
-                    replaceWater(uiEvent.ratio)
+                    viewModelScope.launch(Dispatchers.IO) {
+                        tankApi.replaceWater(uiEvent.ratio * 0.01F)
+                        readState()
+                    }
                 }
                 is UiEvent.LedEvent -> {
                     viewModelScope.launch(Dispatchers.IO) {
                         tankApi.enableBoardLed(uiEvent.value)
+                        readState()
                     }
                 }
                 is UiEvent.OnChangeTemperatureRange -> {
@@ -102,12 +105,6 @@ class FishTankViewModel(application: Application) : AndroidViewModel(application
                 }
                 is UiEvent.OnPlayButtonClick -> {
 
-                }
-                is UiEvent.SettingChange -> {
-                    val setting = uiEvent.connectionSetting
-                    settingsRepository.saveServerUrl(setting.serverUrl)
-                    settingsRepository.saveServerPort(setting.serverPort)
-                    settingsRepository.saveRtspUrl(setting.rtspUrl)
                 }
             }
         }
