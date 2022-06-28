@@ -36,12 +36,10 @@ class TemperatureService(
             }
             is ContextClosedEvent, is ContextStoppedEvent -> {
                 isRunning = false
-                scope.cancel("Application stop!")
             }
             is ContextRefreshedEvent -> {
                 // Refresh.
                 isRunning = false
-                scope.cancel("Application stop!")
                 init()
             }
         }

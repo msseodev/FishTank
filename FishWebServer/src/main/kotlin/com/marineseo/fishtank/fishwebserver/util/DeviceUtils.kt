@@ -28,11 +28,3 @@ object DeviceUtils {
         return fileList
     }
 }
-
-fun String.runCommand(): String  {
-    val cmds = this.split(" ").toTypedArray()
-    println("cmds=${cmds.joinToString { "[$it]" }}")
-
-    val process = Runtime.getRuntime().exec(cmds)
-    return process.inputStream.bufferedReader().readText()
-}

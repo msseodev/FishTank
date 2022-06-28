@@ -73,13 +73,11 @@ class ArduinoService: ApplicationListener<ApplicationContextEvent> {
             }
             is ContextClosedEvent, is ContextStoppedEvent -> {
                 runLog = false
-                scope.cancel("Application ShutDown!")
                 disConnect()
             }
             is ContextRefreshedEvent -> {
                 // Refresh
                 runLog = false
-                scope.cancel("Application Refresh!")
                 disConnect()
                 init()
             }

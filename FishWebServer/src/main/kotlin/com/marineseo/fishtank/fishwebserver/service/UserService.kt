@@ -2,7 +2,7 @@ package com.marineseo.fishtank.fishwebserver.service
 
 import com.marineseo.fishtank.fishwebserver.mapper.DatabaseMapper
 import com.marineseo.fishtank.fishwebserver.model.User
-import com.marineseo.fishtank.fishwebserver.util.MarineUtils
+import com.marineseo.fishtank.fishwebserver.util.makeRandomString
 import org.springframework.stereotype.Service
 
 const val TOKEN_LENGTH = 64
@@ -25,7 +25,7 @@ class UserService(
     }
 
     private fun generateUserToken(): String {
-        return MarineUtils.makeRandomString(TOKEN_LENGTH)
+        return makeRandomString(TOKEN_LENGTH)
     }
 
     fun getUserByToken(token: String): User? {

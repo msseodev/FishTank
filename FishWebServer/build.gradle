@@ -76,7 +76,7 @@ task publishFishTank {
                 fileTree("$buildDir/libs").each {
                     if(it.name.endsWith(".war")) {
                         println "Deploy ${it.name}"
-                        put from: "${it.path}", into: "/var/lib/tomcat9/webapps/FishWebServer-plain.war"
+                        put from: "${it.path}", into: "/var/lib/tomcat9/webapps/ROOT.war"
                     }
                 }
             }
