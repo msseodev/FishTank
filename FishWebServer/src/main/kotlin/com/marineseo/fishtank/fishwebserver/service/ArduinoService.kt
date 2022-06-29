@@ -256,6 +256,12 @@ class ArduinoService: ApplicationListener<ApplicationContextEvent> {
         return response?.data?.toInt()?.toShort() == HIGH
     }
 
+    fun adjustBrightness(percentage: Float): Boolean {
+        // TODO - IMPL! Need to implement analog pin out in arduino code.
+
+        return true
+    }
+
     private fun sendAndGetResponse(packet: FishPacket, depth: Int = 0): FishPacket? {
         val writeResult = port?.writePacket(packet)
         if (writeResult != true) {
