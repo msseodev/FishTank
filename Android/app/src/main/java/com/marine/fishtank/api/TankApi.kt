@@ -122,6 +122,13 @@ class TankApi(
         return response.body() ?: RESULT_FAIL_HTTP
     }
 
+    fun changeLightBrightness(percentage: Float): Boolean {
+        verifyTokenNull()
+
+        val response = fishService.changeBrightness(token!!, percentage).execute()
+        return response.body() ?: false
+    }
+
     private fun verifyTokenNull() {
         if (token == null) {
             throw IllegalStateException("Token is null! You must success sign-in first.")

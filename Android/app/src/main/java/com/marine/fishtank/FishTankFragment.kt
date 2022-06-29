@@ -133,7 +133,7 @@ fun FishTankScreen(
             ) { tabIndex ->
                 when (tabIndex) {
                     0 -> ControlPage(uiState, eventHandler)
-                    1 -> MonitorPage(temperatureState, uiState, eventHandler)
+                    1 -> MonitorPage(temperatureState, eventHandler)
                     2 -> CameraPage(uiState, eventHandler)
                 }
             }
@@ -181,7 +181,7 @@ fun CameraPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
 }
 
 @Composable
-fun MonitorPage(temperatureList: List<Temperature>, uiState: UiState, eventHandler: (UiEvent) -> Unit) {
+fun MonitorPage(temperatureList: List<Temperature>, eventHandler: (UiEvent) -> Unit) {
     Log.d(TAG, "MonitorPage!")
 
     val position = remember { mutableStateOf(1f) }
@@ -392,6 +392,8 @@ fun ControlPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
         Text(text = "Functions")
         Divider(modifier = Modifier.padding(vertical = 5.dp))
 
+        val brightnessPosition = remember { mutableStateOf(uiState.brightNess) }
+
         // Create Radio
         RadioGroup(
             listOf(
@@ -405,6 +407,7 @@ fun ControlPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
                 ) { eventHandler(UiEvent.OutWaterEvent(false)) }
             )
         )
+
         RadioGroup(
             listOf(
                 RadioBtn(
@@ -417,6 +420,7 @@ fun ControlPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
                 ) { eventHandler(UiEvent.InWaterEvent(false)) }
             )
         )
+
         RadioGroup(
             listOf(
                 RadioBtn(
@@ -429,6 +433,7 @@ fun ControlPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
                 ) { eventHandler(UiEvent.PurifierEvent(false)) }
             )
         )
+
         RadioGroup(
             listOf(
                 RadioBtn(false, stringResource(R.string.heater_on)) {
@@ -447,6 +452,7 @@ fun ControlPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
                 }
             )
         )
+
         RadioGroup(
             listOf(
                 RadioBtn(false, stringResource(R.string.board_led_on)) {
@@ -466,6 +472,27 @@ fun ControlPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
             )
         )
 
+        Spacer(modifier = Modifier.height(20.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(15.dp)
+        ) {
+            Text(text = stringResource(id = R.string.light_brightness))
+            Slider(
+                value = brightnessPosition.value.toFloat(),
+                valueRange = 0f..100f,
+                steps = 0,
+                onValueChange = { value: Float ->
+                    brightnessPosition.value = value.toInt()
+                },
+                onValueChangeFinished = {
+                    eventHandler(UiEvent.OnLightBrightnessChange(brightnessPosition.value))
+                }
+            )
+        }
+
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -479,7 +506,7 @@ fun ControlPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
                 trailingIcon = { Text(text = "%") },
                 label = { Text(text = stringResource(id = R.string.replace_ratio)) },
                 value = ratioValue.toString(),
-                onValueChange = { ratioValue = if(it.isNotEmpty() && it.isDigitsOnly()) it.toInt() else 0 }
+                onValueChange = { ratioValue = if (it.isNotEmpty() && it.isDigitsOnly()) it.toInt() else 0 }
             )
 
             OutlinedButton(
