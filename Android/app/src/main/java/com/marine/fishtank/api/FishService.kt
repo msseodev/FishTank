@@ -60,4 +60,8 @@ interface FishService {
     @POST("/fish/func/replaceWater")
     @FormUrlEncoded
     fun replaceWater(@Field(KEY_TOKEN) token: String, @Field(KEY_PERCENTAGE) percentage: Float): Call<Int>
+
+    @POST("/fish/brightness")
+    @FormUrlEncoded
+    fun changeBrightness(@Field(KEY_TOKEN) token: String, @Field(KEY_PERCENTAGE) percentage: Float): Call<Boolean>
 }

@@ -103,8 +103,10 @@ class FishTankViewModel(application: Application) : AndroidViewModel(application
                 is UiEvent.OnChangeTemperatureRange -> {
                     startFetchTemperature(uiEvent.intValue)
                 }
-                is UiEvent.OnPlayButtonClick -> {
-
+                is UiEvent.OnLightBrightnessChange -> {
+                    viewModelScope.launch(Dispatchers.IO) {
+                        tankApi.changeLightBrightness(uiEvent.ratio * 0.01f)
+                    }
                 }
             }
         }
@@ -125,7 +127,12 @@ data class UiState(
     var resultText: String = "",
 
     var connectionSetting: ConnectionSetting = DEFAULT_CONNECTION_SETTING,
-    var serverUrl: String = ""
+    var serverUrl: String = "",
+
+    /**
+     * Percentage of brightness.
+     */
+    var brightNess: Int = 0
 )
 
 sealed class UiEvent(
@@ -144,5 +151,5 @@ sealed class UiEvent(
     class OnChangeTemperatureRange(count: Int) : UiEvent(intValue = count)
 
     class OnPlayButtonClick : UiEvent()
-    class SettingChange(val connectionSetting: ConnectionSetting) : UiEvent()
+    class OnLightBrightnessChange(val ratio: Int): UiEvent()
 }
