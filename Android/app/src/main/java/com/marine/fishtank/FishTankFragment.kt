@@ -417,21 +417,6 @@ fun ControlPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
             listOf(
                 RadioBtn(
                     false,
-                    stringResource(R.string.pump_run),
-                ) { eventHandler(UiEvent.PumpEvent(true)) },
-                RadioBtn(false, stringResource(R.string.pump_stop)) {
-                    eventHandler(
-                        UiEvent.PumpEvent(
-                            false
-                        )
-                    )
-                }
-            )
-        )
-        RadioGroup(
-            listOf(
-                RadioBtn(
-                    false,
                     stringResource(R.string.purifier_on),
                 ) { eventHandler(UiEvent.PurifierEvent(true)) },
                 RadioBtn(
