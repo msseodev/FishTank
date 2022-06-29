@@ -177,7 +177,7 @@ class ArduinoService: ApplicationListener<ApplicationContextEvent> {
                 opCode = OP_PIN_IO,
                 pin = PIN_RELAY_OUT_WATER,
                 pinMode = MODE_OUTPUT,
-                data = (if (open) LOW else HIGH).toFloat()
+                data = (if (open) HIGH else LOW).toFloat()
             )
         ) != null
     }
@@ -190,7 +190,7 @@ class ArduinoService: ApplicationListener<ApplicationContextEvent> {
                 opCode = OP_PIN_IO,
                 pin = PIN_RELAY_IN_WATER,
                 pinMode = MODE_OUTPUT,
-                data = (if (open) HIGH else LOW).toFloat()
+                data = (if (open) LOW else HIGH).toFloat()
             )
         ) != null
     }
