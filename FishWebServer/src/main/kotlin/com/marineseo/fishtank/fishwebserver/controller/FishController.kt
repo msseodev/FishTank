@@ -170,4 +170,14 @@ class FishController(
         return ResponseEntity.ok(RESULT_SUCCESS)
     }
 
+    @PostMapping("/brightness")
+    fun adjustBrightness(
+        @RequestParam(KEY_TOKEN) token: String,
+        @RequestParam(KEY_PERCENTAGE) percentage: Float
+    ): ResponseEntity<Boolean> {
+        if (userService.getUserByToken(token) == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null)
+
+        return ResponseEntity.ok(arduinoService.adjustBrightness(percentage))
+    }
+
 }
