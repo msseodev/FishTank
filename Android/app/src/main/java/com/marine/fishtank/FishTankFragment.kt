@@ -1,11 +1,14 @@
 package com.marine.fishtank
 
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.*
 import android.widget.Toast
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.KeyboardOptions
@@ -98,7 +101,7 @@ fun FishTankScreen(
     val uiState: UiState by viewModel.uiState.observeAsState(UiState())
     val temperatureState: List<Temperature> by viewModel.temperatureLiveData.observeAsState(emptyList())
 
-    val tabTitles = listOf("Control", "Monitor", "Camera")
+    val tabTitles = listOf("Control", "Monitor", "Camera", "Schedule")
     // Default page -> monitor
     val pagerState = rememberPagerState(0)
 
@@ -135,12 +138,42 @@ fun FishTankScreen(
                     0 -> ControlPage(uiState, eventHandler)
                     1 -> MonitorPage(temperatureState, eventHandler)
                     2 -> CameraPage(uiState, eventHandler)
+                    3 -> SchedulePage(uiState, eventHandler)
                 }
             }
         }
     }
 
     Log.d(TAG, "End composing FishTankScreen")
+}
+
+@Composable
+fun SchedulePage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
+    Log.d(TAG, "Composing SchedulePage!")
+
+    LazyColumn {
+        // Add 5 items
+        items(5) { index ->
+            TankAction("Water-replacement $index",
+                Date(System.currentTimeMillis() + (index * 1000L*60*60)))
+        }
+    }
+}
+
+@Composable
+fun TankAction(action: String, exeTime: Date) {
+    Column() {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(width = 1.dp, color = androidx.compose.ui.graphics.Color.Black)
+                .padding(10.dp)
+                .align(Alignment.CenterHorizontally)
+        ) {
+            Text(text = action)
+            Text(text = SimpleDateFormat("HH:mm:ss").format(exeTime))
+        }
+    }
 }
 
 @Composable
