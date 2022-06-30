@@ -43,28 +43,9 @@ data class ConnectionSetting(
 class SettingsRepository private constructor(
     private val context: Context
 ) {
-    private val keyServerUrl = stringPreferencesKey("server_url")
-    private val keyServerPort = intPreferencesKey("server_port")
-    private val keyRtspUrl = stringPreferencesKey("rtsp_url")
-
     private val keyUserId = stringPreferencesKey("user_id")
     private val keyUserPassword = stringPreferencesKey("user_password")
 
-    val settingFlow: Flow<ConnectionSetting> = context.dataStore.data
-        .map { pref ->
-            ConnectionSetting(
-                serverUrl = pref[keyServerUrl] ?: DEFAULT_SERVER_URL,
-                serverPort = pref[keyServerPort] ?: DEFAULT_SERVER_PORT,
-                rtspUrl = pref[keyRtspUrl] ?: DEFAULT_RTSP_URL
-            )
-        }
-
-    val serverUrlFlow: Flow<String> = context.dataStore.data
-        .map { pref -> pref[keyServerUrl] ?: DEFAULT_SERVER_URL }
-    val serverPortFlow: Flow<Int> = context.dataStore.data
-        .map { pref -> pref[keyServerPort] ?: DEFAULT_SERVER_PORT }
-    val rtspUrlFlow: Flow<String> = context.dataStore.data
-        .map { pref -> pref[keyRtspUrl] ?: DEFAULT_RTSP_URL }
     val userIdFlow = context.dataStore.data.map { pref -> pref[keyUserId] ?: "" }
     val userPasswordFlow = context.dataStore.data.map { pref -> pref[keyUserPassword] ?: "" }
 
@@ -77,24 +58,6 @@ class SettingsRepository private constructor(
     suspend fun saveUserPassword(password: String) {
         context.dataStore.edit {
             it[keyUserPassword] = password
-        }
-    }
-
-    suspend fun saveServerUrl(url :String) {
-        context.dataStore.edit {
-            it[keyServerUrl] = url
-        }
-    }
-
-    suspend fun saveServerPort(port: Int) {
-        context.dataStore.edit {
-            it[keyServerPort] = port
-        }
-    }
-
-    suspend fun saveRtspUrl(url: String) {
-        context.dataStore.edit {
-            it[keyRtspUrl] = url
         }
     }
 
