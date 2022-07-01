@@ -3,7 +3,6 @@ package com.marineseo.fishtank.fishwebserver.service
 import com.marineseo.fishtank.fishwebserver.mapper.DatabaseMapper
 import com.marineseo.fishtank.fishwebserver.model.PeriodicTask
 import com.marineseo.fishtank.fishwebserver.model.Task
-import com.marineseo.fishtank.fishwebserver.model.Temperature
 import com.marineseo.fishtank.fishwebserver.util.TimeUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -12,10 +11,10 @@ import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationListener
 import org.springframework.context.event.*
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
-import java.sql.Date
 import java.sql.Timestamp
-import java.text.SimpleDateFormat
+import java.util.*
 
 private const val WATER_VOLUME = 100000 // ml
 private const val WATER_OUT_IN_MINUTE = 578 // ml
@@ -164,6 +163,25 @@ class TaskService(
             }
         }
         return false
+    }
+
+    @Scheduled(cron = "0 0 0 * * ?")
+    fun periodicToTask() {
+        logger.info("Start periodicToTask!")
+
+        val periodicTasks = mapper.getAllPeriodicTask()
+        for(periodicTask in periodicTasks) {
+            mapper.insertTask(Task(
+                userId = periodicTask.userId,
+                type = periodicTask.type,
+                data = periodicTask.data,
+                executeTime = Calendar.getInstance().apply {
+                    set(Calendar.HOUR_OF_DAY, periodicTask.time.hours)
+                    set(Calendar.MINUTE, periodicTask.time.minutes)
+                    set(Calendar.SECOND, periodicTask.time.seconds)
+                }.timeInMillis
+            ))
+        }
     }
 
     private fun fetchTask(): Task? {

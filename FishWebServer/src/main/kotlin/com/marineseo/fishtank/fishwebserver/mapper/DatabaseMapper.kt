@@ -86,4 +86,7 @@ interface DatabaseMapper {
 
     @Select("SELECT * FROM ${PeriodicTask.TABLE_NAME} WHERE id=#{id}")
     fun selectPeriodicTask(@Param("id") id: Int): PeriodicTask?
+
+    @Select("SELECT * FROM ${PeriodicTask.TABLE_NAME}")
+    fun getAllPeriodicTask(): List<PeriodicTask>
 }

@@ -58,7 +58,7 @@ class ArduinoService: ApplicationListener<ApplicationContextEvent> {
                 }
                 "ftdi_sio" -> {
                     logger.debug("${devFile.name} is debug port")
-                    runDebugLog(devFile.absolutePath)
+                    //runDebugLog(devFile.absolutePath)
                 }
             }
         }
