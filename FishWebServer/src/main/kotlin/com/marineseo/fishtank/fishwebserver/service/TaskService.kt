@@ -1,6 +1,7 @@
 package com.marineseo.fishtank.fishwebserver.service
 
 import com.marineseo.fishtank.fishwebserver.mapper.DatabaseMapper
+import com.marineseo.fishtank.fishwebserver.model.PeriodicTask
 import com.marineseo.fishtank.fishwebserver.model.Task
 import com.marineseo.fishtank.fishwebserver.model.Temperature
 import com.marineseo.fishtank.fishwebserver.util.TimeUtils
@@ -169,4 +170,19 @@ class TaskService(
         return mapper.fetchTask(Timestamp(System.currentTimeMillis()))
     }
 
+    fun fetchPeriodicTask(userId: String): List<PeriodicTask> {
+        return mapper.fetchPeriodicTasks(userId)
+    }
+
+    fun addPeriodicTask(periodicTask: PeriodicTask) {
+        mapper.insertPeriodicTask(periodicTask)
+    }
+
+    fun deletePeriodicTask(id: Int) {
+        mapper.deletePeriodicTask(id)
+    }
+
+    fun selectPeriodicTasK(id: Int): PeriodicTask? {
+        return mapper.selectPeriodicTask(id)
+    }
 }

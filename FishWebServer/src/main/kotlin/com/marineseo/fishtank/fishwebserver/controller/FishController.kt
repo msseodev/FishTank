@@ -1,5 +1,6 @@
 package com.marineseo.fishtank.fishwebserver.controller
 
+import com.marineseo.fishtank.fishwebserver.model.PeriodicTask
 import com.marineseo.fishtank.fishwebserver.model.RESULT_FAIL_DEVICE_CONNECTION
 import com.marineseo.fishtank.fishwebserver.model.RESULT_SUCCESS
 import com.marineseo.fishtank.fishwebserver.model.Temperature
@@ -22,6 +23,7 @@ private const val KEY_ID = "id"
 private const val KEY_PASSWORD = "password"
 private const val KEY_DAYS = "days"
 private const val KEY_PERCENTAGE = "percentage"
+private const val KEY_PERIODIC = "periodicTask"
 
 @RestController
 @RequestMapping("/fish")
@@ -178,6 +180,44 @@ class FishController(
         if (userService.getUserByToken(token) == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null)
 
         return ResponseEntity.ok(arduinoService.adjustBrightness(percentage))
+    }
+
+    @PostMapping("/periodic/add")
+    fun addPeriodicTask(
+        @RequestParam(KEY_TOKEN) token: String,
+        @RequestParam(KEY_PERIODIC) periodicTask: PeriodicTask
+    ): ResponseEntity<Boolean> {
+        val user = userService.getUserByToken(token) ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null)
+        periodicTask.userId = user.id
+        taskService.addPeriodicTask(periodicTask)
+
+        return ResponseEntity.ok(true)
+    }
+
+    @PostMapping("/periodic/fetch")
+    fun fetchPeriodicTasks(
+        @RequestParam(KEY_TOKEN) token: String
+    ): ResponseEntity<List<PeriodicTask>> {
+        val user = userService.getUserByToken(token) ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null)
+        return ResponseEntity.ok(taskService.fetchPeriodicTask(user.id))
+    }
+
+    @PostMapping("/periodic/delete")
+    fun deletePeriodicTask(
+        @RequestParam(KEY_TOKEN) token: String,
+        @RequestParam(KEY_PERIODIC) periodicTask: PeriodicTask
+    ): ResponseEntity<Boolean> {
+        val user = userService.getUserByToken(token) ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null)
+        if(user.id != periodicTask.userId) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
+        val targetPeriodicTask = taskService.selectPeriodicTasK(periodicTask.id) ?:return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
+
+        if(user.id != targetPeriodicTask.userId) {
+            // Only owner can delete task.
+            return ResponseEntity.ok(false)
+        }
+
+        taskService.deletePeriodicTask(targetPeriodicTask.id)
+        return ResponseEntity.ok(true)
     }
 
 }
