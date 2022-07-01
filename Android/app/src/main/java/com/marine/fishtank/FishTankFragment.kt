@@ -1,6 +1,5 @@
 package com.marine.fishtank
 
-import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -14,6 +13,8 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -25,6 +26,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
 import androidx.core.text.isDigitsOnly
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -46,7 +48,9 @@ import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.source.rtsp.RtspMediaSource
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
 import com.google.android.exoplayer2.ui.StyledPlayerView
+import com.marine.fishtank.model.PeriodicTask
 import com.marine.fishtank.model.Temperature
+import com.marine.fishtank.model.typeAsString
 import com.marine.fishtank.viewmodel.FishTankViewModel
 import com.marine.fishtank.viewmodel.UiEvent
 import com.marine.fishtank.viewmodel.UiState
@@ -54,7 +58,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.util.*
 
 private const val TAG = "FishTankFragment"
 
@@ -87,6 +90,7 @@ class FishTankFragment : Fragment() {
 
         viewModel.startFetchTemperature(1)
         viewModel.readState()
+        viewModel.fetchPeriodicTasks()
     }
 }
 
@@ -100,6 +104,7 @@ fun FishTankScreen(
 
     val uiState: UiState by viewModel.uiState.observeAsState(UiState())
     val temperatureState: List<Temperature> by viewModel.temperatureLiveData.observeAsState(emptyList())
+    val periodicTasks: List<PeriodicTask> by viewModel.periodicTaskLiveData.observeAsState(emptyList())
 
     val tabTitles = listOf("Control", "Monitor", "Camera", "Schedule")
     // Default page -> monitor
@@ -138,7 +143,7 @@ fun FishTankScreen(
                     0 -> ControlPage(uiState, eventHandler)
                     1 -> MonitorPage(temperatureState, eventHandler)
                     2 -> CameraPage(uiState, eventHandler)
-                    3 -> SchedulePage(uiState, eventHandler)
+                    3 -> SchedulePage(periodicTasks, eventHandler)
                 }
             }
         }
@@ -148,20 +153,65 @@ fun FishTankScreen(
 }
 
 @Composable
-fun SchedulePage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
+fun SchedulePage(periodicTasks: List<PeriodicTask>, eventHandler: (UiEvent) -> Unit) {
     Log.d(TAG, "Composing SchedulePage!")
+    val context = LocalContext.current
+    var openDialog: Boolean by remember { mutableStateOf(false) }
+    var typeDropDownExpand: Boolean by remember {
+        mutableStateOf(false)
+    }
+    val typeItems = {  }
+    var typeDropDownIndex by remember {
+        mutableStateOf(0)
+    }
 
-    LazyColumn {
-        // Add 5 items
-        items(5) { index ->
-            TankAction("Water-replacement $index",
-                Date(System.currentTimeMillis() + (index * 1000L*60*60)))
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(onClick = { openDialog = true }) {
+                Icon(Icons.Filled.Add, "PeriodicTask add button")
+            }
+        }
+    ) { padding ->
+        LazyColumn(Modifier.padding(padding)) {
+            for (task in periodicTasks) {
+                item {
+                    PeriodicTaskItem(
+                        action = task.typeAsString(context),
+                        exeTime = task.time
+                    )
+                }
+            }
+        }
+
+        // Dialog to add Periodic task.
+        if (openDialog) {
+            Dialog(onDismissRequest = {
+                openDialog = false
+            }) {
+                Column(
+                    modifier = Modifier
+                        .padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(text = stringResource(id = R.string.periodic_dialog_title))
+
+                    Spacer(modifier = Modifier.height(25.dp))
+                    Row(Modifier.fillMaxWidth()) {
+                        Text(text = stringResource(id = R.string.periodic_dialog_task_type))
+
+                        DropdownMenu(expanded = typeDropDownExpand, onDismissRequest = {typeDropDownExpand=false }) {
+
+                        }
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
-fun TankAction(action: String, exeTime: Date) {
+fun PeriodicTaskItem(action: String, exeTime: String) {
     Column() {
         Row(
             modifier = Modifier
@@ -171,7 +221,7 @@ fun TankAction(action: String, exeTime: Date) {
                 .align(Alignment.CenterHorizontally)
         ) {
             Text(text = action)
-            Text(text = SimpleDateFormat("HH:mm:ss").format(exeTime))
+            Text(text = exeTime)
         }
     }
 }
@@ -554,7 +604,7 @@ fun ControlPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
                         eventHandler(UiEvent.ReplaceWater(ratioValue))
                     }
                 }) {
-                Text(text = stringResource(id = R.string.change_water))
+                Text(text = stringResource(id = R.string.task_replace_water))
             }
         }
     }

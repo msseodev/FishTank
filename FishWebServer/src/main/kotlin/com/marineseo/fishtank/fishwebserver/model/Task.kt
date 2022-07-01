@@ -24,7 +24,6 @@ data class Task(
         const val DATA_CLOSE = 0
         const val DATA_OPEN = 1
 
-
         const val TB_TASK = "task"
         const val COL_ID = "id"
         const val COL_USER_ID = "userId"

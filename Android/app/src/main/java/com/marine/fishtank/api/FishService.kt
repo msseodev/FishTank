@@ -1,5 +1,6 @@
 package com.marine.fishtank.api
 
+import com.marine.fishtank.model.PeriodicTask
 import com.marine.fishtank.model.Temperature
 import retrofit2.Call
 import retrofit2.http.Field
@@ -12,6 +13,7 @@ private const val KEY_ID = "id"
 private const val KEY_PASSWORD = "password"
 private const val KEY_DAYS = "days"
 private const val KEY_PERCENTAGE = "percentage"
+private const val KEY_PERIODIC = "periodicTask"
 
 interface FishService {
     /**
@@ -64,4 +66,19 @@ interface FishService {
     @POST("/fish/brightness")
     @FormUrlEncoded
     fun changeBrightness(@Field(KEY_TOKEN) token: String, @Field(KEY_PERCENTAGE) percentage: Float): Call<Boolean>
+
+    @POST("/fish/periodic/add")
+    @FormUrlEncoded
+    fun addPeriodicTask(@Field(KEY_TOKEN) token: String, @Field(KEY_PERIODIC) periodicTask: PeriodicTask): Call<Boolean>
+
+    @POST("/fish/periodic/fetch")
+    @FormUrlEncoded
+    fun fetchPeriodicTasks(@Field(KEY_TOKEN) token: String): Call<List<PeriodicTask>>
+
+    @POST("/fish/periodic/delete")
+    @FormUrlEncoded
+    fun deletePeriodicTask(
+        @Field(KEY_TOKEN) token: String,
+        @Field(KEY_PERIODIC) periodicTask: PeriodicTask
+    ): Call<Boolean>
 }
