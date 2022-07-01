@@ -1,24 +1,20 @@
 package com.marine.fishtank.viewmodel
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.*
 import com.marine.fishtank.BuildConfig
 import com.marine.fishtank.ConnectionSetting
 import com.marine.fishtank.DEFAULT_CONNECTION_SETTING
-import com.marine.fishtank.SettingsRepository
-import com.marine.fishtank.api.OnServerPacketListener
 import com.marine.fishtank.api.TankApi
 import com.marine.fishtank.model.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlin.math.tan
 
 private const val TAG = "FishTankViewModel"
 
 class FishTankViewModel(application: Application) : AndroidViewModel(application) {
     val temperatureLiveData = MutableLiveData<List<Temperature>>()
-    private val settingsRepository = SettingsRepository.getInstance(context = application)
+    val periodicTaskLiveData = MutableLiveData<List<PeriodicTask>>()
 
     private val tankApi: TankApi = TankApi.getInstance(BuildConfig.SERVER_URL)
 
@@ -51,6 +47,14 @@ class FishTankViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch(Dispatchers.IO) {
             temperatureLiveData.postValue(
                 tankApi.readDBTemperature(days)
+            )
+        }
+    }
+
+    fun fetchPeriodicTasks() {
+        viewModelScope.launch(Dispatchers.IO) {
+            periodicTaskLiveData.postValue(
+                tankApi.fetchPeriodicTasks()
             )
         }
     }
@@ -142,7 +146,6 @@ sealed class UiEvent(
     class OutWaterEvent(enable: Boolean) : UiEvent(enable)
     class InWaterEvent(enable: Boolean) : UiEvent(enable)
     class LightEvent(enable: Boolean) : UiEvent(enable)
-    class PumpEvent(enable: Boolean) : UiEvent(enable)
     class HeaterEvent(enable: Boolean) : UiEvent(enable)
     class PurifierEvent(enable: Boolean) : UiEvent(enable)
     class LedEvent(enable: Boolean) : UiEvent(enable)
@@ -150,6 +153,5 @@ sealed class UiEvent(
     class ReplaceWater(val ratio: Int) : UiEvent()
     class OnChangeTemperatureRange(count: Int) : UiEvent(intValue = count)
 
-    class OnPlayButtonClick : UiEvent()
     class OnLightBrightnessChange(val ratio: Int): UiEvent()
 }
