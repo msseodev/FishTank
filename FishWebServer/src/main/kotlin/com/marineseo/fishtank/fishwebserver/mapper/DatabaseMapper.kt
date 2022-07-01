@@ -1,8 +1,10 @@
 package com.marineseo.fishtank.fishwebserver.mapper
 
+import com.marineseo.fishtank.fishwebserver.model.PeriodicTask
 import com.marineseo.fishtank.fishwebserver.model.Task
 import com.marineseo.fishtank.fishwebserver.model.Temperature
 import com.marineseo.fishtank.fishwebserver.model.User
+import org.apache.ibatis.annotations.Delete
 import org.apache.ibatis.annotations.Insert
 import org.apache.ibatis.annotations.Mapper
 import org.apache.ibatis.annotations.Param
@@ -63,4 +65,25 @@ interface DatabaseMapper {
                 "WHERE ${Task.COL_ID}=#{id}"
     )
     fun updateTask(@Param("task") task: Task)
+
+    @Insert("INSERT INTO ${PeriodicTask.TABLE_NAME}" +
+            "(${PeriodicTask.COL_USER_ID}, ${PeriodicTask.COL_TYPE}, ${PeriodicTask.COL_DATA}, ${PeriodicTask.COL_TIME}) " +
+            "VALUES(#{userId}, #{type} #{data}, #{time})")
+    fun insertPeriodicTask(periodicTask: PeriodicTask)
+
+    @Select("SELECT * FROM ${PeriodicTask.TABLE_NAME} " +
+            "WHERE userId=#{userId}")
+    fun fetchPeriodicTasks(@Param("userId") userId: String): List<PeriodicTask>
+
+    @Update("Update ${PeriodicTask.TABLE_NAME} " +
+            "SET ${PeriodicTask.COL_USER_ID}=#{userId}, ${PeriodicTask.COL_TYPE}=#{type}, " +
+            "${PeriodicTask.COL_DATA}=#{data}, ${PeriodicTask.COL_TIME}=#{time} " +
+            "WHERE ${PeriodicTask.COL_ID}=#{id}")
+    fun updatePeriodicTask(periodicTask: PeriodicTask)
+
+    @Delete("DELETE FROM ${PeriodicTask.TABLE_NAME} WHERE id=#{id}")
+    fun deletePeriodicTask(@Param("id") id: Int)
+
+    @Select("SELECT * FROM ${PeriodicTask.TABLE_NAME} WHERE id=#{id}")
+    fun selectPeriodicTask(@Param("id") id: Int): PeriodicTask?
 }
