@@ -1,11 +1,11 @@
 package com.marineseo.fishtank.fishwebserver
 
-import org.slf4j.MDC
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
-import java.lang.management.ManagementFactory
+import org.springframework.scheduling.annotation.EnableScheduling
 
 @SpringBootApplication
+@EnableScheduling
 open class FishWebServerApplication
 
 fun main(args: Array<String>) {
