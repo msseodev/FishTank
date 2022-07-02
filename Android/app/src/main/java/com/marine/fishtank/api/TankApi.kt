@@ -129,6 +129,11 @@ class TankApi(
         return response.body() ?: false
     }
 
+    fun fetchPeriodicTasks(): List<PeriodicTask> {
+        verifyTokenNull()
+        return fishService.fetchPeriodicTasks(token!!).execute().body() ?: emptyList()
+    }
+
     private fun verifyTokenNull() {
         if (token == null) {
             throw IllegalStateException("Token is null! You must success sign-in first.")

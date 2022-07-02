@@ -33,4 +33,12 @@
 
     <string name="light_brightness">Light brightness</string>
 
+    <string name="periodic_dialog_title">Action</string>
+    <string name="periodic_dialog_task_type">type</string>
+
+    <string name="task_replace_water">환수</string>
+    <string name="task_out_valve">상수밸브</string>
+    <string name="task_in_valve">하수밸브</string>
+    <string name="task_purifier">여과기</string>
+    <string name="task_light">조명</string>
 </resources>
