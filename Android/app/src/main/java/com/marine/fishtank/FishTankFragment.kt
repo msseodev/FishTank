@@ -71,8 +71,6 @@ class FishTankFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         Log.d(TAG, "onCreateView")
 
-        viewModel.init()
-
         return ComposeView(requireContext()).apply {
             setContent {
                 MaterialTheme {

@@ -190,6 +190,17 @@ class TankApi(
         return false
     }
 
+    fun readLightBrightness(): Float {
+        verifyTokenNull()
+        try {
+            return fishService.readLightBrightness(token!!).execute().body() ?: 0f
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        return 0f
+    }
+
     fun fetchPeriodicTasks(): List<PeriodicTask> {
         verifyTokenNull()
         try {

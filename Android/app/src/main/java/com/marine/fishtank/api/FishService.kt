@@ -67,6 +67,10 @@ interface FishService {
     @FormUrlEncoded
     fun changeBrightness(@Field(KEY_TOKEN) token: String, @Field(KEY_PERCENTAGE) percentage: Float): Call<Boolean>
 
+    @POST("/fish/brightness/read")
+    @FormUrlEncoded
+    fun readLightBrightness(@Field(KEY_TOKEN) token: String) : Call<Float>
+
     @POST("/fish/periodic/add")
     @FormUrlEncoded
     fun addPeriodicTask(@Field(KEY_TOKEN) token: String, @Field(KEY_PERIODIC) periodicTask: PeriodicTask): Call<Boolean>
