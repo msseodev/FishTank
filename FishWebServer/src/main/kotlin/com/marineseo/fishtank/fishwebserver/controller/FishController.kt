@@ -182,6 +182,14 @@ class FishController(
         return ResponseEntity.ok(arduinoService.adjustBrightness(percentage))
     }
 
+    @PostMapping("/brightness/read")
+    fun readLightBrightness(
+        @RequestParam(KEY_TOKEN) token: String,
+    ): ResponseEntity<Float> {
+        if (userService.getUserByToken(token) == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null)
+        return ResponseEntity.ok(arduinoService.readBrightness())
+    }
+
     @PostMapping("/periodic/add")
     fun addPeriodicTask(
         @RequestParam(KEY_TOKEN) token: String,

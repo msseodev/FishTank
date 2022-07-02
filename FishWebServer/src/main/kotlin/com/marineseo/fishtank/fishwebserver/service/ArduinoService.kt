@@ -255,6 +255,22 @@ class ArduinoService: ApplicationListener<ApplicationContextEvent> {
         return response?.data?.toInt()?.toShort() == HIGH
     }
 
+    fun readBrightness(): Float {
+        logger.info("Reading brightness....")
+
+        val response = sendAndGetResponse(
+            FishPacket(
+                clientId = COMMON_CLIENT_ID,
+                opCode = OP_READ_ANALOG_PIN,
+                pin = PIN_LIGHT_BRIGHTNESS
+            )
+        )
+
+        logger.info("brightness=${response?.data}")
+        val brightness =  response?.data ?: 0f
+        return (brightness / 255) * 100
+    }
+
     fun adjustBrightness(percentage: Float): Boolean {
         val brightness = (255 * percentage).toInt()
         logger.info("Adjusting brightness to $brightness ($percentage)")

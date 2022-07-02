@@ -18,26 +18,21 @@ class FishTankViewModel(application: Application) : AndroidViewModel(application
 
     private val tankApi: TankApi = TankApi.getInstance(BuildConfig.SERVER_URL)
 
-    private val _uiState = MutableLiveData<UiState>()
+    private val _uiState = MutableLiveData<UiState>().apply { value = UiState() }
     val uiState: LiveData<UiState>
         get() = _uiState
-
-    fun init() {
-        // Post first empty value to copy later.
-        _uiState.postValue(
-            UiState()
-        )
-    }
 
     fun readState() {
         viewModelScope.launch(Dispatchers.IO) {
             val inWaterState = tankApi.readInWaterState()
             val outWaterState = tankApi.readOutWaterState()
+            val brightNess = tankApi.readLightBrightness()
 
             _uiState.postValue(
                 _uiState.value?.copy(
                     inWaterValveState = inWaterState,
-                    outWaterValveState = outWaterState
+                    outWaterValveState = outWaterState,
+                    brightNess =  brightNess.toInt()
                 )
             )
         }

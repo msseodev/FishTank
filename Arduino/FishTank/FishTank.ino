@@ -12,6 +12,8 @@
 #define OP_GET_TEMPERATURE 1000
 #define OP_INPUT_PIN 1001
 #define OP_READ_DIGIT_PIN 1002
+#define OP_INPUT_ANALOG_PIN 1003
+#define OP_READ_ANALOG_PIN 1004
 
 #define LOOP_INTERVAL 10
 #define PACKET_TERMINATE '\n'
@@ -262,6 +264,21 @@ void loop() {
                   }
                   
                     break;
+                }
+                case OP_INPUT_ANALOG_PIN: {
+                  pinMode(packet.pin,packet.pinMode);
+                  int value = (int) (packet.data);
+                  analogWrite(packet.pin, value);
+
+                  if(packet.pin < PIN_LENGTH && packet.pin >= 0) {
+                      pinState[packet.pin] = value;
+                    }
+                    
+                  break;
+                }
+                case OP_READ_ANALOG_PIN: {
+                  packet.data = analogRead(packet.pin);
+                  break;
                 }
             }
 

@@ -84,7 +84,7 @@ class TemperatureService(
 
         // for logging
         val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-        logger.debug(
+        logger.info(
             "Fetching from ${formatter.format(from)} until ${formatter.format(until)} tempSize=${temperatures.size}"
         )
 

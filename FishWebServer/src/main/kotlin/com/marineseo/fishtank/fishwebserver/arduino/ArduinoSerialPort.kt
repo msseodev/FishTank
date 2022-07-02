@@ -30,7 +30,7 @@ class ArduinoSerialPort(portName: String): SerialPort(portName) {
             for(b in bytes) {
                 stringBuilder.append(String.format("%X ", b))
             }
-            //logger.debug("Raw Packet=${stringBuilder}")
+            //logger.info("Raw Packet=${stringBuilder}")
 
             val byteBuffer = ByteBuffer.allocate(PACKET_SIZE).apply {
                 order(ByteOrder.LITTLE_ENDIAN)
@@ -65,7 +65,7 @@ class ArduinoSerialPort(portName: String): SerialPort(portName) {
     }
 
     fun writePacket(packet: FishPacket): Boolean {
-        logger.debug("Write $packet")
+        logger.info("Write $packet")
         val byteBuffer = ByteBuffer.allocate(PACKET_SIZE).apply {
             order(ByteOrder.LITTLE_ENDIAN)
             putShort(MAGIC)
