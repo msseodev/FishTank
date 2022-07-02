@@ -42,11 +42,15 @@ class TankApi(
     private var token: String? = null
 
     fun signIn(id: String, password: String): Boolean {
-        val call = fishService.signIn(id, password)
-        val response = call.execute()
-        if (response.code() == HttpURLConnection.HTTP_OK) {
-            token = response.body()
-            return true
+        try {
+            val call = fishService.signIn(id, password)
+            val response = call.execute()
+            if (response.code() == HttpURLConnection.HTTP_OK) {
+                token = response.body()
+                return true
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
 
         return false
@@ -55,83 +59,146 @@ class TankApi(
     fun enableBoardLed(enable: Boolean): Int {
         verifyTokenNull()
 
-        val response = fishService.enableBoardLed(token!!, enable).execute()
-        return response.body() ?: RESULT_FAIL_HTTP
+        try {
+            val response = fishService.enableBoardLed(token!!, enable).execute()
+            return response.body() ?: RESULT_FAIL_HTTP
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return RESULT_FAIL_HTTP
     }
 
     fun readDBTemperature(days: Int): List<Temperature> {
         verifyTokenNull()
 
-        val response = fishService.readDBTemperature(token!!, days).execute()
-        return response.body() ?: emptyList()
+        try {
+            val response = fishService.readDBTemperature(token!!, days).execute()
+            return response.body() ?: emptyList()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return emptyList()
     }
 
     fun enableOutWater(enable: Boolean): Int {
         verifyTokenNull()
 
-        val response = fishService.enableOutWater(token!!, enable).execute()
-        return response.body() ?: RESULT_FAIL_HTTP
+        try {
+            val response = fishService.enableOutWater(token!!, enable).execute()
+            return response.body() ?: RESULT_FAIL_HTTP
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return RESULT_FAIL_HTTP
     }
 
     fun enableInWater(enable: Boolean): Int {
         verifyTokenNull()
 
-        val response = fishService.enableInWater(token!!, enable).execute()
-        return response.body() ?: RESULT_FAIL_HTTP
+        try {
+            val response = fishService.enableInWater(token!!, enable).execute()
+            return response.body() ?: RESULT_FAIL_HTTP
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return RESULT_FAIL_HTTP
     }
 
     fun enableLight(enable: Boolean): Int {
         verifyTokenNull()
 
-        val response = fishService.enableLight(token!!, enable).execute()
-        return response.body() ?: RESULT_FAIL_HTTP
+        try {
+            val response = fishService.enableLight(token!!, enable).execute()
+            return response.body() ?: RESULT_FAIL_HTTP
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return RESULT_FAIL_HTTP
     }
 
     fun enablePurifier(enable: Boolean): Int {
         verifyTokenNull()
 
-        val response = fishService.enablePurifier(token!!, enable).execute()
-        return response.body() ?: RESULT_FAIL_HTTP
+        try {
+            val response = fishService.enablePurifier(token!!, enable).execute()
+            return response.body() ?: RESULT_FAIL_HTTP
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return RESULT_FAIL_HTTP
     }
 
     fun enableHeater(enable: Boolean): Int {
         verifyTokenNull()
-
-        val response = fishService.enableHeater(token!!, enable).execute()
-        return response.body() ?: RESULT_FAIL_HTTP
+        try {
+            val response = fishService.enableHeater(token!!, enable).execute()
+            return response.body() ?: RESULT_FAIL_HTTP
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return RESULT_FAIL_HTTP
     }
 
     fun readInWaterState(): Boolean {
         verifyTokenNull()
 
-        val response = fishService.readInWaterState(token!!).execute()
-        return response.body() ?: false
+        try {
+            val response = fishService.readInWaterState(token!!).execute()
+
+            return response.body() ?: false
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        return false
     }
 
     fun readOutWaterState(): Boolean {
         verifyTokenNull()
 
-        val response = fishService.readOutWaterState(token!!).execute()
-        return response.body() ?: false
+        try {
+            val response = fishService.readOutWaterState(token!!).execute()
+            return response.body() ?: false
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return false
     }
 
     fun replaceWater(percentage: Float): Int {
         verifyTokenNull()
 
-        val response = fishService.replaceWater(token!!, percentage).execute()
-        return response.body() ?: RESULT_FAIL_HTTP
+        try {
+            val response = fishService.replaceWater(token!!, percentage).execute()
+            return response.body() ?: RESULT_FAIL_HTTP
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        return RESULT_FAIL_HTTP
     }
 
     fun changeLightBrightness(percentage: Float): Boolean {
         verifyTokenNull()
+        try {
+            val response = fishService.changeBrightness(token!!, percentage).execute()
+            return response.body() ?: false
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
 
-        val response = fishService.changeBrightness(token!!, percentage).execute()
-        return response.body() ?: false
+        return false
     }
 
     fun fetchPeriodicTasks(): List<PeriodicTask> {
         verifyTokenNull()
-        return fishService.fetchPeriodicTasks(token!!).execute().body() ?: emptyList()
+        try {
+            return fishService.fetchPeriodicTasks(token!!).execute().body() ?: emptyList()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        return emptyList()
     }
 
     private fun verifyTokenNull() {
