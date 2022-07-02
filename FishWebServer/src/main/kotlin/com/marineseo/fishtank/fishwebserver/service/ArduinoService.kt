@@ -1,10 +1,7 @@
 package com.marineseo.fishtank.fishwebserver.service
 
 import com.marineseo.fishtank.fishwebserver.arduino.ArduinoSerialPort
-import com.marineseo.fishtank.fishwebserver.model.FishPacket
-import com.marineseo.fishtank.fishwebserver.model.OP_GET_TEMPERATURE
-import com.marineseo.fishtank.fishwebserver.model.OP_PIN_IO
-import com.marineseo.fishtank.fishwebserver.model.OP_READ_DIGIT_PIN
+import com.marineseo.fishtank.fishwebserver.model.*
 import com.marineseo.fishtank.fishwebserver.util.DeviceUtils
 import jssc.SerialPort
 import jssc.SerialPortException
@@ -24,6 +21,8 @@ private const val PIN_RELAY_LIGHT: Short = 46
 private const val PIN_RELAY_PURIFIER1: Short = 45
 private const val PIN_RELAY_PURIFIER2: Short = 44
 private const val PIN_RELAY_HEATER: Short = 43
+
+private const val PIN_LIGHT_BRIGHTNESS: Short = 2
 
 private const val MODE_INPUT: Short = 0x00
 private const val MODE_OUTPUT: Short = 0x01
@@ -53,11 +52,11 @@ class ArduinoService: ApplicationListener<ApplicationContextEvent> {
         for(devFile in usbDevs) {
             when(DeviceUtils.getDriver(devFile)) {
                 "ch341" -> {
-                    logger.debug("${devFile.name} id Arduino!")
+                    logger.info("${devFile.name} id Arduino!")
                     connect(devFile.absolutePath)
                 }
                 "ftdi_sio" -> {
-                    logger.debug("${devFile.name} is debug port")
+                    logger.info("${devFile.name} is debug port")
                     //runDebugLog(devFile.absolutePath)
                 }
             }
@@ -91,7 +90,7 @@ class ArduinoService: ApplicationListener<ApplicationContextEvent> {
                 runLog = true
                 while(runLog) {
                     debugPort?.readString().let {
-                        logger.debug(it)
+                        logger.info(it)
                     }
 
                     delay(2000L)
@@ -257,7 +256,17 @@ class ArduinoService: ApplicationListener<ApplicationContextEvent> {
     }
 
     fun adjustBrightness(percentage: Float): Boolean {
-        // TODO - IMPL! Need to implement analog pin out in arduino code.
+        val brightness = (255 * percentage).toInt()
+        logger.info("Adjusting brightness to $brightness ($percentage)")
+        val response = sendAndGetResponse(
+            FishPacket(
+                clientId = COMMON_CLIENT_ID,
+                opCode = OP_INPUT_ANALOG_PIN,
+                pin = PIN_LIGHT_BRIGHTNESS,
+                pinMode = MODE_OUTPUT,
+                data = brightness.toFloat()
+            )
+        )
 
         return true
     }
