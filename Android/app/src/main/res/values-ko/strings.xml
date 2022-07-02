@@ -32,4 +32,13 @@
     <string name="replace_ratio">Replace ratio</string>
 
     <string name="light_brightness">조명 밝기</string>
+
+    <string name="periodic_dialog_title">작업</string>
+    <string name="periodic_dialog_task_type">타입</string>
+
+    <string name="task_replace_water">환수</string>
+    <string name="task_out_valve">상수밸브</string>
+    <string name="task_in_valve">하수밸브</string>
+    <string name="task_purifier">여과기</string>
+    <string name="task_light">조명</string>
 </resources>
