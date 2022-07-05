@@ -1,13 +1,10 @@
-
-
 #include <OneWire.h>
 #include <DallasTemperature.h>
-
 
 #define READ_TIMEOUT 5000
 
 #define ONE_WIRE_BUS 52
-#define BAUDRATE 57600
+#define BAUD_RATE 57600
 
 #define OP_GET_TEMPERATURE 1000
 #define OP_INPUT_PIN 1001
@@ -16,7 +13,6 @@
 #define OP_READ_ANALOG_PIN 1004
 
 #define LOOP_INTERVAL 10
-#define PACKET_TERMINATE '\n'
 
 #define BUFFER_SIZE 512
 #define SMALL_BUF_SIZE 256
@@ -222,11 +218,11 @@ void setup() {
       state = 0;
     }
   
-    Serial.begin(BAUDRATE);
+    Serial.begin(BAUD_RATE);
     Serial.setTimeout(READ_TIMEOUT);
     Serial.flush();
 
-    Serial1.begin(BAUDRATE);
+    Serial1.begin(BAUD_RATE);
     sensors.begin();
 }
 
@@ -263,7 +259,7 @@ void loop() {
                     packet.data = pinState[packet.pin];
                   }
                   
-                    break;
+                  break;
                 }
                 case OP_INPUT_ANALOG_PIN: {
                   pinMode(packet.pin,packet.pinMode);
@@ -277,7 +273,9 @@ void loop() {
                   break;
                 }
                 case OP_READ_ANALOG_PIN: {
-                  packet.data = analogRead(packet.pin);
+                  if(packet.pin < PIN_LENGTH && packet.pin >= 0) {
+                     packet.data = pinState[packet.pin];
+                  }
                   break;
                 }
             }

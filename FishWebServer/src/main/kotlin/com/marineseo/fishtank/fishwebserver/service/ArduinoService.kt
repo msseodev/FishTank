@@ -262,6 +262,7 @@ class ArduinoService: ApplicationListener<ApplicationContextEvent> {
             FishPacket(
                 clientId = COMMON_CLIENT_ID,
                 opCode = OP_READ_ANALOG_PIN,
+                pinMode = MODE_INPUT,
                 pin = PIN_LIGHT_BRIGHTNESS
             )
         )
@@ -284,7 +285,7 @@ class ArduinoService: ApplicationListener<ApplicationContextEvent> {
             )
         )
 
-        return true
+        return response != null
     }
 
     private fun sendAndGetResponse(packet: FishPacket, depth: Int = 0): FishPacket? {
