@@ -1,6 +1,7 @@
 package com.marine.fishtank.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.*
 import com.marine.fishtank.BuildConfig
 import com.marine.fishtank.ConnectionSetting
@@ -8,7 +9,10 @@ import com.marine.fishtank.DEFAULT_CONNECTION_SETTING
 import com.marine.fishtank.api.TankApi
 import com.marine.fishtank.model.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlin.math.abs
 
 private const val TAG = "FishTankViewModel"
 
@@ -26,13 +30,15 @@ class FishTankViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch(Dispatchers.IO) {
             val inWaterState = tankApi.readInWaterState()
             val outWaterState = tankApi.readOutWaterState()
-            val brightNess = tankApi.readLightBrightness()
+            val brightness = tankApi.readLightBrightness()
+
+            Log.d(TAG, "readState - inWaterState=$inWaterState, outWaterState=$outWaterState, brightness=$brightness")
 
             _uiState.postValue(
                 _uiState.value?.copy(
                     inWaterValveState = inWaterState,
                     outWaterValveState = outWaterState,
-                    brightNess =  brightNess.toInt()
+                    brightness =  brightness.toInt()
                 )
             )
         }
@@ -103,8 +109,17 @@ class FishTankViewModel(application: Application) : AndroidViewModel(application
                     startFetchTemperature(uiEvent.intValue)
                 }
                 is UiEvent.OnLightBrightnessChange -> {
-                    viewModelScope.launch(Dispatchers.IO) {
-                        tankApi.changeLightBrightness(uiEvent.ratio * 0.01f)
+                    Log.d(TAG, "OnLightBrightnessChange=${uiEvent.brightness}")
+                    // First, post the value.
+                    withContext(Dispatchers.Main) {
+                        _uiState.value = uiState.value?.copy(brightness = uiEvent.brightness)
+                    }
+
+                    if(uiEvent.adjust) {
+                        Log.d(TAG, "Request adjust brightness to ${uiEvent.brightness}")
+                        viewModelScope.launch(Dispatchers.IO) {
+                            tankApi.changeLightBrightness(uiEvent.brightness * 0.01f)
+                        }
                     }
                 }
             }
@@ -119,6 +134,7 @@ data class UiState(
     var pumpState: Boolean = false,
     var heaterState: Boolean = false,
     var purifierState: Boolean = false,
+    var ledState: Boolean = false,
 
     var temperature: Double = 0.0,
     var temperatureDays: Float = 0f,
@@ -131,7 +147,7 @@ data class UiState(
     /**
      * Percentage of brightness.
      */
-    var brightNess: Int = 0
+    var brightness: Int = 0
 )
 
 sealed class UiEvent(
@@ -148,5 +164,5 @@ sealed class UiEvent(
     class ReplaceWater(val ratio: Int) : UiEvent()
     class OnChangeTemperatureRange(count: Int) : UiEvent(intValue = count)
 
-    class OnLightBrightnessChange(val ratio: Int): UiEvent()
+    class OnLightBrightnessChange(val brightness: Int, val adjust: Boolean): UiEvent()
 }

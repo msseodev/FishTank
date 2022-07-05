@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
@@ -24,6 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
@@ -74,7 +76,15 @@ class FishTankFragment : Fragment() {
         return ComposeView(requireContext()).apply {
             setContent {
                 MaterialTheme {
-                    FishTankScreen(viewModel = viewModel) { uiEvent ->
+                    val uiState: UiState by viewModel.uiState.observeAsState(UiState())
+                    val temperatureState: List<Temperature> by viewModel.temperatureLiveData.observeAsState(emptyList())
+                    val periodicTasks: List<PeriodicTask> by viewModel.periodicTaskLiveData.observeAsState(emptyList())
+
+                    FishTankScreen(
+                        uiState = uiState,
+                        temperatureState = temperatureState,
+                        periodicTasks = periodicTasks
+                    ) { uiEvent ->
                         viewModel.uiEvent(uiEvent)
                     }
                 }
@@ -95,14 +105,12 @@ class FishTankFragment : Fragment() {
 @OptIn(ExperimentalPagerApi::class)
 @Composable
 fun FishTankScreen(
-    viewModel: FishTankViewModel,
+    uiState: UiState,
+    temperatureState: List<Temperature>,
+    periodicTasks: List<PeriodicTask>,
     eventHandler: (UiEvent) -> Unit
 ) {
     Log.d(TAG, "Composing FishTankScreen")
-
-    val uiState: UiState by viewModel.uiState.observeAsState(UiState())
-    val temperatureState: List<Temperature> by viewModel.temperatureLiveData.observeAsState(emptyList())
-    val periodicTasks: List<PeriodicTask> by viewModel.periodicTaskLiveData.observeAsState(emptyList())
 
     val tabTitles = listOf("Control", "Monitor", "Camera", "Schedule")
     // Default page -> monitor
@@ -473,8 +481,6 @@ fun ControlPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
         Text(text = "Functions")
         Divider(modifier = Modifier.padding(vertical = 5.dp))
 
-        val brightnessPosition = remember { mutableStateOf(uiState.brightNess) }
-
         // Create Radio
         RadioGroup(
             listOf(
@@ -505,11 +511,11 @@ fun ControlPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
         RadioGroup(
             listOf(
                 RadioBtn(
-                    false,
+                    uiState.purifierState,
                     stringResource(R.string.purifier_on),
                 ) { eventHandler(UiEvent.PurifierEvent(true)) },
                 RadioBtn(
-                    false,
+                    !uiState.purifierState,
                     stringResource(R.string.purifier_off),
                 ) { eventHandler(UiEvent.PurifierEvent(false)) }
             )
@@ -517,14 +523,14 @@ fun ControlPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
 
         RadioGroup(
             listOf(
-                RadioBtn(false, stringResource(R.string.heater_on)) {
+                RadioBtn(uiState.heaterState, stringResource(R.string.heater_on)) {
                     eventHandler(
                         UiEvent.HeaterEvent(
                             true
                         )
                     )
                 },
-                RadioBtn(false, stringResource(R.string.heater_off)) {
+                RadioBtn(!uiState.heaterState, stringResource(R.string.heater_off)) {
                     eventHandler(
                         UiEvent.HeaterEvent(
                             false
@@ -536,14 +542,14 @@ fun ControlPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
 
         RadioGroup(
             listOf(
-                RadioBtn(false, stringResource(R.string.board_led_on)) {
+                RadioBtn(uiState.ledState, stringResource(R.string.board_led_on)) {
                     eventHandler(
                         UiEvent.LedEvent(
                             true
                         )
                     )
                 },
-                RadioBtn(false, stringResource(R.string.board_led_off)) {
+                RadioBtn(!uiState.ledState, stringResource(R.string.board_led_off)) {
                     eventHandler(
                         UiEvent.LedEvent(
                             false
@@ -553,26 +559,28 @@ fun ControlPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
             )
         )
 
+        var brightnessPosition by rememberSaveable { mutableStateOf(0)}
+
         Spacer(modifier = Modifier.height(20.dp))
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(15.dp)
+                .padding(top = 15.dp, start = 20.dp, end = 20.dp)
         ) {
-            Text(text = stringResource(id = R.string.light_brightness))
+            Text(text = "${stringResource(id = R.string.light_brightness)} (${uiState.brightness}%)")
             Slider(
-                value = brightnessPosition.value.toFloat(),
+                value = uiState.brightness.toFloat(),
                 valueRange = 0f..100f,
-                steps = 0,
                 onValueChange = { value: Float ->
-                    brightnessPosition.value = value.toInt()
+                    Log.d(TAG, "Brightness onValueChange $value")
+                    brightnessPosition = value.toInt()
+                    eventHandler(UiEvent.OnLightBrightnessChange(brightnessPosition, false))
                 },
                 onValueChangeFinished = {
-                    eventHandler(UiEvent.OnLightBrightnessChange(brightnessPosition.value))
+                    eventHandler(UiEvent.OnLightBrightnessChange(brightnessPosition, true))
                 }
             )
         }
-
 
         Row(
             modifier = Modifier
@@ -642,5 +650,17 @@ fun RadioGroup(radioList: List<RadioBtn>) {
                 Text(text = radioBtn.text)
             }
         }
+    }
+}
+
+@Preview
+@Composable
+fun ComposablePreview() {
+    FishTankScreen(
+        uiState = UiState(),
+        temperatureState = arrayListOf(),
+        periodicTasks = arrayListOf()
+    ) { uiEvent ->
+        // Nothing
     }
 }
