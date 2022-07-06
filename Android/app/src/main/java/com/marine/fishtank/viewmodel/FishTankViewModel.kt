@@ -26,6 +26,20 @@ class FishTankViewModel(application: Application) : AndroidViewModel(application
     val uiState: LiveData<UiState>
         get() = _uiState
 
+    var isRefreshing = MutableLiveData<Boolean>(false)
+
+    fun refreshState() {
+        viewModelScope.launch {
+            isRefreshing.value = true
+            withContext(Dispatchers.IO) {
+                readState()
+                startFetchTemperature(1)
+                fetchPeriodicTasks()
+            }
+            isRefreshing.value = false
+        }
+    }
+
     fun readState() {
         viewModelScope.launch(Dispatchers.IO) {
             val inWaterState = tankApi.readInWaterState()

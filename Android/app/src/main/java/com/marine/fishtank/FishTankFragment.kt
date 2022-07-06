@@ -32,7 +32,9 @@ import androidx.compose.ui.window.Dialog
 import androidx.core.text.isDigitsOnly
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.github.mikephil.charting.charts.Chart
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.components.YAxis
@@ -45,6 +47,8 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.pagerTabIndicatorOffset
 import com.google.accompanist.pager.rememberPagerState
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.source.rtsp.RtspMediaSource
@@ -76,17 +80,7 @@ class FishTankFragment : Fragment() {
         return ComposeView(requireContext()).apply {
             setContent {
                 MaterialTheme {
-                    val uiState: UiState by viewModel.uiState.observeAsState(UiState())
-                    val temperatureState: List<Temperature> by viewModel.temperatureLiveData.observeAsState(emptyList())
-                    val periodicTasks: List<PeriodicTask> by viewModel.periodicTaskLiveData.observeAsState(emptyList())
-
-                    FishTankScreen(
-                        uiState = uiState,
-                        temperatureState = temperatureState,
-                        periodicTasks = periodicTasks
-                    ) { uiEvent ->
-                        viewModel.uiEvent(uiEvent)
-                    }
+                    FishTankScreen(viewModel)
                 }
             }
         }
@@ -104,15 +98,16 @@ class FishTankFragment : Fragment() {
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
-fun FishTankScreen(
-    uiState: UiState,
-    temperatureState: List<Temperature>,
-    periodicTasks: List<PeriodicTask>,
-    eventHandler: (UiEvent) -> Unit
-) {
+fun FishTankScreen(viewModel: FishTankViewModel) {
     Log.d(TAG, "Composing FishTankScreen")
+    val uiState: UiState by viewModel.uiState.observeAsState(UiState())
+    val temperatureState: List<Temperature> by viewModel.temperatureLiveData.observeAsState(emptyList())
+    val periodicTasks: List<PeriodicTask> by viewModel.periodicTaskLiveData.observeAsState(emptyList())
+    val eventHandler = { uiEvent: UiEvent -> viewModel.uiEvent(uiEvent) }
+    val isRefreshing by viewModel.isRefreshing.observeAsState(false)
 
     val tabTitles = listOf("Control", "Monitor", "Camera", "Schedule")
+
     // Default page -> monitor
     val pagerState = rememberPagerState(0)
 
@@ -121,35 +116,40 @@ fun FishTankScreen(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colors.background
     ) {
-        Column {
-            TabRow(
-                backgroundColor = colorResource(id = R.color.purple_500),
-                selectedTabIndex = pagerState.currentPage,
-                indicator = { tabPositions -> // 3.
-                    TabRowDefaults.Indicator(
-                        Modifier.pagerTabIndicatorOffset(
-                            pagerState,
-                            tabPositions
+        SwipeRefresh(
+            state = rememberSwipeRefreshState(isRefreshing),
+            onRefresh = { viewModel.refreshState() }
+        ) {
+            Column {
+                TabRow(
+                    backgroundColor = colorResource(id = R.color.purple_500),
+                    selectedTabIndex = pagerState.currentPage,
+                    indicator = { tabPositions -> // 3.
+                        TabRowDefaults.Indicator(
+                            Modifier.pagerTabIndicatorOffset(
+                                pagerState,
+                                tabPositions
+                            )
                         )
-                    )
-                }) {
-                tabTitles.forEachIndexed { index, title ->
-                    Tab(selected = pagerState.currentPage == index,
-                        onClick = { CoroutineScope(Dispatchers.Main).launch { pagerState.scrollToPage(index) } },
-                        text = { Text(text = title) })
+                    }) {
+                    tabTitles.forEachIndexed { index, title ->
+                        Tab(selected = pagerState.currentPage == index,
+                            onClick = { CoroutineScope(Dispatchers.Main).launch { pagerState.scrollToPage(index) } },
+                            text = { Text(text = title) })
+                    }
                 }
-            }
-            HorizontalPager(
-                modifier = Modifier.fillMaxSize(),
-                count = tabTitles.size,
-                state = pagerState,
-                verticalAlignment = Alignment.Top
-            ) { tabIndex ->
-                when (tabIndex) {
-                    0 -> ControlPage(uiState, eventHandler)
-                    1 -> MonitorPage(temperatureState, eventHandler)
-                    2 -> CameraPage(uiState, eventHandler)
-                    3 -> SchedulePage(periodicTasks, eventHandler)
+                HorizontalPager(
+                    modifier = Modifier.fillMaxSize(),
+                    count = tabTitles.size,
+                    state = pagerState,
+                    verticalAlignment = Alignment.Top
+                ) { tabIndex ->
+                    when (tabIndex) {
+                        0 -> ControlPage(uiState, eventHandler)
+                        1 -> MonitorPage(temperatureState, eventHandler)
+                        2 -> CameraPage(uiState, eventHandler)
+                        3 -> SchedulePage(periodicTasks, eventHandler)
+                    }
                 }
             }
         }
@@ -441,7 +441,7 @@ fun Chart(
             }
         },
         update = {
-            Log.d(TAG, "Update LineChart mx=$maximumCount")
+            Log.d(TAG, "Update LineChart mx=$maximumCount, size=${temperatureList.size}")
 
             val entryList = mutableListOf<Entry>()
             for (tmp in temperatureList.withIndex()) {
@@ -459,9 +459,6 @@ fun Chart(
 
             it.setVisibleXRange(1f, maximumCount)
             it.moveViewToX((temperatureList.size - 1).toFloat())
-
-            // it.setVisibleXRangeMaximum(10f)
-            //it.moveViewToX((temperatureList.size - 1).toFloat())
         })
 }
 
@@ -650,17 +647,5 @@ fun RadioGroup(radioList: List<RadioBtn>) {
                 Text(text = radioBtn.text)
             }
         }
-    }
-}
-
-@Preview
-@Composable
-fun ComposablePreview() {
-    FishTankScreen(
-        uiState = UiState(),
-        temperatureState = arrayListOf(),
-        periodicTasks = arrayListOf()
-    ) { uiEvent ->
-        // Nothing
     }
 }
