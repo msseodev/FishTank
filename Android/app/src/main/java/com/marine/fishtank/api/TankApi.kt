@@ -41,6 +41,10 @@ class TankApi(
 
     private var token: String? = null
 
+    fun isAlreadySignIn(): Boolean {
+        return token != null
+    }
+
     fun signIn(id: String, password: String): Boolean {
         try {
             val call = fishService.signIn(id, password)
