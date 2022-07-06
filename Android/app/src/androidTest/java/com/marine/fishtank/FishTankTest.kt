@@ -33,42 +33,8 @@ class FishTankTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private val viewModel by lazy { FishTankViewModel(FishApplication.INSTANCE!!) }
 
     @Test
     fun brightnessTest() {
-        runBlocking {
-            var fakeUiState = MutableLiveData<UiState>()
-            var fakeTemperature = MutableLiveData<List<Temperature>>()
-            var fakePeriodicTask = MutableLiveData<List<PeriodicTask>>()
-
-            // Start the app
-            composeTestRule.setContent {
-                MaterialTheme {
-                    val uiState: UiState by fakeUiState.observeAsState(UiState())
-                    val temperatureState: List<Temperature> by fakeTemperature.observeAsState(emptyList())
-                    val periodicTasks: List<PeriodicTask> by fakePeriodicTask.observeAsState(emptyList())
-
-                    FishTankScreen(
-                        uiState = uiState,
-                        temperatureState = temperatureState,
-                        periodicTasks = periodicTasks
-                    ) { uiEvent ->
-                        Log.d(TAG, "uiEvent=$uiEvent")
-                    }
-                }
-            }
-
-            val random = Random(System.currentTimeMillis())
-            repeat(10) {
-                val brValue = random.nextInt(100)
-                Log.d(TAG, "Set brightness to $brValue")
-                fakeUiState.postValue(
-                    fakeUiState.value?.copy(brightness = brValue)
-                )
-
-                delay(1000)
-            }
-        }
     }
 }
