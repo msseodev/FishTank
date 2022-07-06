@@ -25,16 +25,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.core.text.isDigitsOnly
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.github.mikephil.charting.charts.Chart
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.components.YAxis
@@ -57,6 +54,7 @@ import com.google.android.exoplayer2.ui.StyledPlayerView
 import com.marine.fishtank.model.PeriodicTask
 import com.marine.fishtank.model.Temperature
 import com.marine.fishtank.model.typeAsString
+import com.marine.fishtank.view.TemperatureMarker
 import com.marine.fishtank.viewmodel.FishTankViewModel
 import com.marine.fishtank.viewmodel.UiEvent
 import com.marine.fishtank.viewmodel.UiState
@@ -346,6 +344,10 @@ fun Chart(
         factory = { context ->
             Log.d(TAG, "Factory LineChart")
             LineChart(context).apply {
+                val temperatureMarker = TemperatureMarker(context)
+                temperatureMarker.chartView = this
+                marker = temperatureMarker
+
                 // no description text
                 description.isEnabled = false
 
