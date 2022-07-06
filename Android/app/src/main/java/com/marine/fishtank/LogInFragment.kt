@@ -25,7 +25,10 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
+import com.marine.fishtank.api.TankApi
 import com.marine.fishtank.viewmodel.LogInViewModel
 
 sealed class LogInEvent {
@@ -43,6 +46,11 @@ class LogInFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         Log.d(TAG, "onCreateView")
+
+        if(TankApi.getInstance(BuildConfig.SERVER_URL).isAlreadySignIn()) {
+            Log.d(TAG, "Already sign-in")
+            navigate(Screen.LogIn, Screen.FishTank)
+        }
 
         viewModel.signInResult.observe(viewLifecycleOwner) { signIn ->
             if(signIn.result) {
