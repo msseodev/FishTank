@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
@@ -102,13 +103,13 @@ fun LogInScreen(viewModel: LogInViewModel, onEvent: (LogInEvent) -> Unit) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(colorResource(id = R.color.loyal_blue))
+                //.background(colorResource(id = R.color.loyal_blue))
                 .padding(15.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
                 value = userIdText,
                 maxLines = 1,
                 label = { Text(text = "id") },
@@ -119,7 +120,7 @@ fun LogInScreen(viewModel: LogInViewModel, onEvent: (LogInEvent) -> Unit) {
                 )
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(15.dp))
 
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
@@ -149,6 +150,7 @@ fun LogInScreen(viewModel: LogInViewModel, onEvent: (LogInEvent) -> Unit) {
 
             OutlinedButton(
                 modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
                 onClick = { onEvent(LogInEvent.SignIn(userIdText, passwordText)) },
             ) {
                 Text(text = "SIGN IN")

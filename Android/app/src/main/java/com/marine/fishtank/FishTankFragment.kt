@@ -164,7 +164,7 @@ fun SchedulePage(periodicTasks: List<PeriodicTask>, eventHandler: (UiEvent) -> U
     var typeDropDownExpand: Boolean by remember {
         mutableStateOf(false)
     }
-    val typeItems = {  }
+    val typeItems = { }
     var typeDropDownIndex by remember {
         mutableStateOf(0)
     }
@@ -204,7 +204,7 @@ fun SchedulePage(periodicTasks: List<PeriodicTask>, eventHandler: (UiEvent) -> U
                     Row(Modifier.fillMaxWidth()) {
                         Text(text = stringResource(id = R.string.periodic_dialog_task_type))
 
-                        DropdownMenu(expanded = typeDropDownExpand, onDismissRequest = {typeDropDownExpand=false }) {
+                        DropdownMenu(expanded = typeDropDownExpand, onDismissRequest = { typeDropDownExpand = false }) {
 
                         }
                     }
@@ -471,6 +471,7 @@ fun ControlPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
     val scrollState = rememberScrollState()
     var ratioValue by remember { mutableStateOf(20) }
     val context = LocalContext.current
+    var brightnessPosition by rememberSaveable { mutableStateOf(0) }
 
     Column(
         modifier = Modifier
@@ -480,91 +481,37 @@ fun ControlPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
         Text(text = "Functions")
         Divider(modifier = Modifier.padding(vertical = 5.dp))
 
-        // Create Radio
-        RadioGroup(
-            listOf(
-                RadioBtn(
-                    uiState.outWaterValveState,
-                    stringResource(R.string.open_water_out),
-                ) { eventHandler(UiEvent.OutWaterEvent(true)) },
-                RadioBtn(
-                    !uiState.outWaterValveState,
-                    stringResource(R.string.close_water_out),
-                ) { eventHandler(UiEvent.OutWaterEvent(false)) }
-            )
+        SwitchRow(
+            state = uiState.outWaterValveState,
+            text = stringResource(id = R.string.out_valve),
+            onClick = { eventHandler(UiEvent.OutWaterEvent(it)) }
         )
 
-        RadioGroup(
-            listOf(
-                RadioBtn(
-                    uiState.inWaterValveState,
-                    stringResource(R.string.open_water_in),
-                ) { eventHandler(UiEvent.InWaterEvent(true)) },
-                RadioBtn(
-                    !uiState.inWaterValveState,
-                    stringResource(R.string.close_water_in),
-                ) { eventHandler(UiEvent.InWaterEvent(false)) }
-            )
+        SwitchRow(
+            state = uiState.inWaterValveState,
+            text = stringResource(id = R.string.in_valve),
+            onClick = { eventHandler(UiEvent.InWaterEvent(it)) }
         )
 
-        RadioGroup(
-            listOf(
-                RadioBtn(
-                    uiState.purifierState,
-                    stringResource(R.string.purifier_on),
-                ) { eventHandler(UiEvent.PurifierEvent(true)) },
-                RadioBtn(
-                    !uiState.purifierState,
-                    stringResource(R.string.purifier_off),
-                ) { eventHandler(UiEvent.PurifierEvent(false)) }
-            )
+        SwitchRow(
+            state = uiState.purifierState,
+            text = stringResource(id = R.string.purifier),
+            onClick = { eventHandler(UiEvent.PurifierEvent(it)) }
         )
 
-        RadioGroup(
-            listOf(
-                RadioBtn(uiState.heaterState, stringResource(R.string.heater_on)) {
-                    eventHandler(
-                        UiEvent.HeaterEvent(
-                            true
-                        )
-                    )
-                },
-                RadioBtn(!uiState.heaterState, stringResource(R.string.heater_off)) {
-                    eventHandler(
-                        UiEvent.HeaterEvent(
-                            false
-                        )
-                    )
-                }
-            )
+        SwitchRow(
+            state = uiState.ledState,
+            text = stringResource(id = R.string.board_led),
+            onClick = { eventHandler(UiEvent.LedEvent(it)) }
         )
 
-        RadioGroup(
-            listOf(
-                RadioBtn(uiState.ledState, stringResource(R.string.board_led_on)) {
-                    eventHandler(
-                        UiEvent.LedEvent(
-                            true
-                        )
-                    )
-                },
-                RadioBtn(!uiState.ledState, stringResource(R.string.board_led_off)) {
-                    eventHandler(
-                        UiEvent.LedEvent(
-                            false
-                        )
-                    )
-                }
-            )
-        )
-
-        var brightnessPosition by rememberSaveable { mutableStateOf(0)}
-
+        Divider(Modifier.fillMaxWidth().padding(vertical = 5.dp))
         Spacer(modifier = Modifier.height(20.dp))
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 15.dp, start = 20.dp, end = 20.dp)
+                .padding(start = 20.dp, end = 20.dp)
         ) {
             Text(text = "${stringResource(id = R.string.light_brightness)} (${uiState.brightness}%)")
             Slider(
@@ -580,6 +527,9 @@ fun ControlPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
                 }
             )
         }
+
+        Divider(Modifier.fillMaxWidth().padding(vertical = 5.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         Row(
             modifier = Modifier
@@ -609,45 +559,38 @@ fun ControlPage(uiState: UiState, eventHandler: (UiEvent) -> Unit) {
                         eventHandler(UiEvent.ReplaceWater(ratioValue))
                     }
                 }) {
-                Text(text = stringResource(id = R.string.task_replace_water))
+                Text(text = stringResource(id = R.string.replace_water))
             }
         }
     }
 }
 
-data class RadioBtn(
-    var selected: Boolean = false,
-    var text: String,
-    var onclick: () -> Unit
-)
-
 @Composable
-fun RadioGroup(radioList: List<RadioBtn>) {
-    var selectedIndex = radioList.indices.firstOrNull { radioList[it].selected } ?: 0
+fun SwitchRow(
+    state: Boolean = false,
+    text: String,
+    onClick: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                start = 10.dp,
+                end = 10.dp,
+                top = 10.dp
+            ),
+        horizontalArrangement = Arrangement.Start,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            modifier = Modifier.weight(1f),
+            text = text
+        )
 
-    Row {
-        radioList.forEachIndexed { index, radioBtn ->
-            val selected = index == selectedIndex
-            val onClickHandle = {
-                selectedIndex = index
-                radioBtn.selected = true
-
-                radioBtn.onclick()
-            }
-
-            Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .selectable(selected = selected, onClick = onClickHandle),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Start,
-            ) {
-                RadioButton(
-                    selected = selected,
-                    onClick = onClickHandle
-                )
-                Text(text = radioBtn.text)
-            }
-        }
+        Switch(
+            modifier = Modifier.weight(1f),
+            checked = state,
+            onCheckedChange =  onClick
+        )
     }
 }
