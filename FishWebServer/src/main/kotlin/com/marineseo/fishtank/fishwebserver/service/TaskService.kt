@@ -176,9 +176,9 @@ class TaskService(
                 type = periodicTask.type,
                 data = periodicTask.data,
                 executeTime = Calendar.getInstance().apply {
-                    set(Calendar.HOUR_OF_DAY, periodicTask.time.hours)
-                    set(Calendar.MINUTE, periodicTask.time.minutes)
-                    set(Calendar.SECOND, periodicTask.time.seconds)
+                    val divided = periodicTask.time.split(":")
+                    set(Calendar.HOUR_OF_DAY, divided[0].toInt())
+                    set(Calendar.MINUTE, divided[1].toInt())
                 }.timeInMillis
             ))
         }

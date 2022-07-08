@@ -68,7 +68,7 @@ interface DatabaseMapper {
 
     @Insert("INSERT INTO ${PeriodicTask.TABLE_NAME}" +
             "(${PeriodicTask.COL_USER_ID}, ${PeriodicTask.COL_TYPE}, ${PeriodicTask.COL_DATA}, ${PeriodicTask.COL_TIME}) " +
-            "VALUES(#{userId}, #{type} #{data}, #{time})")
+            "VALUES(#{userId}, #{type}, #{data}, #{time})")
     fun insertPeriodicTask(periodicTask: PeriodicTask)
 
     @Select("SELECT * FROM ${PeriodicTask.TABLE_NAME} " +
