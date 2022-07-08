@@ -32,6 +32,10 @@
 
     <string name="periodic_dialog_title">작업</string>
     <string name="periodic_dialog_task_type">타입</string>
+    <string name="periodic_dialog_task_value">값</string>
+    <string name="periodic_dialog_save">저장</string>
+    <string name="periodic_dialog_cancel">취소</string>
+    <string name="periodic_dialog_task_time">시간</string>
 
     <string name="replace_water">환수</string>
     <string name="out_valve">하수밸브</string>

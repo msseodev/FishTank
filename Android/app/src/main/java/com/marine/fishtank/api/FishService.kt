@@ -14,6 +14,9 @@ private const val KEY_PASSWORD = "password"
 private const val KEY_DAYS = "days"
 private const val KEY_PERCENTAGE = "percentage"
 private const val KEY_PERIODIC = "periodicTask"
+private const val KEY_TYPE = "type"
+private const val KEY_DATA = "data"
+private const val KEY_TIME = "time"
 
 interface FishService {
     /**
@@ -69,11 +72,16 @@ interface FishService {
 
     @POST("/fish/brightness/read")
     @FormUrlEncoded
-    fun readLightBrightness(@Field(KEY_TOKEN) token: String) : Call<Float>
+    fun readLightBrightness(@Field(KEY_TOKEN) token: String): Call<Float>
 
     @POST("/fish/periodic/add")
     @FormUrlEncoded
-    fun addPeriodicTask(@Field(KEY_TOKEN) token: String, @Field(KEY_PERIODIC) periodicTask: PeriodicTask): Call<Boolean>
+    fun addPeriodicTask(
+        @Field(KEY_TOKEN) token: String,
+        @Field(KEY_TYPE) type: Int,
+        @Field(KEY_DATA) data: Int,
+        @Field(KEY_TIME) time: String
+    ): Call<Boolean>
 
     @POST("/fish/periodic/fetch")
     @FormUrlEncoded
