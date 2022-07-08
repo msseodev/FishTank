@@ -1,20 +1,23 @@
 package com.marine.fishtank.model
 
 import android.content.Context
+import android.os.Parcelable
 import com.marine.fishtank.R
 import com.marine.fishtank.model.PeriodicTask.Companion.TYPE_LIGHT
 import com.marine.fishtank.model.PeriodicTask.Companion.TYPE_PURIFIER
 import com.marine.fishtank.model.PeriodicTask.Companion.TYPE_REPLACE_WATER
 import com.marine.fishtank.model.PeriodicTask.Companion.TYPE_VALVE_IN_WATER
 import com.marine.fishtank.model.PeriodicTask.Companion.TYPE_VALVE_OUT_WATER
+import kotlinx.parcelize.Parcelize
 
+@Parcelize
 data class PeriodicTask(
     var id: Int = 0,
     var userId: String = "",
     var type: Int = 0,
     var data: Int = 0,
     var time: String = ""
-) {
+): Parcelable {
     companion object {
         const val TABLE_NAME = "periodicTask"
         const val COL_ID = "id"
@@ -28,6 +31,17 @@ data class PeriodicTask(
         const val TYPE_VALVE_IN_WATER = 2
         const val TYPE_PURIFIER = 3
         const val TYPE_LIGHT = 4
+
+        fun typeFromResource(resource: Int): Int {
+            return when(resource) {
+                R.string.in_valve -> TYPE_VALVE_IN_WATER
+                R.string.out_valve -> TYPE_VALVE_OUT_WATER
+                R.string.replace_water -> TYPE_REPLACE_WATER
+                R.string.purifier -> TYPE_PURIFIER
+                R.string.light -> TYPE_LIGHT
+                else -> 0
+            }
+        }
     }
 }
 

@@ -52,7 +52,7 @@ class FishTankViewModel(application: Application) : AndroidViewModel(application
                 _uiState.value?.copy(
                     inWaterValveState = inWaterState,
                     outWaterValveState = outWaterState,
-                    brightness =  brightness.toInt()
+                    brightness = brightness.toInt()
                 )
             )
         }
@@ -78,46 +78,32 @@ class FishTankViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch(Dispatchers.IO) {
             when (uiEvent) {
                 is UiEvent.OutWaterEvent -> {
-                    viewModelScope.launch(Dispatchers.IO) {
-                        tankApi.enableOutWater(uiEvent.value)
-                        readState()
-                    }
+                    tankApi.enableOutWater(uiEvent.value)
+                    readState()
                 }
                 is UiEvent.InWaterEvent -> {
-                    viewModelScope.launch(Dispatchers.IO) {
-                        tankApi.enableInWater(uiEvent.value)
-                        readState()
-                    }
+                    tankApi.enableInWater(uiEvent.value)
+                    readState()
                 }
                 is UiEvent.LightEvent -> {
-                    viewModelScope.launch(Dispatchers.IO) {
-                        tankApi.enableLight(uiEvent.value)
-                        readState()
-                    }
+                    tankApi.enableLight(uiEvent.value)
+                    readState()
                 }
                 is UiEvent.HeaterEvent -> {
-                    viewModelScope.launch(Dispatchers.IO) {
-                        tankApi.enableHeater(uiEvent.value)
-                        readState()
-                    }
+                    tankApi.enableHeater(uiEvent.value)
+                    readState()
                 }
                 is UiEvent.PurifierEvent -> {
-                    viewModelScope.launch(Dispatchers.IO) {
-                        tankApi.enablePurifier(uiEvent.value)
-                        readState()
-                    }
+                    tankApi.enablePurifier(uiEvent.value)
+                    readState()
                 }
                 is UiEvent.ReplaceWater -> {
-                    viewModelScope.launch(Dispatchers.IO) {
-                        tankApi.replaceWater(uiEvent.ratio * 0.01F)
-                        readState()
-                    }
+                    tankApi.replaceWater(uiEvent.ratio * 0.01F)
+                    readState()
                 }
                 is UiEvent.LedEvent -> {
-                    viewModelScope.launch(Dispatchers.IO) {
-                        tankApi.enableBoardLed(uiEvent.value)
-                        readState()
-                    }
+                    tankApi.enableBoardLed(uiEvent.value)
+                    readState()
                 }
                 is UiEvent.OnChangeTemperatureRange -> {
                     startFetchTemperature(uiEvent.intValue)
@@ -129,12 +115,16 @@ class FishTankViewModel(application: Application) : AndroidViewModel(application
                         _uiState.value = uiState.value?.copy(brightness = uiEvent.brightness)
                     }
 
-                    if(uiEvent.adjust) {
+                    if (uiEvent.adjust) {
                         Log.d(TAG, "Request adjust brightness to ${uiEvent.brightness}")
                         viewModelScope.launch(Dispatchers.IO) {
                             tankApi.changeLightBrightness(uiEvent.brightness * 0.01f)
                         }
                     }
+                }
+                is UiEvent.AddPeriodicTask -> {
+                    Log.d(TAG, "Add periodicTask! ${uiEvent.periodicTask}")
+                    tankApi.addPeriodicTask(uiEvent.periodicTask)
                 }
             }
         }
@@ -178,5 +168,6 @@ sealed class UiEvent(
     class ReplaceWater(val ratio: Int) : UiEvent()
     class OnChangeTemperatureRange(count: Int) : UiEvent(intValue = count)
 
-    class OnLightBrightnessChange(val brightness: Int, val adjust: Boolean): UiEvent()
+    class OnLightBrightnessChange(val brightness: Int, val adjust: Boolean) : UiEvent()
+    class AddPeriodicTask(val periodicTask: PeriodicTask): UiEvent()
 }

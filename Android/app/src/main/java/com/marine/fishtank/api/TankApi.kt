@@ -216,6 +216,22 @@ class TankApi(
         return emptyList()
     }
 
+    fun addPeriodicTask(periodicTask: PeriodicTask): Boolean {
+        verifyTokenNull()
+        try {
+            return fishService.addPeriodicTask(
+                token!!,
+                periodicTask.type,
+                periodicTask.data,
+                periodicTask.time
+            ).execute().body() ?: false
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        return false
+    }
+
     private fun verifyTokenNull() {
         if (token == null) {
             throw IllegalStateException("Token is null! You must success sign-in first.")

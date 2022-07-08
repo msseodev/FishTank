@@ -30,8 +30,12 @@
 
     <string name="light_brightness">Light brightness</string>
 
-    <string name="periodic_dialog_title">Action</string>
+    <string name="periodic_dialog_title">Periodic Action</string>
     <string name="periodic_dialog_task_type">type</string>
+    <string name="periodic_dialog_task_value">Value</string>
+    <string name="periodic_dialog_save">Save</string>
+    <string name="periodic_dialog_cancel">cancel</string>
+    <string name="periodic_dialog_task_time">Time</string>
 
     <string name="replace_water">환수</string>
     <string name="out_valve">하수밸브</string>
