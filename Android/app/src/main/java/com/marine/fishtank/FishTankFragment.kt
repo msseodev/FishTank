@@ -59,6 +59,7 @@ import com.google.android.exoplayer2.ui.StyledPlayerView
 import com.marine.fishtank.model.PeriodicTask
 import com.marine.fishtank.model.Temperature
 import com.marine.fishtank.model.typeAsString
+import com.marine.fishtank.view.PeriodicTaskDialog
 import com.marine.fishtank.view.TemperatureMarker
 import com.marine.fishtank.viewmodel.FishTankViewModel
 import com.marine.fishtank.viewmodel.UiEvent
@@ -162,239 +163,74 @@ fun FishTankScreen(viewModel: FishTankViewModel) {
     Log.d(TAG, "End composing FishTankScreen")
 }
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun SchedulePage(periodicTasks: List<PeriodicTask>, eventHandler: (UiEvent) -> Unit) {
     Log.d(TAG, "Composing SchedulePage!")
     val context = LocalContext.current
-    var openDialog: Boolean by remember { mutableStateOf(false) }
+    val openDialog = remember { mutableStateOf(false) }
 
-    var typeExpand: Boolean by remember { mutableStateOf(false) }
+    val typeExpand = remember { mutableStateOf(false) }
     val typeOptions = arrayOf( R.string.out_valve, R.string.in_valve, R.string.purifier, R.string.light)
-    var selectedTypeOption by remember { mutableStateOf(typeOptions[0]) }
+    val selectedTypeOption = remember { mutableStateOf(typeOptions[0]) }
 
-    var valueBooleanExpand: Boolean by remember { mutableStateOf(false) }
+    val valueBooleanExpand = remember { mutableStateOf(false) }
     val valueBooleanOptions = arrayOf( 0, 1)
 
-    var valueLightExpand: Boolean by remember { mutableStateOf(false) }
-    val valueLightOptions = 0..255
-    var selectedOption by remember { mutableStateOf(valueLightOptions.first)}
+    val valueLightExpand = remember { mutableStateOf(false) }
+    val valueLightOptions = (0..100).toList().toTypedArray()
+    val selectedOption = remember { mutableStateOf(valueLightOptions[0])}
 
     val mCalendar = Calendar.getInstance()
     val currentHour = mCalendar[Calendar.HOUR_OF_DAY]
     val currentMinute = mCalendar[Calendar.MINUTE]
-    var actionTime by remember { mutableStateOf("$currentHour:$currentMinute") }
+    val actionTime = remember { mutableStateOf("$currentHour:$currentMinute") }
 
     val timePickerDialog = TimePickerDialog(
         context,
         {_, hour : Int, minute: Int ->
-            actionTime = "$hour:${String.format("%02d", minute)}"
+            actionTime.value = "$hour:${String.format("%02d", minute)}"
         }, currentHour, currentMinute, false
     )
-    val source = remember {
-        MutableInteractionSource()
+
+    PeriodicTaskDialog(
+        openState = openDialog,
+        typeExpand = typeExpand,
+        typeOptions = typeOptions,
+        selectedTypeOption = selectedTypeOption,
+        valueBooleanExpand = valueBooleanExpand,
+        valueBooleanOptions = valueBooleanOptions,
+        valueLightExpand = valueLightExpand,
+        valueLightOptions = valueLightOptions,
+        selectedOption = selectedOption,
+        actionTime = actionTime,
+        timePickerDialog = timePickerDialog,
+    ) {
+        eventHandler(
+            UiEvent.AddPeriodicTask(
+                PeriodicTask(
+                    type = PeriodicTask.typeFromResource(selectedTypeOption.value),
+                    data = selectedOption.value,
+                    time = actionTime.value
+                )
+            )
+        )
     }
 
-    if(source.collectIsPressedAsState().value) {
-        timePickerDialog.show()
-    }
-
+    // Floating button
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(onClick = { openDialog = true }) {
+            FloatingActionButton(onClick = { openDialog.value = true }) {
                 Icon(Icons.Filled.Add, "PeriodicTask add button")
             }
         }
     ) { padding ->
-        LazyColumn(Modifier.padding(padding)) {
+        LazyColumn(Modifier.padding(padding).fillMaxSize()) {
             for (task in periodicTasks) {
                 item {
                     PeriodicTaskItem(
                         action = task.typeAsString(context),
                         exeTime = task.time
                     )
-                }
-            }
-        }
-
-        // Dialog to add Periodic task.
-        if (openDialog) {
-            Dialog(onDismissRequest = {
-                openDialog = false
-            }) {
-                Surface(
-                    modifier = Modifier
-                        .width(250.dp)
-                        .wrapContentHeight(),
-                    shape = RoundedCornerShape(15.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(20.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Spacer(
-                            Modifier
-                                .height(5.dp)
-                                .fillMaxWidth())
-
-                        Text(
-                            textAlign = TextAlign.Center,
-                            text = stringResource(id = R.string.periodic_dialog_title),
-                            fontSize = 15.sp
-                        )
-
-                        Spacer(modifier = Modifier.height(25.dp))
-
-                        ExposedDropdownMenuBox(
-                            expanded = typeExpand,
-                            onExpandedChange  = { typeExpand = !typeExpand }
-                        ) {
-                            TextField(
-                                readOnly = true,
-                                value = stringResource(id = selectedTypeOption),
-                                onValueChange = {},
-                                label = { Text(stringResource(id = R.string.periodic_dialog_task_type))},
-                                trailingIcon = {
-                                    ExposedDropdownMenuDefaults.TrailingIcon(
-                                        expanded = typeExpand
-                                    )
-                                },
-                                colors = ExposedDropdownMenuDefaults.textFieldColors()
-                            )
-
-                            ExposedDropdownMenu(
-                                expanded = typeExpand,
-                                onDismissRequest = { typeExpand = false }
-                            ) {
-                                typeOptions.forEach { option ->
-                                    DropdownMenuItem(onClick = {
-                                        typeExpand = false
-                                        selectedTypeOption = option
-                                    }) {
-                                        Text(text = stringResource(id = option))
-                                    }
-                                }
-                            }
-                        }
-
-                        Divider(Modifier.fillMaxWidth())
-                        Spacer(modifier = Modifier.height(15.dp))
-
-                        if(selectedTypeOption != R.string.light) {
-                            ExposedDropdownMenuBox(
-                                expanded = valueBooleanExpand,
-                                onExpandedChange  = { valueBooleanExpand = !valueBooleanExpand }
-                            ) {
-                                TextField(
-                                    readOnly = true,
-                                    value = selectedOption.toString(),
-                                    onValueChange = {},
-                                    label = { Text(stringResource(id = R.string.periodic_dialog_task_value))},
-                                    trailingIcon = {
-                                        ExposedDropdownMenuDefaults.TrailingIcon(
-                                            expanded = valueBooleanExpand
-                                        )
-                                    },
-                                    colors = ExposedDropdownMenuDefaults.textFieldColors()
-                                )
-
-                                ExposedDropdownMenu(
-                                    expanded = valueBooleanExpand,
-                                    onDismissRequest = { valueBooleanExpand = false }
-                                ) {
-                                    valueBooleanOptions.forEach { option ->
-                                        DropdownMenuItem(onClick = {
-                                            valueBooleanExpand = false
-                                            selectedOption = option
-                                        }) {
-                                            Text(text = option.toString())
-                                        }
-                                    }
-                                }
-                            }
-                        } else {
-                            ExposedDropdownMenuBox(
-                                expanded = valueLightExpand,
-                                onExpandedChange  = { valueLightExpand = !valueLightExpand }
-                            ) {
-                                TextField(
-                                    readOnly = true,
-                                    value = selectedOption.toString(),
-                                    onValueChange = {},
-                                    label = { Text(stringResource(id = R.string.periodic_dialog_task_value))},
-                                    trailingIcon = {
-                                        ExposedDropdownMenuDefaults.TrailingIcon(
-                                            expanded = valueLightExpand
-                                        )
-                                    },
-                                    colors = ExposedDropdownMenuDefaults.textFieldColors()
-                                )
-
-                                ExposedDropdownMenu(
-                                    expanded = valueLightExpand,
-                                    onDismissRequest = { valueLightExpand = false }
-                                ) {
-                                    valueBooleanOptions.forEach { option ->
-                                        DropdownMenuItem(onClick = {
-                                            valueLightExpand = false
-                                            selectedOption = option
-                                        }) {
-                                            Text(text = option.toString())
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(15.dp))
-
-                        TextField(
-                            readOnly = true,
-                            value = actionTime,
-                            interactionSource = source,
-                            onValueChange = {},
-                            label = { Text(stringResource(id = R.string.periodic_dialog_task_time))},
-                            trailingIcon = {
-                                ExposedDropdownMenuDefaults.TrailingIcon(
-                                    expanded = typeExpand
-                                )
-                            },
-                            colors = ExposedDropdownMenuDefaults.textFieldColors()
-                        )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            OutlinedButton(
-                                modifier = Modifier.weight(1f),
-                                onClick = {
-                                    openDialog = false
-                                }
-                            ) {
-                                Text(stringResource(id = R.string.periodic_dialog_cancel))
-                            }
-
-                            OutlinedButton(
-                                modifier = Modifier.weight(1f),
-                                onClick = {
-                                    openDialog = false
-                                    eventHandler(UiEvent.AddPeriodicTask(
-                                        PeriodicTask(
-                                            type = PeriodicTask.typeFromResource(selectedTypeOption),
-                                            data = selectedOption,
-                                            time = actionTime
-                                        )
-                                    ))
-                                }
-                            ) {
-                                Text(stringResource(id = R.string.periodic_dialog_save))
-                            }
-                        }
-
-                    }
                 }
             }
         }
