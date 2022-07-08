@@ -24,6 +24,9 @@ private const val KEY_PASSWORD = "password"
 private const val KEY_DAYS = "days"
 private const val KEY_PERCENTAGE = "percentage"
 private const val KEY_PERIODIC = "periodicTask"
+private const val KEY_TYPE = "type"
+private const val KEY_DATA = "data"
+private const val KEY_TIME = "time"
 
 @RestController
 @RequestMapping("/fish")
@@ -193,11 +196,20 @@ class FishController(
     @PostMapping("/periodic/add")
     fun addPeriodicTask(
         @RequestParam(KEY_TOKEN) token: String,
-        @RequestParam(KEY_PERIODIC) periodicTask: PeriodicTask
+        @RequestParam(KEY_TYPE) type: Int,
+        @RequestParam(KEY_DATA) data: Int,
+        @RequestParam(KEY_TIME) time: String
     ): ResponseEntity<Boolean> {
+        logger.info("add Periodic Task! type=$type data=$data time=$time")
         val user = userService.getUserByToken(token) ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null)
-        periodicTask.userId = user.id
-        taskService.addPeriodicTask(periodicTask)
+        taskService.addPeriodicTask(
+            PeriodicTask(
+                userId = user.id,
+                type = type,
+                data = data,
+                time = time
+            )
+        )
 
         return ResponseEntity.ok(true)
     }
