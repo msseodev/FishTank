@@ -125,6 +125,7 @@ class FishTankViewModel(application: Application) : AndroidViewModel(application
                 is UiEvent.AddPeriodicTask -> {
                     Log.d(TAG, "Add periodicTask! ${uiEvent.periodicTask}")
                     tankApi.addPeriodicTask(uiEvent.periodicTask)
+                    tankApi.fetchPeriodicTasks()
                 }
             }
         }
