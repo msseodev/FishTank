@@ -7,7 +7,6 @@ import com.marine.fishtank.model.PeriodicTask.Companion.TYPE_PURIFIER
 import com.marine.fishtank.model.PeriodicTask.Companion.TYPE_REPLACE_WATER
 import com.marine.fishtank.model.PeriodicTask.Companion.TYPE_VALVE_IN_WATER
 import com.marine.fishtank.model.PeriodicTask.Companion.TYPE_VALVE_OUT_WATER
-import java.sql.Time
 
 data class PeriodicTask(
     var id: Int = 0,
@@ -34,11 +33,11 @@ data class PeriodicTask(
 
 fun PeriodicTask.typeAsString(context: Context): String {
     return when(type) {
-        TYPE_REPLACE_WATER -> context.getString(R.string.task_replace_water)
-        TYPE_VALVE_OUT_WATER -> context.getString(R.string.task_out_valve)
-        TYPE_VALVE_IN_WATER -> context.getString(R.string.task_in_valve)
-        TYPE_PURIFIER -> context.getString(R.string.task_purifier)
-        TYPE_LIGHT -> context.getString(R.string.task_light)
+        TYPE_REPLACE_WATER -> context.getString(R.string.replace_water)
+        TYPE_VALVE_OUT_WATER -> context.getString(R.string.out_valve)
+        TYPE_VALVE_IN_WATER -> context.getString(R.string.in_valve)
+        TYPE_PURIFIER -> context.getString(R.string.purifier)
+        TYPE_LIGHT -> context.getString(R.string.light)
         else -> "UNKNOWN"
     }
 }
