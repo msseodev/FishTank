@@ -3,4 +3,4 @@ project(FishTankNative)
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_executable(FishTankNative main.cpp FishTank.cpp FishTank.h)
+add_executable(FishTankNative main.cpp FishTank.cpp OneWire.cpp DallasTemperature.cpp Arduino.cpp Arduino.h)
