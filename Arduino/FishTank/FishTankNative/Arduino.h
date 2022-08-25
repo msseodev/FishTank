@@ -2,15 +2,15 @@
 // Created by MSSeo on 2022-08-25.
 //
 
-#ifndef FISHTANKNATIVE_FISHTANK_H
-#define FISHTANKNATIVE_FISHTANK_H
+#ifndef FISHTANKNATIVE_ARDUINO_H
+#define FISHTANKNATIVE_ARDUINO_H
 
-#include <stdio.h>
-#include <string.h>
-#include <rpcndr.h>
+#include <cstdio>
+#include <cstring>
+// #include <rpcndr.h>
+#include <cstdint>
 
-void setup();
-void loop();
+
 
 class Ser {
 public:
@@ -38,7 +38,11 @@ void pinMode(int, int);
 void digitalWrite(int, int);
 void analogWrite(int, int);
 
+void setup();
+void loop();
+
 Ser Serial;
 Ser Serial1;
 
-#endif //FISHTANKNATIVE_FISHTANK_H
+
+#endif //FISHTANKNATIVE_ARDUINO_H

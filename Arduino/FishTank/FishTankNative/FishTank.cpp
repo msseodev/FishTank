@@ -1,6 +1,5 @@
-#include "OneWire.h"
 #include "DallasTemperature.h"
-#include "FishTank.h"
+#include "Arduino.h"
 
 
 #define READ_TIMEOUT 5000
@@ -106,6 +105,8 @@ public:
 
         bff[index++] = ETX;
         bff[index++] = makeCrc();
+
+        return index;
     }
 
     /**
@@ -145,6 +146,8 @@ public:
 
         if(bff[index++] != ETX) return -1;
         crc = bff[index++];
+
+        return index;
     }
 
     void clear() {
@@ -157,7 +160,7 @@ public:
         crc = 0;
     }
 
-    boolean validateCrc() {
+    bool validateCrc() {
         return makeCrc() == crc;
     }
 
@@ -217,16 +220,16 @@ void sendPacket(FishPacket &packet) {
 }
 
 void readPacket(FishPacket &packet) {
-    byte firstByte = Serial.read();
+    char firstByte = Serial.read();
     if(firstByte == STX) {
         // Packet received
-        byte buffer[PACKET_SIZE_MAX];
+        unsigned char buffer[PACKET_SIZE_MAX];
         memset(buffer, 0, PACKET_SIZE_MAX);
 
         int idx = 0;
-        boolean escaping = false;
+        bool escaping = false;
         for(int i= 0; i<PACKET_SIZE_MAX; i++) {
-            byte b = Serial.read();
+            unsigned char b = Serial.read();
             if(escaping) {
                 // This byte is escaped. alloc unconditionally.
                 buffer[idx++] = b;
@@ -334,3 +337,4 @@ void loop() {
         prevMils = millis();
     }
 }
+
