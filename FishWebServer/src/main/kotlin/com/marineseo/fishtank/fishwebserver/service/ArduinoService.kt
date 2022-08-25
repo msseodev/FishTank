@@ -324,7 +324,7 @@ class ArduinoService: ApplicationListener<ApplicationContextEvent> {
         }
     }
 
-    fun disConnect() {
+    private fun disConnect() {
         port?.closePort()
     }
 }
