@@ -170,7 +170,7 @@ fun SchedulePage(periodicTasks: List<PeriodicTask>, eventHandler: (UiEvent) -> U
     val openDialog = remember { mutableStateOf(false) }
 
     val typeExpand = remember { mutableStateOf(false) }
-    val typeOptions = arrayOf( R.string.out_valve, R.string.in_valve, R.string.purifier, R.string.light)
+    val typeOptions = listOf( R.string.out_valve, R.string.in_valve, R.string.purifier, R.string.light)
     val selectedTypeOption = remember { mutableStateOf(typeOptions[0]) }
 
     val valueBooleanExpand = remember { mutableStateOf(false) }
