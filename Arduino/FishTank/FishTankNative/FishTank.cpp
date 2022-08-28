@@ -180,43 +180,13 @@ void clearPacket(FishPacket &packet) {
 }
 
 void sendPacket(FishPacket &packet) {
-    Serial1.println("Send Packet");
-
     unsigned char buffer[PACKET_SIZE_MAX];
     memset(buffer, 0, PACKET_SIZE_MAX);
 
     int size = packet.serializePacket(buffer);
 
-    // Print buffer for debugging
-    for (unsigned char i: buffer) {
-        char hexBuf[3];
-        sprintf(hexBuf, "%X", i);
-        hexBuf[2] = 0;
-
-        Serial1.print(hexBuf);
-        Serial1.print(" ");
-    }
-    Serial1.println();
-
-    Serial1.print(", id=");
-    Serial1.print(packet.id);
-    Serial1.print(", clientId=");
-    Serial1.print(packet.clientId);
-    Serial1.print(", opCode=");
-    Serial1.print(packet.opCode);
-    Serial1.print(", pin=");
-    Serial1.print(packet.pin);
-    Serial1.print(", pinMode=");
-    Serial1.print(packet.pinMode);
-    Serial1.print(", data=");
-    Serial1.print(packet.data);
-    Serial1.println();
-
     Serial.write(buffer, size);
     Serial.flush();
-
-    Serial1.println("Send packet Complete");
-    Serial1.println();
 }
 
 void readPacket(FishPacket &packet) {
@@ -268,7 +238,6 @@ void setup() {
     Serial.setTimeout(READ_TIMEOUT);
     Serial.flush();
 
-    Serial1.begin(BAUD_RATE);
     sensors.begin();
 }
 
