@@ -26,3 +26,7 @@ DallasTemperature::DallasTemperature(OneWire *, uint8_t) {
 
 }
 
+void DallasTemperature::begin() {
+
+}
+

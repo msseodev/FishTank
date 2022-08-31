@@ -17,7 +17,13 @@ data class FishPacket(
     val opCode: Short = 0,
     val pin: Short = 0,
     val pinMode: Short = 0,
-    val data: Float = 0f
+    val data: Float = 0f,
+    val crc: Byte = 0
 )
+
+
+fun FishPacket.toRawPacket(): ByteArray {
+
+}
 
 
