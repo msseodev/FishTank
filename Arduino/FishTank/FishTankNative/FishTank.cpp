@@ -37,6 +37,9 @@ int pinState[PIN_LENGTH];
 #define ETX 0x03
 #define DLE 0x10
 
+Ser Serial;
+Ser Serial1;
+
 /**
  * STX - DATA - ETX - CRC
  */
@@ -54,7 +57,7 @@ public:
     // End Data
 
     const unsigned char etx = ETX;
-    unsigned char crc;
+    unsigned int crc;
 
     /**
      * Write value to target in little endian order.
@@ -164,9 +167,12 @@ public:
         return makeCrc() == crc;
     }
 
-private:
-    unsigned char makeCrc() {
-        return (id + clientId + opCode + pin + pinMode + data) * 2;
+    unsigned int makeCrc() {
+        int localCrc = (id << 12) & 0xF000;
+        localCrc |= (clientId << 8) & 0x0F00;
+        localCrc |= (pin << 4) & 0x00F0;
+        localCrc |= pinMode & 0x000F;
+        return localCrc;
     }
 };
 

@@ -41,8 +41,7 @@ void analogWrite(int, int);
 void setup();
 void loop();
 
-Ser Serial;
-Ser Serial1;
+
 
 
 #endif //FISHTANKNATIVE_ARDUINO_H
