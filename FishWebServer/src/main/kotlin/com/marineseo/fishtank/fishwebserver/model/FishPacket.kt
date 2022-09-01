@@ -37,25 +37,74 @@ fun FishPacket.makeCrc(): Short {
             (pinMode and 0x000F)
 }
 
+fun FishPacket.isValidate(): Boolean {
+    return crc == makeCrc()
+}
+
 fun FishPacket.toRawPacket(): ByteArray {
     crc = makeCrc()
 
     val buffer = ByteBuffer.allocate(PACKET_SIZE * 2)
     buffer.order(ByteOrder.LITTLE_ENDIAN)
 
+    buffer.put(STX)
     write(id, buffer)
     write(clientId, buffer)
     write(opCode, buffer)
     write(pin, buffer)
     write(pinMode, buffer)
     write(data, buffer)
-    write(crc, buffer)
+    buffer.put(ETX)
+    buffer.putShort(crc)
 
-    // TODO Array
     buffer.limit(buffer.position())
+    buffer.flip()
 
-    return buffer.array()
+    return ByteBuffer.allocate(buffer.limit()).apply { put(buffer) }.array()
 }
+
+fun ByteArray.toPacket(): FishPacket {
+    if(this.size < PACKET_SIZE) throw IllegalArgumentException("Size error. Size must be $PACKET_SIZE at least.")
+    if(this[0] != STX) throw IllegalArgumentException("First byte should be $STX but ${this[0]}")
+    if(this[size-3] != ETX) throw IllegalArgumentException("Last byte should be $ETX but ${this[size-3]}")
+
+    val crc = ByteBuffer.allocate(2).also {
+        it.order(ByteOrder.LITTLE_ENDIAN)
+        it.put(this[size-2])
+        it.put(this[size-1])
+        it.position(0)
+    }.short
+
+    // Fetch content. STX~ETX
+    val contents = this.filterIndexed { i: Int, _: Byte -> i in 1 until size-3 }.toByteArray()
+
+    val buffer = ByteBuffer.allocate(this.size)
+    buffer.order(ByteOrder.LITTLE_ENDIAN)
+
+    var escaped = false
+    for(b in contents) {
+        if(!escaped && b == DLE){
+            escaped = true
+            continue
+        }
+        escaped = false
+        buffer.put(b)
+    }
+
+    buffer.limit(buffer.position())
+    buffer.flip()
+
+    return FishPacket(
+        id = buffer.int,
+        clientId = buffer.int,
+        opCode = buffer.short,
+        pin = buffer.short,
+        pinMode = buffer.short,
+        data = buffer.float,
+        crc = crc
+    )
+}
+
 
 fun write(value: Number, buffer: ByteBuffer) {
     val size = when(value) {
@@ -63,11 +112,13 @@ fun write(value: Number, buffer: ByteBuffer) {
         is Int -> Int.SIZE_BYTES
         is Short -> Short.SIZE_BYTES
         is Double -> Double.SIZE_BYTES
+        is Float -> Float.SIZE_BYTES
+        is Byte -> Byte.SIZE_BYTES
         else -> 0
     }
 
+    val number = if(value is Float) value.toFloat().toRawBits() else value.toInt()
     repeat(size) { index ->
-        val number = value.toInt()
         val b = number.ushr(index * 8).toByte()
         when(b) {
             STX, ETX, DLE -> buffer.put(DLE)
