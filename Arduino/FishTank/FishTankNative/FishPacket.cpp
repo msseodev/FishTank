@@ -45,6 +45,8 @@ int FishPacket::serializePacket(unsigned char bff[]) {
     int index = 0;
     bff[index++] = STX;
 
+    crc = makeCrc();
+
     index += write((unsigned char *)&id, 4, bff+index);
     index += write((unsigned char *)&clientId, 4, bff+index);
     index += write((unsigned char *)&opCode, 2, bff+index);
@@ -53,7 +55,9 @@ int FishPacket::serializePacket(unsigned char bff[]) {
     index += write((unsigned char *)&data, 4, bff+index);
 
     bff[index++] = ETX;
-    bff[index++] = makeCrc();
+    unsigned char* cp = (unsigned char *)&crc;
+    bff[index++] = cp[0];
+    bff[index++] = cp[1];
 
     return index;
 }
@@ -69,12 +73,15 @@ int FishPacket::read(unsigned char* value, int sizeOfValue, const unsigned char*
     int idx = 0;
     int vIdx = 0;
 
+    bool escaped = false;
     while(true) {
         unsigned char b = buffer[idx++];
-        if(b == DLE) {
+        if(!escaped && b == DLE) {
+            escaped = true;
             continue;
         }
 
+        escaped = false;
         value[vIdx++] = b;
         if(vIdx >= sizeOfValue) break;
     }
@@ -94,7 +101,9 @@ int FishPacket::deSerializePacket(unsigned char bff[]) {
     index += read((unsigned char *)&data, 4, bff+index);
 
     if(bff[index++] != ETX) return -1;
-    crc = bff[index++];
+    unsigned char* cp = (unsigned char *)&crc;
+    cp[0] = bff[index++];
+    cp[1] = bff[index++];
 
     return index;
 }
@@ -113,7 +122,6 @@ bool FishPacket::validateCrc() {
     return makeCrc() == crc;
 }
 
-// ((2 << 12) & F000) | ((1 << 8) & 0F00) | ((10 << 4) & 00F0) | (1 & 000F)
 unsigned int FishPacket::makeCrc() {
     int localCrc = (id << 12) & 0xF000;
     localCrc |= (clientId << 8) & 0x0F00;
