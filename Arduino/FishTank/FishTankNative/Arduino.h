@@ -31,6 +31,8 @@ public:
     static void begin(int);
     static void setTimeout(int);
     static int read();
+
+    static void mockSetReadNext(uint8_t[], int size);
 };
 
 unsigned long millis();

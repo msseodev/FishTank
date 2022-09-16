@@ -1,4 +1,6 @@
 #include <iostream>
+#include <iomanip>
+#include <cstring>
 #include "FishPacket.h"
 
 using namespace std;
@@ -12,8 +14,17 @@ void printPacket(FishPacket* packet) {
          endl;
 }
 
+void printBytes(unsigned char arr[], int len) {
+    for(int i=0; i<=len; i++) {
+        cout << hex << setfill('0') << setw(2) << (int)arr[i] << " ";
+    }
+    cout << endl;
+
+    cout << dec;
+}
+
 int main() {
-    for(int i=0; i<2000; i++) {
+    for(int i=0; i<10; i++) {
         auto *fishPacket = new FishPacket();
         fishPacket->clientId = i;
         fishPacket->id = i+100;
@@ -29,6 +40,7 @@ int main() {
         int packetSize = fishPacket->serializePacket(buffer);
         cout << "PacketSize=" << packetSize << endl;
         printPacket(fishPacket);
+        printBytes(buffer, packetSize);
 
         auto *aPacket = new FishPacket();
         aPacket->deSerializePacket(buffer);

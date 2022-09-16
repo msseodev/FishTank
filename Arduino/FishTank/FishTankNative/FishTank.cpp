@@ -2,7 +2,6 @@
 #include "Arduino.h"
 #include "FishPacket.h"
 
-
 #define READ_TIMEOUT 5000
 
 #define ONE_WIRE_BUS 52
@@ -113,6 +112,10 @@ void readPacket(FishPacket &packet) {
 
             if(b == ETX){
                 // End of packet.
+                buffer[idx++] = b;
+                // Read CRC
+                buffer[idx++] = Serial.read();
+                buffer[idx++] = Serial.read();
                 break;
             }
 
