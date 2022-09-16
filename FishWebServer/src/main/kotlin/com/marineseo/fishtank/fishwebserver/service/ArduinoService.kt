@@ -296,7 +296,7 @@ class ArduinoService: ApplicationListener<ApplicationContextEvent> {
             repairConnection()
 
             if (depth < REPAIR_MAX_TRY) {
-                sendAndGetResponse(packet, depth + 1)
+                return sendAndGetResponse(packet, depth + 1)
             }
             return null
         }
@@ -308,7 +308,7 @@ class ArduinoService: ApplicationListener<ApplicationContextEvent> {
             repairConnection()
 
             if (depth < REPAIR_MAX_TRY) {
-                sendAndGetResponse(packet, depth + 1)
+                return sendAndGetResponse(packet, depth + 1)
             }
         }
 
