@@ -27,23 +27,41 @@ class ArduinoSerialPort(portName: String): SerialPort(portName) {
 
         val buffer = ByteBuffer.allocate(PACKET_SIZE * 2)
 
-        while(true) {
-            readByte()?.let { b->
-                if(!readStx) {
-                    // First byte.
-                    if(b == STX) {
-                        readStx = true
-                    } else {
-                        logger.error("First byte must be STX($STX) BUT $b")
-                        return null
-                    }
+        val firstByte = readByte()
+        if(firstByte == STX) {
+            var escaping = false
+            while(true) {
+                val b = readByte() ?: continue
+
+                if(escaping) {
+                    buffer.put(b)
+                    escaping = false
+                    continue
                 }
 
+                if(b == DLE) {
+                    escaping = true
+                    continue
+                }
+
+                if(b == ETX) {
+                    // End of packet.
+                    buffer.put(b)
+                    // Read CRC
+                    buffer.put(b)
+                    buffer.put(b)
+                    break
+                }
+
+                // Plain data byte.
                 buffer.put(b)
-
             }
-
         }
+
+        val dataArr = buffer.array().filterIndexed {index, byte ->
+            index < buffer.position()
+        }
+        return dataArr.toByteArray().toPacket()
     }
 
     fun readPacket(): FishPacket? {
