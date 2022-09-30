@@ -46,16 +46,9 @@ void clearPacket(FishPacket &packet) {
     packet.data = 0;
 }
 
-void sendPacket(FishPacket &packet) {
-    Serial1.println("Send Packet");
-
-    unsigned char buffer[PACKET_SIZE_MAX];
-    memset(buffer, 0, PACKET_SIZE_MAX);
-
-    int size = packet.serializePacket(buffer);
-
+void printArrayAsHex(unsigned char arr[], int len) {
     // Print buffer for debugging
-    for (unsigned char i: buffer) {
+    for (int i=0; i<len; i++) {
         char hexBuf[3];
         sprintf(hexBuf, "%X", i);
         hexBuf[2] = 0;
@@ -63,8 +56,10 @@ void sendPacket(FishPacket &packet) {
         Serial1.print(hexBuf);
         Serial1.print(" ");
     }
-    Serial1.println();
+}
 
+void printFishPacket(FishPacket &packet) {
+    Serial1.println();
     Serial1.print(", id=");
     Serial1.print(packet.id);
     Serial1.print(", clientId=");
@@ -78,7 +73,21 @@ void sendPacket(FishPacket &packet) {
     Serial1.print(", data=");
     Serial1.print(packet.data);
     Serial1.println();
+}
 
+void sendPacket(FishPacket &packet) {
+    Serial1.println("Send Packet");
+
+    unsigned char buffer[PACKET_SIZE_MAX];
+    memset(buffer, 0, PACKET_SIZE_MAX);
+
+    int size = packet.serializePacket(buffer);
+
+    // Print buffer for debugging
+    printArrayAsHex(buffer, size);
+    printFishPacket(packet);
+
+    // Send packet
     Serial.write(buffer, size);
     Serial.flush();
 
