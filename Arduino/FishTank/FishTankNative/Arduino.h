@@ -31,6 +31,8 @@ public:
     static void begin(int);
     static void setTimeout(int);
     static int read();
+
+    static void mockSetReadNext(uint8_t[], int size);
 };
 
 unsigned long millis();
@@ -41,8 +43,7 @@ void analogWrite(int, int);
 void setup();
 void loop();
 
-Ser Serial;
-Ser Serial1;
+
 
 
 #endif //FISHTANKNATIVE_ARDUINO_H
