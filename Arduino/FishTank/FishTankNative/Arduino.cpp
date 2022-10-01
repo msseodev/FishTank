@@ -4,6 +4,9 @@
 
 #include "Arduino.h"
 
+uint8_t mData[100];
+int index = 0;
+
 void Ser::println() {
 
 }
@@ -33,7 +36,15 @@ void Ser::begin(int) {}
 
 void Ser::setTimeout(int) {}
 
-int Ser::read() {}
+int Ser::read() {
+    return mData[index++];
+}
+
+void Ser::mockSetReadNext(uint8_t data[], int size) {
+    memset(mData, 0, 100);
+    memcpy(mData, data, size);
+    index = 0;
+}
 
 unsigned long millis(){ }
 void pinMode(int, int){ }
