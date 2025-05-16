@@ -156,60 +156,58 @@ fun TextDropDownMenu(
 ) {
     var text by remember { mutableStateOf(textOptions[0]) }
     var expanded by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
-    val source = remember { MutableInteractionSource() }
-    val timePickerDialog = TimePickerDialog(
-        LocalContext.current,
-        { _, hour: Int, minute: Int ->
-            text = TimeUtils.formatTimeHHmm(hour, minute)
-            onTimeSelected(text)
-        },
-        TimeUtils.currentHour(),
-        TimeUtils.currentMinute(),
-        false
-    )
-
-    if (source.collectIsPressedAsState().value) {
-        if(isTimePicker) {
-            timePickerDialog.show()
-        }
+    val timePickerDialog = remember {
+        TimePickerDialog(
+            context,
+            { _, hour: Int, minute: Int ->
+                text = TimeUtils.formatTimeHHmm(hour, minute)
+                onTimeSelected(text)
+            },
+            TimeUtils.currentHour(),
+            TimeUtils.currentMinute(),
+            false
+        )
     }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = {
-            if(!isTimePicker) {
+            if (isTimePicker) {
+                timePickerDialog.show()
+            } else {
                 expanded = !expanded
             }
         }
     ) {
         OutlinedTextField(
-            modifier = Modifier.menuAnchor(),
-            readOnly = true,
+            modifier = Modifier
+                .menuAnchor(), // 반드시 ExposedDropdownMenuBox scope 내에서 호출
             value = text,
             onValueChange = {},
+            readOnly = true,
             label = { Text(label) },
-            interactionSource = source,
             trailingIcon = {
-                ExposedDropdownMenuDefaults.TrailingIcon(
-                    expanded = expanded
-                )
-            },
+                ExposedDropdownMenuDefaults.TrailingIcon(expanded)
+            }
         )
 
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            textOptions.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(text = option) },
-                    onClick = {
-                        onOptionSelected(option)
-                        text = option
-                        expanded = false
-                    }
-                )
+        if (!isTimePicker) {
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                textOptions.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(text = option) },
+                        onClick = {
+                            text = option
+                            onOptionSelected(option)
+                            expanded = false
+                        }
+                    )
+                }
             }
         }
     }
