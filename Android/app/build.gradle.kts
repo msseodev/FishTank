@@ -4,10 +4,11 @@ plugins {
     id("kotlin-parcelize")
     kotlin("kapt")
     id("com.google.dagger.hilt.android")
+    id("org.jetbrains.kotlin.plugin.compose")
 }
 
-val composeVersion = "1.4.0"
-val composeBom = "2023.04.01"
+val composeVersion = "1.6.1"
+val composeBom = "2024.05.00"
 val accompanistVersion = "0.28.0"
 val coroutineVersion = "1.6.4"
 val navigationVersion = "2.5.3"
@@ -17,18 +18,18 @@ val lifeCycle = "2.6.1"
 
 android {
     namespace = "com.marine.fishtank"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.marine.fishtank"
         minSdk = 26
-        targetSdk = 33
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("String", "SERVER_URL", "\"http://1.236.89.110:15483\"")
+        buildConfigField("String", "SERVER_URL", "\"http://211.255.170.100:15483\"")
     }
 
     buildTypes {
@@ -53,9 +54,7 @@ android {
         compose = true
     }
 
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.3"
-    }
+
 
     kapt {
         correctErrorTypes = true
@@ -84,8 +83,8 @@ dependencies {
 
     // Hilt
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0-alpha01")
-    implementation("com.google.dagger:hilt-android:2.45")
-    kapt("com.google.dagger:hilt-android-compiler:2.45")
+    implementation("com.google.dagger:hilt-android:2.51")
+    kapt("com.google.dagger:hilt-android-compiler:2.51")
 
     // LifeCycle
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifeCycle")
