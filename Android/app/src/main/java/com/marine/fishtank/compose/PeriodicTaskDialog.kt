@@ -26,7 +26,6 @@ import com.marine.fishtank.model.PeriodicTask
 import com.marine.fishtank.util.TimeUtils
 import com.orhanobut.logger.Logger
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PeriodicTaskDialog(
     onCancel: () -> Unit = {},

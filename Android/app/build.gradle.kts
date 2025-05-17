@@ -29,7 +29,7 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("String", "SERVER_URL", "\"http://211.255.170.100:15483\"")
+        buildConfigField("String", "SERVER_URL", "\"http://211.255.170.80:15483\"")
     }
 
     buildTypes {
