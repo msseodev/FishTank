@@ -4,10 +4,10 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 
 private const val DEFAULT_SERVER_URL = "fish.marineseo.xyz"
@@ -40,14 +40,14 @@ data class ConnectionSetting(
 }
 
 
-class SettingsRepository private constructor(
-    private val context: Context
-) {
+class SettingsRepository(private val context: Context) {
     private val keyUserId = stringPreferencesKey("user_id")
     private val keyUserPassword = stringPreferencesKey("user_password")
 
     val userIdFlow = context.dataStore.data.map { pref -> pref[keyUserId] ?: "" }
+        .flowOn(Dispatchers.IO)
     val userPasswordFlow = context.dataStore.data.map { pref -> pref[keyUserPassword] ?: "" }
+        .flowOn(Dispatchers.IO)
 
     suspend fun saveUserId(id: String) {
         context.dataStore.edit {
@@ -60,24 +60,4 @@ class SettingsRepository private constructor(
             it[keyUserPassword] = password
         }
     }
-
-    companion object {
-        @Volatile
-        private var INSTANCE: SettingsRepository? = null
-
-        fun getInstance(context: Context): SettingsRepository {
-            return INSTANCE ?: synchronized(this) {
-                INSTANCE?.let {
-                    return it
-                }
-
-                val instance = SettingsRepository(context)
-                INSTANCE = instance
-                instance
-            }
-        }
-    }
-
-
-
 }
