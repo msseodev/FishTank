@@ -5,11 +5,10 @@ plugins {
 group = "com.github.philjay"
 
 android {
-    compileSdk = 33
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 14
-        targetSdk = 33
     }
 
     buildTypes {

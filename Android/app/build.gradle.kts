@@ -1,29 +1,21 @@
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
     id("kotlin-parcelize")
     kotlin("kapt")
-    id("com.google.dagger.hilt.android")
-    id("org.jetbrains.kotlin.plugin.compose")
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.kotlin.compose)
 }
 
-val composeVersion = "1.6.1"
-val composeBom = "2024.05.00"
-val accompanistVersion = "0.28.0"
-val coroutineVersion = "1.6.4"
-val navigationVersion = "2.5.3"
-val exoplayerVersion = "2.18.2"
-val retrofit2Version = "2.9.0"
-val lifeCycle = "2.6.1"
 
 android {
     namespace = "com.marine.fishtank"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.marine.fishtank"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -69,70 +61,67 @@ android {
 }
 
 dependencies {
-    api(project(":MpChartLib"))
+    implementation(project(":MpChartLib"))
 
-    implementation("androidx.core:core-ktx:1.10.0")
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    //implementation("com.google.android.material:material:1.8.0")
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.constraintlayout)
 
     // Navigation
-    implementation("androidx.navigation:navigation-fragment-ktx:$navigationVersion")
-    implementation("androidx.navigation:navigation-ui-ktx:$navigationVersion")
-    implementation("androidx.navigation:navigation-compose:$navigationVersion")
+    implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.androidx.navigation.ui.ktx)
+    implementation(libs.androidx.navigation.compose)
 
     // Hilt
-    implementation("androidx.hilt:hilt-navigation-compose:1.1.0-alpha01")
-    implementation("com.google.dagger:hilt-android:2.51")
-    kapt("com.google.dagger:hilt-android-compiler:2.51")
+    implementation(libs.hilt.navigation.compose)
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.compiler)
 
     // LifeCycle
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifeCycle")
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifeCycle")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:$lifeCycle")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:$lifeCycle")
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.lifecycle.livedata.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
 
     // ETC
-    implementation("androidx.datastore:datastore-preferences:1.0.0")
-    implementation("com.google.code.gson:gson:2.10")
-    implementation("com.orhanobut:logger:2.2.0")
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.gson)
+    implementation(libs.logger)
 
     // Compose
-    val composeBom = platform("androidx.compose:compose-bom:$composeBom")
-    implementation(composeBom)
-    androidTestImplementation(composeBom)
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.material3:material3")
-    implementation("androidx.compose.ui:ui-tooling")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material:material-icons-extended")
-    implementation("androidx.compose.runtime:runtime-livedata")
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.ui.tooling)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.androidx.compose.runtime.livedata)
 
     // Accompanist - for compose
-    implementation("com.google.accompanist:accompanist-pager:$accompanistVersion")
-    implementation("com.google.accompanist:accompanist-pager-indicators:$accompanistVersion")
-    implementation("com.google.accompanist:accompanist-swiperefresh:$accompanistVersion")
+    implementation(libs.accompanist.pager)
+    implementation(libs.accompanist.pager.indicators)
+    implementation(libs.accompanist.swiperefresh)
 
     // Coroutine
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutineVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutineVersion")
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.android)
 
     // ExoPlayer
-    implementation("com.google.android.exoplayer:exoplayer:$exoplayerVersion")
-    implementation("com.google.android.exoplayer:exoplayer-rtsp:$exoplayerVersion")
+    implementation(libs.exoplayer)
+    implementation(libs.exoplayer.rtsp)
 
     // Retrofit
-    implementation("com.squareup.retrofit2:retrofit:$retrofit2Version")
-    implementation("com.squareup.retrofit2:converter-gson:$retrofit2Version")
-    implementation("com.squareup.retrofit2:converter-scalars:$retrofit2Version")
-    implementation("com.squareup.okhttp3:logging-interceptor:4.10.0")
-    implementation("com.github.skydoves:sandwich:1.3.4")
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
+    implementation(libs.retrofit.converter.scalars)
+    implementation(libs.okhttp.logging.interceptor)
+    implementation(libs.sandwich)
 
     // Test
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.4")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.0")
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4:$composeVersion")
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.espresso.core)
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
 
-    debugImplementation("androidx.compose.ui:ui-test-manifest:$composeVersion")
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 }

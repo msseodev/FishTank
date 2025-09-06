@@ -133,7 +133,7 @@ fun ControlTopAppBar() {
                 fontWeight = FontWeight.Bold
             )
         },
-        colors = TopAppBarDefaults.smallTopAppBarColors(
+        colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.tertiaryContainer
         )
     )
